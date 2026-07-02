@@ -1,0 +1,22 @@
+Metadata-Version: 2.4
+Name: wavehack-pipeline
+Version: 0.1.0
+Summary: Wave Hack data pipeline: GFS取得・スクレイピング・ML推論
+Requires-Python: >=3.11
+Requires-Dist: anthropic>=0.100.0
+Requires-Dist: pyyaml>=6.0.3
+Requires-Dist: psycopg[binary]>=3.2
+Provides-Extra: gfs
+Requires-Dist: xarray>=2024.0; extra == "gfs"
+Requires-Dist: cfgrib>=0.9.10; extra == "gfs"
+Requires-Dist: requests>=2.31; extra == "gfs"
+Requires-Dist: astral>=3.2; extra == "gfs"
+Provides-Extra: scraping
+Requires-Dist: playwright>=1.40; extra == "scraping"
+Provides-Extra: ml
+Requires-Dist: lightgbm>=4.0; extra == "ml"
+Requires-Dist: scikit-learn>=1.3; extra == "ml"
+Requires-Dist: numpy>=1.26; extra == "ml"
+Provides-Extra: dev
+Requires-Dist: pytest>=8.0; extra == "dev"
+Requires-Dist: ruff>=0.4; extra == "dev"

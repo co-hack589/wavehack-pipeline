@@ -1,0 +1,53 @@
+# Build artefacts / caches
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/.pytest_cache/
+**/.ruff_cache/
+**/.mypy_cache/
+
+# Virtualenvs (rebuilt inside container)
+**/.venv/
+**/venv/
+**/env/
+
+# Editor / OS
+.DS_Store
+.vscode/
+.idea/
+
+# VCS
+.git/
+.gitignore
+.github/
+
+# Node / other stacks (in case build ctx = output/)
+**/node_modules/
+**/.next/
+**/dist/
+**/build/
+
+# Local previously-generated pipeline outputs (regenerated in container)
+code/wavehack-pipeline/output/
+code/wavehack-pipeline/data/tide_cache/
+data/dashboard.json
+data/dashboard_sample_for_claude.json
+data/subagent_status.json
+html/dashboard.html
+html/subagent_status.html
+html/design_mock_*
+html/design_components.html
+html/auth_provider_guide.html
+
+# Large / unrelated buckets in output/
+md/
+llm_comments/
+batch_requests/
+batch_results/
+legal/
+
+# Env & secrets
+**/.env
+**/.env.*
+**/secrets*.json

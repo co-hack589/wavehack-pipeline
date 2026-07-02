@@ -1,0 +1,16 @@
+# python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+
+# env / secrets
+.env
+.env.*
+
+# generated data
+output/
+
+# os
+.DS_Store

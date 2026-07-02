@@ -1,0 +1,112 @@
+[
+  {
+    "name": "木崎浜",
+    "name_en": "Kisakihama",
+    "area": "宮崎市",
+    "latitude": 31.8251,
+    "longitude": 131.4532,
+    "beach_direction": "東",
+    "confidence": "high",
+    "source": "https://www.navitime.co.jp/poi?spot=02301-14000054",
+    "note": ""
+  },
+  {
+    "name": "一ツ葉",
+    "name_en": "Hitotsuba",
+    "area": "宮崎市",
+    "latitude": 31.9303,
+    "longitude": 131.4689,
+    "beach_direction": "東",
+    "confidence": "high",
+    "source": "https://mppf.or.jp/marineparks/sunbeach/",
+    "note": ""
+  },
+  {
+    "name": "青島",
+    "name_en": "Aoshima",
+    "area": "宮崎市",
+    "latitude": 31.8052,
+    "longitude": 131.4759,
+    "beach_direction": "東北東",
+    "confidence": "high",
+    "source": "https://ja.wikipedia.org/wiki/%E9%9D%92%E5%B3%B6_(%E5%AE%AE%E5%B4%8E%E7%9C%8C)",
+    "note": ""
+  },
+  {
+    "name": "曽山寺",
+    "name_en": "Sosanji",
+    "area": "宮崎市",
+    "latitude": 31.8134,
+    "longitude": 131.4540,
+    "beach_direction": "東",
+    "confidence": "high",
+    "source": "https://media.namiaru.com/pointguide_kaedakako/",
+    "note": "曽山寺駅座標から海岸側に補正"
+  },
+  {
+    "name": "お倉ヶ浜",
+    "name_en": "Okuragahama",
+    "area": "日向市",
+    "latitude": 32.4040,
+    "longitude": 131.6413,
+    "beach_direction": "東南東",
+    "confidence": "medium",
+    "source": "https://www.surf-forecast.com/breaks/Okuragahama",
+    "note": "ビーチライン上、南寄り中央代表点に補正。旧座標(32.4030,131.6600)はビーチから沖合約880m(離岸礁『白バエ』近傍)を指していたため西へ修正"
+  },
+  {
+    "name": "金ヶ浜",
+    "name_en": "Kanegahama",
+    "area": "日向市",
+    "latitude": 32.3613,
+    "longitude": 131.6223,
+    "beach_direction": "東",
+    "confidence": "high",
+    "source": "https://www.mapion.co.jp/phonebook/M12001/45206/BS4500871/",
+    "note": ""
+  },
+  {
+    "name": "伊勢ヶ浜",
+    "name_en": "Isegahama",
+    "area": "日向市",
+    "latitude": 32.4286,
+    "longitude": 131.6555,
+    "beach_direction": "南東",
+    "confidence": "medium",
+    "source": "https://hyugasurf.camp/",
+    "note": "湾内、湾中央付近を採用"
+  },
+  {
+    "name": "伊比井",
+    "name_en": "Ibii",
+    "area": "日南市",
+    "latitude": 31.7111,
+    "longitude": 131.4640,
+    "beach_direction": "東南東",
+    "confidence": "medium",
+    "source": "https://ja.wikipedia.org/wiki/%E4%BC%8A%E6%AF%94%E4%BA%95%E9%A7%85",
+    "note": "伊比井駅(31.7111, 131.4562)から海岸側に補正。surf-forecastにページなし、富土と隣接"
+  },
+  {
+    "name": "大堂津",
+    "name_en": "Odotsu",
+    "area": "日南市",
+    "latitude": 31.5570,
+    "longitude": 131.3850,
+    "beach_direction": "東南東",
+    "confidence": "high",
+    "source": "https://ja.wikipedia.org/wiki/%E5%A4%A7%E5%A0%82%E6%B4%A5%E9%A7%85",
+    "note": "大堂津駅座標を採用"
+  },
+  {
+    "name": "高鍋",
+    "name_en": "Takanabe",
+    "area": "高鍋町",
+    "latitude": 32.1202,
+    "longitude": 131.5310,
+    "beach_direction": "東",
+    "confidence": "high",
+    "source": "https://www.mapion.co.jp/m2/32.12015744,131.53098063,16/poi=BS4500628",
+    "note": "蚊口浜バス停の座標"
+  }
+]

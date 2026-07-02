@@ -1,0 +1,41 @@
+[project]
+name = "wavehack-pipeline"
+version = "0.1.0"
+description = "Wave Hack data pipeline: GFS取得・スクレイピング・ML推論"
+requires-python = ">=3.11"
+dependencies = [
+    "anthropic>=0.100.0",
+    "pyyaml>=6.0.3",
+    "psycopg[binary]>=3.2",
+]
+
+[project.optional-dependencies]
+gfs = [
+    "xarray>=2024.0",
+    "cfgrib>=0.9.10",
+    "requests>=2.31",
+    "astral>=3.2",
+]
+scraping = [
+    "playwright>=1.40",
+]
+ml = [
+    "lightgbm>=4.0",
+    "scikit-learn>=1.3",
+    "numpy>=1.26",
+]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.4",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
