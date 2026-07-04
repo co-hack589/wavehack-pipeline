@@ -2,17 +2,16 @@
 # ---------------------------------------------------------------------------
 # Wave Hack GFS pipeline image
 # ---------------------------------------------------------------------------
-# Build context is expected to be the wavehack `output/` directory so that
-# shared assets (scoring_rules.yaml / dashboard_template.html) can be COPY'd
-# into the same tree layout the scripts assume:
+# Build context = リポジトリルート (wavehack-pipeline 単体で完結)。
+# 共有アセットはリポジトリ同梱の data/scoring_rules.yaml と
+# html/dashboard_template.html を使う（原本は wavehack/output/ 側。
+# scoring_rules.yaml を更新したら `cp` でリポジトリへ再同期すること）。
 #     /app/output/code/wavehack-pipeline/           (source code)
 #     /app/output/data/scoring_rules.yaml
 #     /app/output/html/dashboard_template.html
 #
 # Example (local):
-#     docker build -f output/code/wavehack-pipeline/Dockerfile \
-#                  -t wavehack-pipeline:latest \
-#                  output/
+#     docker build -t wavehack-pipeline:latest .
 #
 # The image is Fargate-ready: entrypoint runs the full pipeline and drops
 # artifacts under /output (mount a volume there or point ECS to an EFS/S3
@@ -51,9 +50,9 @@ RUN pip install --upgrade pip \
 WORKDIR /build
 
 # Copy dependency manifests first for layer caching.
-COPY code/wavehack-pipeline/pyproject.toml code/wavehack-pipeline/uv.lock ./
-COPY code/wavehack-pipeline/README.md ./README.md
-COPY code/wavehack-pipeline/src ./src
+COPY pyproject.toml uv.lock ./
+COPY README.md ./README.md
+COPY src ./src
 
 # Resolve + install into /opt/venv. --frozen honours uv.lock exactly.
 RUN uv sync --extra gfs --frozen --no-dev
@@ -89,12 +88,12 @@ COPY --from=builder /opt/venv /opt/venv
 # ROOT.parent.parent == /app/output for generate_dashboard etc.
 WORKDIR /app/output/code/wavehack-pipeline
 
-# Shared assets outside the pipeline dir (need parent build context).
+# Shared assets (リポジトリ同梱コピー).
 COPY data/scoring_rules.yaml       /app/output/data/scoring_rules.yaml
 COPY html/dashboard_template.html  /app/output/html/dashboard_template.html
 
 # Pipeline source (scripts / src / data / pyproject).
-COPY code/wavehack-pipeline/ /app/output/code/wavehack-pipeline/
+COPY . /app/output/code/wavehack-pipeline/
 
 # Make run_all.sh executable and pre-create intermediate output dirs.
 RUN chmod +x /app/output/code/wavehack-pipeline/scripts/run_all.sh \

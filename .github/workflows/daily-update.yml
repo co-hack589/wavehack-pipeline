@@ -1,0 +1,94 @@
+name: daily-update
+
+# ---------------------------------------------------------------------------
+# 毎日の予報更新パイプライン:
+#   1. Docker で GFS 取得 → forecast.json / dashboard.json 生成 (~35分)
+#   2. wavehack-api リポジトリの data/ にコミット → Render が自動再デプロイ
+#   3. Render の反映を待ってから Cloudflare デプロイフックでフロント再ビルド
+#
+# 必要な Secrets (このリポジトリの Settings → Secrets and variables → Actions):
+#   WAVEHACK_API_PUSH_TOKEN — co-hack589/wavehack-api に Contents write 可能な
+#                             Fine-grained PAT
+#   CF_DEPLOY_HOOK_URL      — Cloudflare Workers ビルドのデプロイフック URL
+#
+# GFS は 00/06/12/18 UTC 発表 → 配信まで ~30分。JST 朝サーフィンに間に合う
+# よう 18UTC(=JST 03時) 発表分を 19:00 UTC (JST 04時) に取り、朝までに反映。
+# ---------------------------------------------------------------------------
+
+on:
+  schedule:
+    - cron: '0 19 * * *'   # JST 04:00
+  workflow_dispatch: {}
+
+concurrency:
+  group: daily-update
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout pipeline
+        uses: actions/checkout@v4
+
+      - name: Build image
+        run: docker build -t wavehack-pipeline:ci .
+
+      - name: Run pipeline
+        run: |
+          mkdir -p out
+          docker run --rm \
+            -e OUTPUT_TARGET=local \
+            -e GFS_WORKERS=4 \
+            -v "$PWD/out:/output" \
+            wavehack-pipeline:ci
+          ls -la out/data/
+
+      - name: Checkout wavehack-api
+        uses: actions/checkout@v4
+        with:
+          repository: co-hack589/wavehack-api
+          token: ${{ secrets.WAVEHACK_API_PUSH_TOKEN }}
+          path: api
+
+      - name: Commit data to wavehack-api
+        id: push_data
+        run: |
+          cp out/data/dashboard.json api/data/dashboard.json
+          cp out/data/forecast.json  api/data/forecast.json
+          cd api
+          git config user.name "wavehack-bot"
+          git config user.email "actions@wavehack.surf"
+          git add data/
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "データ変化なし、以降スキップ"
+          else
+            git commit -m "Update forecast data ($(date -u +%Y-%m-%dT%H:%MZ))"
+            git push
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Wait for Render redeploy
+        if: steps.push_data.outputs.changed == 'true'
+        run: |
+          NEW_GEN=$(python3 -c "import json;print(json.load(open('out/data/dashboard.json'))['generated_at'])")
+          echo "新データ generated_at: $NEW_GEN"
+          for i in $(seq 1 40); do
+            LIVE=$(curl -s -m 20 https://wavehack-api.onrender.com/top3 | python3 -c "import json,sys;print(json.load(sys.stdin).get('generated_at',''))" 2>/dev/null || echo "")
+            echo "[$i/40] live=$LIVE"
+            if [ "$LIVE" = "$NEW_GEN" ]; then
+              echo "Render 反映確認"
+              exit 0
+            fi
+            sleep 30
+          done
+          echo "::warning::Render 反映を20分待っても確認できず。フロント再ビルドは実行する"
+
+      - name: Trigger Cloudflare rebuild
+        if: steps.push_data.outputs.changed == 'true'
+        run: curl -fsS -X POST "${{ secrets.CF_DEPLOY_HOOK_URL }}"

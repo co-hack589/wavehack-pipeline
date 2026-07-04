@@ -69,6 +69,10 @@ fi
 log "Copying artefacts to ${MOUNT_DIR}"
 mkdir -p "${MOUNT_DIR}/data" "${MOUNT_DIR}/html"
 cp -f "${DASHBOARD_JSON}" "${MOUNT_DIR}/data/dashboard.json"
+# forecast.json は wavehack-api の /points /areas /forecast/:id が使う
+if [[ -f "${PIPELINE_DIR}/output/forecast.json" ]]; then
+  cp -f "${PIPELINE_DIR}/output/forecast.json" "${MOUNT_DIR}/data/forecast.json"
+fi
 if [[ -f "${WAVEHACK_OUTPUT}/html/dashboard.html" ]]; then
   cp -f "${WAVEHACK_OUTPUT}/html/dashboard.html" "${MOUNT_DIR}/html/dashboard.html"
 fi

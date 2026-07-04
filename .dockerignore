@@ -51,3 +51,4 @@ legal/
 **/.env
 **/.env.*
 **/secrets*.json
+output/

@@ -1,0 +1,574 @@
+# ============================================================
+# Wave Hack スコアリングルール v0.2 （共通ルール採用版）
+# ============================================================
+#
+# とおいさんからのヒアリング (2026-05-10) を反映:
+#   - うねりはビーチ向きと一致するほど高得点（ポイント別 override で例外指定）
+#   - 風はビーチ向きの真反対=オフショアが最高、オンショアが最低
+#     （オフショア → サイドオフ → サイド → サイドオン → オンショア）
+#     風速が弱ければオンショアでも影響薄い
+#   - 潮は「動いている途中」がベスト
+#     満潮へ向かう途中 > 満潮から引き始め > 干潮から動き出し > 干潮へ向かう途中
+#   - サイズはサーフィンレベル別の調整あり（別途共有予定）
+#   - 地形メモは別途追加予定
+#
+# 設計方針:
+#   - 共通ルールは「ビーチ向き」さえ判れば自動算出（ヒアリング不要）
+#   - ポイント別 yaml は「例外・特殊事情」のみ書く形に簡略化
+#   - 角度は気象学慣例: 0=N, 90=E, 180=S, 270=W、すべて「どこから来るか」
+#
+version: 0.2
+generated_at: "2026-05-10"
+maintainer: takeda.toi (とおいさん)
+
+
+# ============================================================
+# 1) ビーチ向き → 方位角（degree）変換テーブル
+# ============================================================
+#
+# miyazaki_points.json の beach_direction（日本語16方位）をスコア計算用に変換。
+# beach_direction は「波が打ち寄せてくる方向」=「ビーチが向いている方向」と定義。
+# つまり 東向きビーチ = 東(90°)からうねりが来る、と解釈する。
+#
+beach_direction_deg:
+  北:     0
+  北北東: 22.5
+  北東:   45
+  東北東: 67.5
+  東:     90
+  東南東: 112.5
+  南東:   135
+  南南東: 157.5
+  南:     180
+  南南西: 202.5
+  南西:   225
+  西南西: 247.5
+  西:     270
+  西北西: 292.5
+  北西:   315
+  北北西: 337.5
+
+
+# ============================================================
+# 2) 共通スコアリングルール
+# ============================================================
+#
+# 出力は各ファクター 0..1、それを重みづけて総合 0..1 → 表示時 0..10 に変換
+#
+scoring:
+  version: 0.3
+
+  # 各ファクターの重み（合計 1.0）
+  weights:
+    swell:  0.35   # うねり向き × ビーチ向き 一致度
+    wind:   0.30   # 風向き × オフショア 一致度（風速減衰込み）
+    tide:   0.20   # 潮の動きフェーズ
+    size:   0.15   # サイズ & 周期（次バージョンで詳細化）
+
+  # ----- 機能フラグ (v0.3 追加) -----
+  # ヒアリング第2弾フィールドを統合した派生スコア成分の有効/無効を切替。
+  # いずれも対応する yaml フィールドが未定義/空のポイントは自動でスキップ。
+  features:
+    preferred_size_m_enabled: true     # size_score を preferred_size_m カーブで上書き
+    size_attenuation_enabled: true     # htsgw_m を係数倍して実効サイズで評価
+    seasonality_enabled: true          # 月による composite ±補正（best=+0.1, off=-0.1）
+    max_wind_hard_cut_enabled: true    # wind_ms > max_wind_ms で composite=0
+
+  # ----- 共通デフォルト (v0.3 追加) -----
+  # ポイント別 yaml で未定義 (null) のときの fallback。
+  # null のまま運用したい場合は features.* を false にする。
+  defaults:
+    # 共通デフォルトの最大許容風速 (ヒアリング第3弾でポイント別値が確定するまでの暫定)。
+    # 既存 wind.default_limit_wind_ms=14.0 (線形減衰0点) と整合させ、12m/s を境にハードカット。
+    # ポイント別 max_wind_ms が定義されればそちらを優先。
+    max_wind_ms: 12.0
+    seasonality_best_bonus: 0.10        # best シーズン月の composite 加点
+    seasonality_off_penalty: 0.10       # off シーズン月の composite 減点
+
+  # ----- うねり -----
+  swell:
+    # うねり向きとビーチ向きの差で評価。完全一致(0°差)が満点、180°差(背面)が0点
+    # 角度差を 0..180 に正規化して下記カーブで評価
+    direction_curve:
+      - { diff_deg:   0, score: 1.00 }   # 真正面
+      - { diff_deg:  20, score: 1.00 }   # ±20°以内は満点（ビーチが多少傾いていてもOK）
+      - { diff_deg:  45, score: 0.80 }   # ±45° 斜めから入射
+      - { diff_deg:  70, score: 0.50 }
+      - { diff_deg:  90, score: 0.20 }   # 真横（実質入らない）
+      - { diff_deg: 120, score: 0.05 }
+      - { diff_deg: 180, score: 0.00 }   # 背面（陸からのうねりは物理的にあり得ないが念のため）
+
+    # うねり3成分（SWELL1/2/3）の扱い
+    # 各成分のうち最大スコアを採用（一番反応する成分で評価する）
+    # かつ HTSGW（合成有義波高）が 0.3m 未満ならスコアを掛け率0.5で減衰（ノーサーフ判定）
+    use_top_score_among_swells: true
+    no_surf_height_threshold_m: 0.3
+    no_surf_score_multiplier: 0.5
+
+  # ----- 風 -----
+  wind:
+    # オフショア = ビーチ向きから 180°回した方向
+    # 風向きとオフショア方向の角度差で判定（0..180）
+    direction_curve:
+      - { diff_deg:   0, score: 1.00 }   # 真オフショア
+      - { diff_deg:  45, score: 0.80 }   # サイドオフ
+      - { diff_deg:  90, score: 0.50 }   # サイド
+      - { diff_deg: 135, score: 0.20 }   # サイドオン
+      - { diff_deg: 180, score: 0.00 }   # オンショア
+
+    # 風速減衰: 弱い風は影響薄い。風速が weak_threshold 以下なら direction score を底上げ
+    # （オンショアでも風弱ければ波面はそこまで荒れない）
+    weak_threshold_ms: 3.0
+    weak_floor_score:  0.6   # 弱風なら最低この値まで底上げ
+
+    # 強風ペナルティ: max_wind_ms を超えると線形減衰、limit_wind_ms で 0
+    # ポイント別 override で max/limit を上書き可能
+    default_max_wind_ms:   8.0
+    default_limit_wind_ms: 14.0
+
+  # ----- 潮 -----
+  tide:
+    # 潮の動きフェーズによるスコア。
+    # 想定する6フェーズ:
+    #   mid_flood    : 干潮 → 満潮 の中間（上げ7分）= ベスト
+    #   high_slack   : 満潮ピーク（動かない）
+    #   high_to_ebb  : 満潮 → 引き始め（高め水位 + 動き出し）
+    #   mid_ebb      : 満潮 → 干潮 の中間（下げ）
+    #   low_slack    : 干潮ピーク（動かない、底見え注意）
+    #   low_to_flood : 干潮 → 上げ始め
+    phase_score:
+      mid_flood:    1.00   # 満潮へ向かう途中（ベスト）
+      high_to_ebb:  0.80   # 満潮から引き始め
+      low_to_flood: 0.60   # 干潮から動き出し
+      mid_ebb:      0.50   # 干潮へ向かう途中
+      high_slack:   0.40   # 満潮ピーク（動かない）
+      low_slack:    0.20   # 干潮ピーク（動かない・底見え）
+
+    # ポイント別 override が override_phase_score にあればそちらを優先
+    # 潮位データは Phase A-4 で気象庁API から取得予定
+    available_from_phase: A-4
+
+  # ----- サイズ・周期（v0.2 では暫定、次バージョンで詳細化） -----
+  size:
+    # サーフィンレベル別の好サイズはユーザー側で別途共有予定。
+    # 暫定: HTSGW 0.6〜2.5m を満点レンジ、それ未満/超過は線形減衰
+    height_curve:
+      - { height_m: 0.0, score: 0.0 }
+      - { height_m: 0.4, score: 0.3 }
+      - { height_m: 0.6, score: 1.0 }
+      - { height_m: 2.0, score: 1.0 }
+      - { height_m: 2.5, score: 0.8 }
+      - { height_m: 3.5, score: 0.4 }
+      - { height_m: 5.0, score: 0.0 }
+    # 周期は長いほど良い（線形）
+    period_curve:
+      - { period_s:  5, score: 0.20 }
+      - { period_s:  8, score: 0.60 }
+      - { period_s: 12, score: 0.90 }
+      - { period_s: 16, score: 1.00 }
+    # 最終 size_score = height_score * 0.7 + period_score * 0.3
+    weight_height: 0.7
+    weight_period: 0.3
+
+  # ----- 総合スコア → ランクラベル -----
+  rank_thresholds:
+    great: 0.80   # ベスト寄り（推し）
+    good:  0.60
+    fair:  0.40
+    poor:  0.00
+
+
+# ============================================================
+# 3) ポイント別 例外・特殊事情のみ記入する欄
+# ============================================================
+#
+# 共通ルールで埋まる項目（標準のうねり一致・風オフショア判定）は省略可能。
+# 各ポイント特有の特殊事情だけここに書く:
+#
+#   exceptional_swell:    共通ルールでは捉えきれない、このポイントが反応する角度
+#   exceptional_no_swell: 角度的には拾えるはずなのに地形遮蔽等で実は入らない範囲
+#   max_wind_ms:          共通デフォルト 8.0 を上書き（弱風で崩れやすいポイント）
+#   limit_wind_ms:        共通デフォルト 14.0 を上書き
+#   tide_override:        ベスト潮回りがポイント特有（例: このポイントは引き専用）
+#   geography:            地形メモ（ユーザー追記予定）
+#   local_notes:          季節性・カレント・混雑・初心者向け度・台風時など
+#
+points:
+
+  # 注: 曽山寺は 2026-05-10 のヒアリングシートで除外。木崎浜・青島と GFS 同一グリッドで実質同条件のため。
+  # 注: 高鍋 → 蚊口（蚊口浜）にリネーム。高鍋町の代表サーフポイント。
+
+  - name: 木崎浜
+    name_en: Kisakihama
+    beach_direction: 東          # 90°、オフショア=270°(西)
+    exceptional_swell: []        # 例: [{ from_deg: 30, to_deg: 60, note: "北東うねりは加江田川で増幅" }]
+    exceptional_no_swell:
+      - { from_deg: 157.5, to_deg: 202.5, note: "南うねりは入りづらい（南南東〜南南西）" }
+    max_wind_ms: null
+    limit_wind_ms: null
+    tide_override: ""            # 例: "中潮の上げで一番動く"
+    bottom_type: "砂"
+    break_type: "ビーチブレイク"
+    break_direction: "両方"
+    hazards: ""
+    local_notes: "有名ポイント"
+    # 第2弾ヒアリング (2026-05-10): 未統合スキーマフィールド
+    preferred_size_m: [1.5, 2.5]   # 「2m前後」をベスト感とする想定
+    seasonality:
+      best: [9, 10, 11]            # 秋がベスト
+      "off": []                    # 'off' は YAML 1.1 でブール扱いされるためクォート必須
+    seasonality_note: "秋がベスト"
+
+  - name: 一ツ葉
+    name_en: Hitotsuba
+    beach_direction: 東
+    exceptional_swell:
+      - { from_deg: 157.5, to_deg: 202.5, score: 0.85, note: "南うねりを拾いやすい（南南東〜南南西）" }
+    exceptional_no_swell: []
+    max_wind_ms: null
+    limit_wind_ms: null
+    tide_override: "干潮周り"
+    bottom_type: "砂"
+    break_type: "ビーチブレイク"
+    break_direction: "両方"
+    hazards: ""
+    local_notes: "上級者向け"
+    preferred_size_m: [1.5, 2.5]
+    seasonality: ""
+
+  - name: 青島
+    name_en: Aoshima
+    beach_direction: 東北東       # 67.5°
+    exceptional_swell: []
+    exceptional_no_swell:
+      - { from_deg: 157.5, to_deg: 202.5, note: "南うねりはほぼ入らない（入ってもサイズ下がる）" }
+    max_wind_ms: null
+    limit_wind_ms: null
+    tide_override: ""
+    bottom_type: "砂"
+    break_type: "ビーチブレイク"
+    break_direction: ""
+    hazards: ""
+    local_notes: "初心者向け"
+
+  - name: お倉ヶ浜
+    name_en: Okuragahama
+    beach_direction: 東南東       # 112.5°
+    exceptional_swell:
+      - { from_deg: 157.5, to_deg: 202.5, score: 0.85, note: "南うねりに反応しやすい" }
+    exceptional_no_swell: []
+    max_wind_ms: null
+    limit_wind_ms: null
+    tide_override: ""
+    bottom_type: "砂"
+    break_type: "ビーチブレイク"
+    break_direction: ""
+    hazards: ""
+    local_notes: "有名ポイント"
+
+  - name: 金ヶ浜
+    name_en: Kanegahama
+    beach_direction: 東
+    exceptional_swell:
+      - { from_deg: 157.5, to_deg: 202.5, score: 0.85, note: "南うねりに反応しやすい（お倉ヶ浜と同様）" }
+    exceptional_no_swell: []
+    max_wind_ms: null
+    limit_wind_ms: null
+    tide_override: ""
+    bottom_type: "砂"
+    break_type: "ビーチブレイク"
+    break_direction: ""
+    hazards: ""
+    local_notes: "有名ポイント"
+
+  - name: 伊勢ヶ浜
+    name_en: Isegahama
+    beach_direction: 南東          # 135°（湾内なので回り込みうねりに反応するはず）
+    exceptional_swell:
+      - { from_deg: 112.5, to_deg: 157.5, score: 0.95, note: "南東のうねりが入りやすい（湾内ポイント）" }
+    exceptional_no_swell: []
+    max_wind_ms: null
+    limit_wind_ms: null
+    tide_override: ""
+    bottom_type: "砂"
+    break_type: "ビーチブレイク"
+    break_direction: ""
+    hazards: ""
+    local_notes: ""
+
+  - name: 伊比井
+    name_en: Ibii
+    beach_direction: 東南東
+    exceptional_swell: []        # ヒアリング第2弾: 特になし
+    exceptional_no_swell: []     # ヒアリング第2弾: 特になし
+    max_wind_ms: null
+    limit_wind_ms: null
+    tide_override: "干潮周り"
+    bottom_type: "砂"
+    break_type: "ビーチブレイク"
+    break_direction: ""
+    hazards: ""
+    local_notes: "初心者向け"
+
+  - name: 大堂津
+    name_en: Odotsu
+    beach_direction: 東南東
+    exceptional_swell: []
+    exceptional_no_swell: []
+    max_wind_ms: null
+    limit_wind_ms: null
+    tide_override: ""
+    bottom_type: "砂"
+    break_type: "ビーチブレイク"
+    break_direction: ""
+    hazards: ""
+    local_notes: "初心者向け / 他ポイントより基本的に1サイズ下がる"
+    # 第2弾ヒアリング: 全体的にサイズダウン傾向（未統合スキーマ）
+    size_attenuation: 0.7
+
+  - name: 蚊口
+    name_en: Kakuchi
+    beach_direction: 東
+    exceptional_swell: []
+    exceptional_no_swell:
+      - { from_deg: 337.5, to_deg: 22.5, note: "北寄りのうねりはあまり入らない（北北西〜北北東）" }
+    # 「北風に強い」ヒアリング反映: 共通ルールでは北風(0°)はビーチ向き=東(90°)に対して
+    # サイド扱い(diff=90°→0.5)になるが、このポイントは北風で崩れないので加点。
+    # 北西(315°) 〜 北北東(22°) を「サイドオフ相当」(0.85)に底上げ。
+    wind_direction_overrides:
+      - { from_deg: 315, to_deg: 22,  score: 0.85, note: "北風に強い（北西〜北北東を底上げ）" }
+    max_wind_ms: null
+    limit_wind_ms: null
+    tide_override: ""
+    bottom_type: "砂"
+    break_type: "ビーチブレイク"
+    break_direction: ""
+    hazards: ""
+    local_notes: "北風に強い"
+
+
+# ============================================================
+# 4) 言語化コメントテンプレート（v0.2）
+# ============================================================
+comments:
+  great:
+    - "{point_name} ベスト。{swell_dir_label} のうねりが{wave_height_m}m / 周期{period_s}sでビーチに正対、{wind_label}{wind_speed_ms}m/s でフェイスがクリーン。"
+    - "{point_name} はこの時間がピーク。{swell_dir_label} スウェルが正面から、{wind_label}{wind_speed_ms}m/s が面を整える。"
+  good:
+    - "{point_name} は{wave_height_m}m / 周期{period_s}sで楽しめるサイズ。{wind_label}{wind_speed_ms}m/s で大きく崩れない。"
+    - "{point_name} は うねり向きとビーチ向きが噛み合っていて、風も{wind_label}で許容範囲。"
+  fair:
+    - "{point_name} は{wave_height_m}m とやや物足りないサイズ。{wind_label}{wind_speed_ms}m/sでロングボード向きの面。"
+    - "{point_name} はうねり向きが惜しい角度。短めの周期({period_s}s)で力のない波。"
+  poor:
+    - "{point_name} は条件厳しめ。{wind_label}{wind_speed_ms}m/sの影響で面が乱れ、サイズも{wave_height_m}m止まり。"
+    - "{point_name} はオンショア優勢。今日この時間は休憩が無難。"
+  daily_summary:
+    - "{date} の {point_name} のベストタイムは {best_time}。{best_swell_dir_label} のうねりが {best_wave_height_m}m で入り、{wind_label}{best_wind_ms}m/s。"
+
+
+# ============================================================
+# 5) GFS 19変数 英→日 ラベル辞書（UI / コメント生成で参照）
+# ============================================================
+#
+# fields:
+#   ja        : ダッシュボードカード等で見出しとして使う日本語名（短め）
+#   ja_long   : 解説や凡例で使うフル日本語名
+#   unit      : SI単位（表示用文字列）
+#   group     : "wave_total" / "wind_wave" / "swell" / "wind" の4グループに分類
+#   role      : "primary" 主表示 / "detail" 詳細表示 / "raw" 内部計算用
+#   note      : 補足（うねり成分の優先度、合成変数の意味など）
+#
+variable_labels:
+  htsgw_m:
+    ja: "合成波高"
+    ja_long: "合成有義波高 (HTSGW)"
+    unit: "m"
+    group: "wave_total"
+    role: "primary"
+    note: "風波 + うねり全成分の合成。サーフィン的な「波の大きさ」の主要指標。"
+  perpw_s:
+    ja: "合成周期"
+    ja_long: "主要波周期 (PERPW)"
+    unit: "s"
+    group: "wave_total"
+    role: "primary"
+    note: "支配的な成分の周期。長いほど力のある波。"
+  dirpw_deg:
+    ja: "合成うねり向き"
+    ja_long: "主要波の到来方向 (DIRPW)"
+    unit: "deg"
+    group: "wave_total"
+    role: "primary"
+    note: "気象学慣例の方位（0=N, 90=E, 180=S, 270=W）。"
+
+  wvhgt_m:
+    ja: "風波高"
+    ja_long: "風波の有義波高 (WVHGT)"
+    unit: "m"
+    group: "wind_wave"
+    role: "detail"
+    note: "現地の風で立つ波。大きいと面が荒れる。"
+  wvper_s:
+    ja: "風波周期"
+    ja_long: "風波の平均周期 (WVPER)"
+    unit: "s"
+    group: "wind_wave"
+    role: "detail"
+  wvdir_deg:
+    ja: "風波向き"
+    ja_long: "風波の到来方向 (WVDIR)"
+    unit: "deg"
+    group: "wind_wave"
+    role: "detail"
+
+  swell1_m:
+    ja: "うねり1 高さ"
+    ja_long: "第1うねり成分の有義波高 (SWELL1)"
+    unit: "m"
+    group: "swell"
+    role: "primary"
+    note: "通常は最も支配的なうねり成分。"
+  swper1_s:
+    ja: "うねり1 周期"
+    ja_long: "第1うねり成分の周期 (SWPER1)"
+    unit: "s"
+    group: "swell"
+    role: "primary"
+  swdir1_deg:
+    ja: "うねり1 向き"
+    ja_long: "第1うねり成分の到来方向 (SWDIR1)"
+    unit: "deg"
+    group: "swell"
+    role: "primary"
+
+  swell2_m:
+    ja: "うねり2 高さ"
+    ja_long: "第2うねり成分の有義波高 (SWELL2)"
+    unit: "m"
+    group: "swell"
+    role: "detail"
+  swper2_s:
+    ja: "うねり2 周期"
+    ja_long: "第2うねり成分の周期 (SWPER2)"
+    unit: "s"
+    group: "swell"
+    role: "detail"
+  swdir2_deg:
+    ja: "うねり2 向き"
+    ja_long: "第2うねり成分の到来方向 (SWDIR2)"
+    unit: "deg"
+    group: "swell"
+    role: "detail"
+
+  swell3_m:
+    ja: "うねり3 高さ"
+    ja_long: "第3うねり成分の有義波高 (SWELL3)"
+    unit: "m"
+    group: "swell"
+    role: "detail"
+  swper3_s:
+    ja: "うねり3 周期"
+    ja_long: "第3うねり成分の周期 (SWPER3)"
+    unit: "s"
+    group: "swell"
+    role: "detail"
+  swdir3_deg:
+    ja: "うねり3 向き"
+    ja_long: "第3うねり成分の到来方向 (SWDIR3)"
+    unit: "deg"
+    group: "swell"
+    role: "detail"
+
+  wind_ms:
+    ja: "風速"
+    ja_long: "海面風速 (WIND)"
+    unit: "m/s"
+    group: "wind"
+    role: "primary"
+    note: "海面10m高さの風速。スコアリングでは direction × speed で評価。"
+  wdir_deg:
+    ja: "風向"
+    ja_long: "海面風向 (WDIR)"
+    unit: "deg"
+    group: "wind"
+    role: "primary"
+    note: "風が「どこから吹いてくるか」（気象学慣例）。"
+  ugrd_ms:
+    ja: "風 東西成分"
+    ja_long: "海面風 U成分 / 東向き正 (UGRD)"
+    unit: "m/s"
+    group: "wind"
+    role: "raw"
+    note: "WIND/WDIR から計算可能な内部値。"
+  vgrd_ms:
+    ja: "風 南北成分"
+    ja_long: "海面風 V成分 / 北向き正 (VGRD)"
+    unit: "m/s"
+    group: "wind"
+    role: "raw"
+    note: "WIND/WDIR から計算可能な内部値。"
+
+
+# ============================================================
+# 6) 16方位の英→日ラベル（UI 表示用）
+# ============================================================
+#
+# 度数を 16方位に丸めるときに使う。境界は 11.25° 刻み。
+# 「うねり 60° → 北東」のようにユーザー向け表示で使用。
+#
+direction_labels_16:
+  - { from_deg: 348.75, to_deg:  11.25, ja: "北",     en: "N"   }
+  - { from_deg:  11.25, to_deg:  33.75, ja: "北北東", en: "NNE" }
+  - { from_deg:  33.75, to_deg:  56.25, ja: "北東",   en: "NE"  }
+  - { from_deg:  56.25, to_deg:  78.75, ja: "東北東", en: "ENE" }
+  - { from_deg:  78.75, to_deg: 101.25, ja: "東",     en: "E"   }
+  - { from_deg: 101.25, to_deg: 123.75, ja: "東南東", en: "ESE" }
+  - { from_deg: 123.75, to_deg: 146.25, ja: "南東",   en: "SE"  }
+  - { from_deg: 146.25, to_deg: 168.75, ja: "南南東", en: "SSE" }
+  - { from_deg: 168.75, to_deg: 191.25, ja: "南",     en: "S"   }
+  - { from_deg: 191.25, to_deg: 213.75, ja: "南南西", en: "SSW" }
+  - { from_deg: 213.75, to_deg: 236.25, ja: "南西",   en: "SW"  }
+  - { from_deg: 236.25, to_deg: 258.75, ja: "西南西", en: "WSW" }
+  - { from_deg: 258.75, to_deg: 281.25, ja: "西",     en: "W"   }
+  - { from_deg: 281.25, to_deg: 303.75, ja: "西北西", en: "WNW" }
+  - { from_deg: 303.75, to_deg: 326.25, ja: "北西",   en: "NW"  }
+  - { from_deg: 326.25, to_deg: 348.75, ja: "北北西", en: "NNW" }
+
+
+# ============================================================
+# 7) 潮フェーズの日本語ラベル（UI 表示用）
+# ============================================================
+tide_phase_labels:
+  mid_flood:    { ja: "上げ7分", ja_long: "上げ潮の中盤" }
+  high_to_ebb:  { ja: "満潮〜引き始め", ja_long: "満潮ピーク直後の動き出し" }
+  low_to_flood: { ja: "干潮〜上げ始め", ja_long: "干潮ピーク直後の動き出し" }
+  mid_ebb:      { ja: "下げ7分", ja_long: "下げ潮の中盤" }
+  high_slack:   { ja: "満潮どまり", ja_long: "満潮ピーク（動き止まり）" }
+  low_slack:    { ja: "干潮どまり", ja_long: "干潮ピーク（動き止まり）" }
+
+
+# ============================================================
+# 8) 予報レンジ（信頼度）ラベル
+# ============================================================
+#
+# GFS Wave は fhour <= 120 (5日先) までを信頼レンジ、それ以降は参考値扱い。
+# UI / コメント生成で「参考値」表示に切り替えるための閾値。
+#
+forecast_range:
+  reliable_until_fhour: 120     # ここまで（=ちょうど5日先）を信頼レンジ
+  extended_until_fhour: 168     # ここまで（=7日先）参考値として表示
+  labels:
+    reliable: { ja: "予報",   ja_long: "予報レンジ（〜5日先）" }
+    extended: { ja: "参考値", ja_long: "参考値レンジ（5〜7日先・精度低下）" }
+
+
+# ============================================================
+# 9) 未確定の検討事項
+# ============================================================
+notes_todo:
+  - "サーフィンレベル別の size_curve（初心者 / 中級 / 上級）を別yamlで定義し、ユーザー設定で切替"
+  - "地形メモ（point_type / bottom_type / break_direction / 危険箇所）を各ポイントに追加（ユーザー記入予定）"
+  - "潮位は Phase A-4 で気象庁API（あるいは海上保安庁データ）から取得"
+  - "風波(WVHGT)が大きい時の面荒れペナルティを wind スコアに統合するか検討"
+  - "クローズアウト判定: HTSGW > 2.5m + 周期 < 7s で警告ラベル付与"
