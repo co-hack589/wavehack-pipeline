@@ -279,11 +279,33 @@ def resolve_ocean_grid(
     return fallback if fallback is not None else (lat, lon)
 
 
+# cfgrib の変数名 (shortName) は eccodes のバージョンで変わる。
+# 例: うねり有義波高は eccodes 2.4x → "shts" / 2.28 (Debian bookworm) → "swell"。
+# 候補を順に探して最初に存在する名前を使う。
+_SWELL_VAR_CANDIDATES: dict[str, tuple[str, ...]] = {
+    "height": ("shts", "swell"),
+    "period": ("mpts", "swper"),
+    "direction": ("swdir", "dirsw"),
+}
+
+
+def _pick_var(ds: xr.Dataset, candidates: tuple[str, ...]) -> str:
+    for name in candidates:
+        if name in ds.data_vars:
+            return name
+    raise KeyError(
+        f"none of {candidates} found in dataset vars: {list(ds.data_vars)}"
+    )
+
+
 def _extract_at_grid(
     ds_surface: xr.Dataset, ds_swell: xr.Dataset, glat: float, glon: float
 ) -> dict[str, float | None]:
     pt_s = ds_surface.sel(latitude=glat, longitude=glon, method="nearest")
     pt_w = ds_swell.sel(latitude=glat, longitude=glon, method="nearest")
+    v_height = _pick_var(ds_swell, _SWELL_VAR_CANDIDATES["height"])
+    v_period = _pick_var(ds_swell, _SWELL_VAR_CANDIDATES["period"])
+    v_direction = _pick_var(ds_swell, _SWELL_VAR_CANDIDATES["direction"])
 
     vals: dict[str, float | None] = {
         "htsgw_m": _safe_float(pt_s.swh),
@@ -299,9 +321,9 @@ def _extract_at_grid(
     }
     for i in (1, 2, 3):
         slc = pt_w.sel(orderedSequenceData=i)
-        vals[f"swell{i}_m"] = _safe_float(slc.shts)
-        vals[f"swper{i}_s"] = _safe_float(slc.mpts)
-        vals[f"swdir{i}_deg"] = _safe_float(slc.swdir)
+        vals[f"swell{i}_m"] = _safe_float(slc[v_height])
+        vals[f"swper{i}_s"] = _safe_float(slc[v_period])
+        vals[f"swdir{i}_deg"] = _safe_float(slc[v_direction])
     return vals
 
 

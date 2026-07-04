@@ -40,7 +40,8 @@ jobs:
 
       - name: Run pipeline
         run: |
-          mkdir -p out
+          # コンテナは uid 10001 (wavehack) で走るため、mount 先を全書き込み可に
+          mkdir -p out && chmod 777 out
           docker run --rm \
             -e OUTPUT_TARGET=local \
             -e GFS_WORKERS=4 \
