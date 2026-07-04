@@ -41,6 +41,7 @@ class ScoreBreakdown:
     seasonality_adj: float = 0.0       # composite に加算された季節補正 (±0.1 程度)
     effective_htsgw_m: float | None = None  # size_attenuation 適用後の実効サイズ
     wind_hard_cut: bool = False        # max_wind_ms ハードカットが発動したか
+    surf_gate: float = 1.0             # v0.4: サーファビリティゲート（乗算係数）
 
 
 # ============================================================
@@ -417,6 +418,51 @@ def is_wind_hard_cut(
         return False
 
 
+def surfability_gate(
+    *,
+    effective_htsgw_m: float | None,
+    period_s: float | None,
+    rules: ScoringRules,
+) -> float:
+    """サイズ・周期の「前提条件ゲート」(v0.4)。
+
+    向き・風・潮がどれだけ完璧でも、波が無ければサーフィンは成立しない。
+    加重平均に混ぜると薄まる（サイズ0でも他満点で0.85出る）ため、
+    composite 全体に乗算する係数として扱う。
+    yaml `scoring.surfability` 未定義なら 1.0（無効・後方互換）。
+    """
+    cfg = rules.scoring.get("surfability")
+    if not cfg:
+        return 1.0
+    h = effective_htsgw_m
+    if h is None:
+        return 1.0
+
+    # 波高 → ゲート値の折れ線（区分線形）。先頭閾値未満は 0 からの線形立ち上がり
+    pts: list[list[float]] = cfg.get("height_gate") or []
+    gate = 1.0
+    if pts:
+        x0, y0 = pts[0]
+        if h <= x0:
+            gate = y0 * (h / x0) if x0 > 0 else y0
+        else:
+            gate = pts[-1][1]
+            for (ax, ay), (bx, by) in zip(pts, pts[1:]):
+                if h <= bx:
+                    gate = ay + (by - ay) * (h - ax) / (bx - ax)
+                    break
+
+    # 周期ペナルティ: 短周期の風波はサイズ表記ほどのパワーが無い
+    factor = 1.0
+    if period_s is not None:
+        for th, f in cfg.get("period_factor") or []:
+            if period_s < th:
+                factor = f
+                break
+
+    return max(0.0, min(1.0, gate * factor))
+
+
 def composite(
     *,
     swell: float,
@@ -427,10 +473,13 @@ def composite(
     seasonality_adj: float = 0.0,
     wind_hard_cut: bool = False,
     effective_htsgw_m: float | None = None,
+    surf_gate: float = 1.0,
 ) -> ScoreBreakdown:
     w = rules.scoring["weights"]
     score = swell * w["swell"] + wind * w["wind"] + tide * w["tide"] + size * w["size"]
     score += seasonality_adj
+    # サイズ・周期ゲートは季節補正まで含めた全体に乗算（フラットな日は救済しない）
+    score *= surf_gate
     if wind_hard_cut:
         score = 0.0
     score = max(0.0, min(1.0, score))
@@ -453,6 +502,7 @@ def composite(
         seasonality_adj=seasonality_adj,
         effective_htsgw_m=effective_htsgw_m,
         wind_hard_cut=wind_hard_cut,
+        surf_gate=surf_gate,
     )
 
 
@@ -518,6 +568,12 @@ def score_slot(
         rules=rules,
     )
 
+    gate = surfability_gate(
+        effective_htsgw_m=eff_h,
+        period_s=slot.get("perpw_s"),
+        rules=rules,
+    )
+
     return composite(
         swell=sw,
         wind=wn,
@@ -527,4 +583,5 @@ def score_slot(
         seasonality_adj=season_adj,
         wind_hard_cut=hard_cut,
         effective_htsgw_m=eff_h,
+        surf_gate=gate,
     )
