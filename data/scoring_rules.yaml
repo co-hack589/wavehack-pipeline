@@ -133,7 +133,10 @@ scoring:
 
     # 風速減衰: 弱い風は影響薄い。風速が weak_threshold 以下なら direction score を底上げ
     # （オンショアでも風弱ければ波面はそこまで荒れない）
-    weak_threshold_ms: 3.0
+    # 2026-07-08 修正: 3.0 → 2.0 に引き下げ。3m/s のオンショアで composite が 0.88 になり
+    # 「オン(bad tone) ラベルなのに 4.4 ★」という UI/スコアの食い違いが発生していたため。
+    # 1〜2m/s の微風なら向きが悪くても救うが、3m/s 以上はきちんとオンショアを反映する。
+    weak_threshold_ms: 2.0
     weak_floor_score:  0.6   # 弱風なら最低この値まで底上げ
 
     # 強風ペナルティ: max_wind_ms を超えると線形減衰、limit_wind_ms で 0
