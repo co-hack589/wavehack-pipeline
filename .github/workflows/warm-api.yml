@@ -1,0 +1,44 @@
+name: warm-api
+
+# ---------------------------------------------------------------------------
+# Render 無料プランは 15 分無アクセスで spin-down する。iOS/Android アプリの
+# 起動直後 fetch が cold start（10〜30秒）に当たると 20 秒 timeout でエラー
+# 表示になるため、10 分毎に /health を叩いて warm 維持する。
+#
+# コスト: リクエスト 144 回/日、GitHub Actions 実行 ~30秒/回 → 月 ~72分。
+# 無料枠 2000 分/月に対して微々たるもの。
+#
+# 注意: GitHub Actions の cron は数分〜30分遅延することがある。厳密な 10 分
+# 間隔は保証されない。Render の 15 分閾値なので概ね間に合う想定。
+# ---------------------------------------------------------------------------
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch: {}
+
+concurrency:
+  group: warm-api
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Ping /health (retry up to 3x on cold-start)
+        run: |
+          for i in 1 2 3; do
+            code=$(curl -s -o /tmp/body -w "%{http_code}" -m 60 https://wavehack-api.onrender.com/health || echo "000")
+            echo "attempt $i: HTTP=$code"
+            if [ "$code" = "200" ]; then
+              cat /tmp/body
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "::warning::warm-api failed after 3 attempts"
+          exit 1
