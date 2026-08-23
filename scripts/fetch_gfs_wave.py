@@ -47,15 +47,23 @@ def main() -> int:
         help="並列 DL ワーカー数 (default: 4。NOAA S3 への並列度を下げて安定化)",
     )
     parser.add_argument("--cache", type=Path, default=None)
-    parser.add_argument("--filter-points", nargs="+", help="ポイント名(JP)で絞り込み（テスト用）")
+    parser.add_argument(
+        "--filter-points",
+        nargs="+",
+        help="ポイント名(JP)/name_en/id(=name_en.lower()) いずれかで絞り込み（テスト用）",
+    )
     args = parser.parse_args()
 
     points = load_points(args.points)
     if args.filter_points:
-        names = set(args.filter_points)
-        points = [p for p in points if p.name in names]
+        keys = set(args.filter_points)
+        keys_lower = {k.lower() for k in keys}
+        points = [
+            p for p in points
+            if p.name in keys or p.name_en in keys or p.id in keys_lower
+        ]
         if not points:
-            print(f"ERROR: no points matched {names}", file=sys.stderr)
+            print(f"ERROR: no points matched {sorted(keys)}", file=sys.stderr)
             return 1
 
     run = latest_run_base()

@@ -381,6 +381,728 @@ points:
     local_notes: "北風に強い"
 
 
+
+  # --------------------------------------------------------------
+  # 全国 141 ポイント (nami-XXXXXXXX) — Phase 1 default entries
+  # 座標: 波伝説 (namidensetsu.com) 実測
+  # beach_direction: エリア別デフォルト（Phase 1b で OSM 精査予定）
+  # --------------------------------------------------------------
+
+  - name: 曽山寺
+    name_en: Sosanji
+    beach_direction: 東
+    area: 宮崎市
+
+  - name: 高鍋
+    name_en: Takanabe
+    beach_direction: 東
+    area: 高鍋町
+
+  - name: 毘砂別
+    name_en: nami-01020002
+    beach_direction: 西
+    area: 北海道
+
+  - name: 浜厚真
+    name_en: nami-01040008
+    beach_direction: 西
+    area: 北海道
+
+  - name: 浪板
+    name_en: nami-01070005
+    beach_direction: 東
+    area: 岩手
+
+  - name: 小豆浜
+    name_en: nami-01080006
+    beach_direction: 東
+    area: 岩手
+
+  - name: 仙台新港
+    name_en: nami-01080007
+    beach_direction: 東
+    area: 岩手
+
+  - name: 荒浜河口
+    name_en: nami-01080011
+    beach_direction: 東
+    area: 岩手
+
+  - name: 荒浜プール
+    name_en: nami-01080012
+    beach_direction: 東
+    area: 岩手
+
+  - name: 坂下
+    name_en: nami-01100007
+    beach_direction: 東
+    area: 岩手
+
+  - name: 河原子
+    name_en: nami-01110020
+    beach_direction: 東
+    area: 茨城
+
+  - name: 大洗
+    name_en: nami-01110009
+    beach_direction: 東
+    area: 茨城
+
+  - name: 大貫つるかめ下
+    name_en: nami-01110011
+    beach_direction: 東
+    area: 茨城
+
+  - name: 大貫海の子
+    name_en: nami-01110010
+    beach_direction: 東
+    area: 茨城
+
+  - name: とっぷさんて下
+    name_en: nami-01110017
+    beach_direction: 東
+    area: 茨城
+
+  - name: 平井浜・右側
+    name_en: nami-01110018
+    beach_direction: 東
+    area: 茨城
+
+  - name: 波崎
+    name_en: nami-01110005
+    beach_direction: 東
+    area: 茨城
+
+  - name: 作田
+    name_en: nami-01160007
+    beach_direction: 東
+    area: 千葉
+
+  - name: 片貝漁港
+    name_en: nami-01160008
+    beach_direction: 東
+    area: 千葉
+
+  - name: 片貝新堤
+    name_en: nami-01160009
+    beach_direction: 東
+    area: 千葉
+
+  - name: 豊海
+    name_en: nami-01160010
+    beach_direction: 東
+    area: 千葉
+
+  - name: 白子（剃金）
+    name_en: nami-01160070
+    beach_direction: 東
+    area: 千葉
+
+  - name: 白子（古所）
+    name_en: nami-09160017
+    beach_direction: 東
+    area: 千葉
+
+  - name: 一宮
+    name_en: nami-01160011
+    beach_direction: 東
+    area: 千葉
+
+  - name: サンライズ
+    name_en: nami-01160012
+    beach_direction: 東
+    area: 千葉
+
+  - name: 東浪見
+    name_en: nami-01160013
+    beach_direction: 東
+    area: 千葉
+
+  - name: 志田下
+    name_en: nami-01160014
+    beach_direction: 東
+    area: 千葉
+
+  - name: 太東
+    name_en: nami-01160015
+    beach_direction: 東
+    area: 千葉
+
+  - name: 夷隅
+    name_en: nami-01160016
+    beach_direction: 東
+    area: 千葉
+
+  - name: 大原
+    name_en: nami-01160021
+    beach_direction: 東
+    area: 千葉
+
+  - name: 御宿岩和田
+    name_en: nami-01160024
+    beach_direction: 東
+    area: 千葉
+
+  - name: 御宿中央〜浜
+    name_en: nami-01160025
+    beach_direction: 東
+    area: 千葉
+
+  - name: 部原
+    name_en: nami-01160028
+    beach_direction: 東
+    area: 千葉
+
+  - name: 飯岡マンション下
+    name_en: nami-01160096
+    beach_direction: 東
+    area: 千葉
+
+  - name: 飯岡信号下
+    name_en: nami-01160001
+    beach_direction: 東
+    area: 千葉
+
+  - name: 椎名内安太郎下
+    name_en: nami-01160004
+    beach_direction: 東
+    area: 千葉
+
+  - name: 旧かんぽ下
+    name_en: nami-01160058
+    beach_direction: 東
+    area: 千葉
+
+  - name: 吉崎浜
+    name_en: nami-01160006
+    beach_direction: 東
+    area: 千葉
+
+  - name: 堀川浜
+    name_en: nami-09160010
+    beach_direction: 東
+    area: 千葉
+
+  - name: マルキ
+    name_en: nami-01160031
+    beach_direction: 南東
+    area: 千葉
+
+  - name: J's前
+    name_en: nami-01160040
+    beach_direction: 南東
+    area: 千葉
+
+  - name: 白渚
+    name_en: nami-01160041
+    beach_direction: 南東
+    area: 千葉
+
+  - name: 白渚右側
+    name_en: nami-01160097
+    beach_direction: 南東
+    area: 千葉
+
+  - name: 花篭前
+    name_en: nami-01160043
+    beach_direction: 南東
+    area: 千葉
+
+  - name: 千歳
+    name_en: nami-01160045
+    beach_direction: 南東
+    area: 千葉
+
+  - name: 千倉
+    name_en: nami-01160046
+    beach_direction: 南東
+    area: 千葉
+
+  - name: 平砂浦ファミリーパーク下
+    name_en: nami-01160047
+    beach_direction: 南東
+    area: 千葉
+
+  - name: 由比ガ浜
+    name_en: nami-01170001
+    beach_direction: 南
+    area: 神奈川
+
+  - name: 七里ガ浜正面
+    name_en: nami-01170003
+    beach_direction: 南
+    area: 神奈川
+
+  - name: 鎌高前
+    name_en: nami-01170007
+    beach_direction: 南
+    area: 神奈川
+
+  - name: 片瀬東浜海岸
+    name_en: nami-02170002
+    beach_direction: 南
+    area: 神奈川
+
+  - name: 水族館前
+    name_en: nami-01170013
+    beach_direction: 南
+    area: 神奈川
+
+  - name: ボードウォーク前
+    name_en: nami-01170100
+    beach_direction: 南
+    area: 神奈川
+
+  - name: 鵠沼
+    name_en: nami-01170010
+    beach_direction: 南
+    area: 神奈川
+
+  - name: マック前
+    name_en: nami-01170014
+    beach_direction: 南
+    area: 神奈川
+
+  - name: 地下道前
+    name_en: nami-01170017
+    beach_direction: 南
+    area: 神奈川
+
+  - name: 辻堂正面
+    name_en: nami-01170020
+    beach_direction: 南
+    area: 神奈川
+
+  - name: 辻堂第2駐車場前
+    name_en: nami-01170023
+    beach_direction: 南
+    area: 神奈川
+
+  - name: 汐小前
+    name_en: nami-01170024
+    beach_direction: 南
+    area: 神奈川
+
+  - name: チサン
+    name_en: nami-01170025
+    beach_direction: 南
+    area: 神奈川
+
+  - name: パーク
+    name_en: nami-01170027
+    beach_direction: 南
+    area: 神奈川
+
+  - name: 平塚生コン前
+    name_en: nami-01170036
+    beach_direction: 南
+    area: 神奈川
+
+  - name: 平塚生コン前壁横
+    name_en: nami-01170101
+    beach_direction: 南
+    area: 神奈川
+
+  - name: 大磯磯高前
+    name_en: nami-01170042
+    beach_direction: 南
+    area: 神奈川
+
+  - name: 大磯
+    name_en: nami-01170043
+    beach_direction: 南
+    area: 神奈川
+
+  - name: 大磯源二
+    name_en: nami-01170044
+    beach_direction: 南
+    area: 神奈川
+
+  - name: 吉浜地引寄り
+    name_en: nami-01170047
+    beach_direction: 南
+    area: 神奈川
+
+  - name: 湯河原吉浜
+    name_en: nami-01170045
+    beach_direction: 南
+    area: 神奈川
+
+  - name: 宇佐美海岸
+    name_en: nami-09200011
+    beach_direction: 東
+    area: 静岡
+
+  - name: 白浜
+    name_en: nami-01200004
+    beach_direction: 東
+    area: 静岡
+
+  - name: 多々戸浜
+    name_en: nami-01200005
+    beach_direction: 東
+    area: 静岡
+
+  - name: 入田浜
+    name_en: nami-01200007
+    beach_direction: 東
+    area: 静岡
+
+  - name: 大浜
+    name_en: nami-01200009
+    beach_direction: 東
+    area: 静岡
+
+  - name: 静波
+    name_en: nami-01200012
+    beach_direction: 南
+    area: 静岡
+
+  - name: 片浜
+    name_en: nami-01200013
+    beach_direction: 南
+    area: 静岡
+
+  - name: 御前崎・メロン
+    name_en: nami-02200011
+    beach_direction: 南
+    area: 静岡
+
+  - name: 御前崎・メイン
+    name_en: nami-01200014
+    beach_direction: 南
+    area: 静岡
+
+  - name: 御前崎・坂下
+    name_en: nami-02200009
+    beach_direction: 南
+    area: 静岡
+
+  - name: 豊浜
+    name_en: nami-01200019
+    beach_direction: 南
+    area: 静岡
+
+  - name: 中田島海岸（凧場）
+    name_en: nami-01200023
+    beach_direction: 南
+    area: 静岡
+
+  - name: 舞阪灯台前
+    name_en: nami-01200026
+    beach_direction: 南
+    area: 静岡
+
+  - name: 新居浜
+    name_en: nami-01200028
+    beach_direction: 南
+    area: 静岡
+
+  - name: 潮見坂
+    name_en: nami-01200048
+    beach_direction: 南
+    area: 静岡
+
+  - name: 小松原
+    name_en: nami-01210028
+    beach_direction: 南南東
+    area: 愛知
+
+  - name: 寺沢
+    name_en: nami-01210001
+    beach_direction: 南南東
+    area: 愛知
+
+  - name: 百々
+    name_en: nami-01210014
+    beach_direction: 南南東
+    area: 愛知
+
+  - name: チキン
+    name_en: nami-01210012
+    beach_direction: 南南東
+    area: 愛知
+
+  - name: ロングビーチ
+    name_en: nami-01210005
+    beach_direction: 南南東
+    area: 愛知
+
+  - name: ロコ
+    name_en: nami-01210006
+    beach_direction: 南南東
+    area: 愛知
+
+  - name: 港
+    name_en: nami-01210007
+    beach_direction: 南南東
+    area: 愛知
+
+  - name: 全日本
+    name_en: nami-01210008
+    beach_direction: 南南東
+    area: 愛知
+
+  - name: 新日本
+    name_en: nami-01210009
+    beach_direction: 南南東
+    area: 愛知
+
+  - name: 国府ノ浜・テトラ前
+    name_en: nami-01230004
+    beach_direction: 南東
+    area: 三重
+
+  - name: 国府ノ浜・三角〜ラスタ前
+    name_en: nami-01230014
+    beach_direction: 南東
+    area: 三重
+
+  - name: 国府ノ浜・松林
+    name_en: nami-01230008
+    beach_direction: 南東
+    area: 三重
+
+  - name: 市後浜
+    name_en: nami-01230001
+    beach_direction: 南東
+    area: 三重
+
+  - name: 磯ノ浦
+    name_en: nami-01330002
+    beach_direction: 南南西
+    area: 和歌山
+
+  - name: 磯ノ浦2
+    name_en: nami-01330028
+    beach_direction: 南南西
+    area: 和歌山
+
+  - name: 白浜海水浴場
+    name_en: nami-09420008
+    beach_direction: 南
+    area: 徳島
+
+  - name: 生見
+    name_en: nami-01420001
+    beach_direction: 南
+    area: 徳島
+
+  - name: 生見右側
+    name_en: nami-01420024
+    beach_direction: 南
+    area: 徳島
+
+  - name: 内妻
+    name_en: nami-01390003
+    beach_direction: 南
+    area: 徳島
+
+  - name: 宍喰
+    name_en: nami-01390004
+    beach_direction: 南
+    area: 徳島
+
+  - name: 汐入川河口
+    name_en: nami-01430004
+    beach_direction: 北
+    area: 福岡
+
+  - name: 波津漁港
+    name_en: nami-01430005
+    beach_direction: 北
+    area: 福岡
+
+  - name: さつき松原
+    name_en: nami-01430023
+    beach_direction: 北
+    area: 福岡
+
+  - name: 釣川河口
+    name_en: nami-01430007
+    beach_direction: 北
+    area: 福岡
+
+  - name: 三苫
+    name_en: nami-01430010
+    beach_direction: 北
+    area: 福岡
+
+  - name: 奈多
+    name_en: nami-01430011
+    beach_direction: 北
+    area: 福岡
+
+  - name: 二見ヶ浦
+    name_en: nami-01430014
+    beach_direction: 北
+    area: 福岡
+
+  - name: 大口
+    name_en: nami-01430015
+    beach_direction: 北
+    area: 福岡
+
+  - name: 野北
+    name_en: nami-01430017
+    beach_direction: 北
+    area: 福岡
+
+  - name: 芥屋
+    name_en: nami-01430018
+    beach_direction: 北
+    area: 福岡
+
+  - name: 江口浜
+    name_en: nami-02490003
+    beach_direction: 西
+    area: 鹿児島
+
+  - name: 西目
+    name_en: nami-01060010
+    beach_direction: 北北西
+    area: 新潟
+
+  - name: 五十嵐浜
+    name_en: nami-01240007
+    beach_direction: 北北西
+    area: 新潟
+
+  - name: 郷津
+    name_en: nami-01240021
+    beach_direction: 北北西
+    area: 新潟
+
+  - name: 大浜(内灘)
+    name_en: nami-01260008
+    beach_direction: 北
+    area: 鳥取
+
+  - name: 徳光
+    name_en: nami-01260011
+    beach_direction: 北
+    area: 鳥取
+
+  - name: 三国五木
+    name_en: nami-01270002
+    beach_direction: 北
+    area: 鳥取
+
+  - name: 三国新港
+    name_en: nami-01270003
+    beach_direction: 北
+    area: 鳥取
+
+  - name: 鳥居ヶ浜
+    name_en: nami-01270005
+    beach_direction: 北
+    area: 鳥取
+
+  - name: 難波江
+    name_en: nami-01270007
+    beach_direction: 北
+    area: 鳥取
+
+  - name: 高嶋
+    name_en: nami-01290004
+    beach_direction: 北
+    area: 鳥取
+
+  - name: 八丁浜
+    name_en: nami-01290002
+    beach_direction: 北
+    area: 鳥取
+
+  - name: 白兎 歩道橋前付近
+    name_en: nami-01370007
+    beach_direction: 北
+    area: 鳥取
+
+  - name: 小沢見
+    name_en: nami-01370006
+    beach_direction: 北
+    area: 鳥取
+
+  - name: 千畳
+    name_en: nami-01360008
+    beach_direction: 北
+    area: 鳥取
+
+  - name: 大塚
+    name_en: nami-01360010
+    beach_direction: 北
+    area: 鳥取
+
+  - name: 間々下（新島）
+    name_en: nami-01150016
+    beach_direction: 東
+    area: 東京(伊豆諸島)
+
+  - name: 前浜Ｂ堤（新島）
+    name_en: nami-01150018
+    beach_direction: 東
+    area: 東京(伊豆諸島)
+
+  - name: 淡井浦（新島）
+    name_en: nami-01150011
+    beach_direction: 東
+    area: 東京(伊豆諸島)
+
+  - name: 羽伏浦（新島）
+    name_en: nami-01150013
+    beach_direction: 東
+    area: 東京(伊豆諸島)
+
+  - name: ヘリ下（新島）
+    name_en: nami-01150014
+    beach_direction: 東
+    area: 東京(伊豆諸島)
+
+  - name: シークレット（新島）
+    name_en: nami-01150015
+    beach_direction: 東
+    area: 東京(伊豆諸島)
+
+  - name: 堀切（新島）
+    name_en: nami-01150050
+    beach_direction: 東
+    area: 東京(伊豆諸島)
+
+  - name: イセキ（種子島）
+    name_en: nami-01490026
+    beach_direction: 東
+    area: 東京(伊豆諸島)
+
+  - name: 風本（種子島）
+    name_en: nami-01490013
+    beach_direction: 東
+    area: 東京(伊豆諸島)
+
+  - name: 浅川（種子島）
+    name_en: nami-01490014
+    beach_direction: 東
+    area: 東京(伊豆諸島)
+
+  - name: 鉄浜（種子島）
+    name_en: nami-01490015
+    beach_direction: 東
+    area: 東京(伊豆諸島)
+
+  - name: ヨキノ（種子島）
+    name_en: nami-01490025
+    beach_direction: 東
+    area: 東京(伊豆諸島)
+
+  - name: スーサイド（沖縄本島）
+    name_en: nami-01500004
+    beach_direction: 東
+    area: 東京(伊豆諸島)
+
+  - name: ボウル（沖縄本島）
+    name_en: nami-01500008
+    beach_direction: 東
+    area: 東京(伊豆諸島)
+
 # ============================================================
 # 4) 言語化コメントテンプレート（v0.2）
 # ============================================================

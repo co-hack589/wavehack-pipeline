@@ -1,13 +1,20 @@
 """forecast_gfs_wave.json + scoring_rules.yaml から
-9ポイントの並列ダッシュボード用 JSON & HTML を生成する。
+ポイント別ダッシュボード用 JSON & HTML を生成する。
 
-出力:
+デフォルト出力（本番用）:
   output/data/dashboard.json    スコア付きの予報データ
   output/html/dashboard.html    ブラウザで開く可視化（JSON埋め込み済）
+
+Smoke test 用（本番出力を壊さない）:
+  python scripts/generate_dashboard.py \
+    --forecast /tmp/smoke_forecast.json \
+    --output /tmp/smoke_dashboard.json \
+    --no-html
 """
 
 from __future__ import annotations
 
+import argparse
 import json
 import re
 import sys
@@ -41,10 +48,22 @@ TEMPLATE_HTML = WAVEHACK_OUTPUT / "html" / "dashboard_template.html"
 
 
 def main() -> int:
-    if not FORECAST_JSON.exists():
-        print(f"ERROR: {FORECAST_JSON} not found. Run fetch_gfs_wave.py first.", file=sys.stderr)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--forecast", type=Path, default=FORECAST_JSON,
+                        help=f"input forecast_gfs_wave.json (default: {FORECAST_JSON})")
+    parser.add_argument("--output", type=Path, default=DASHBOARD_JSON,
+                        help=f"output dashboard.json (default: {DASHBOARD_JSON})")
+    parser.add_argument("--no-html", action="store_true",
+                        help="skip HTML output (smoke test 用)")
+    args = parser.parse_args()
+
+    forecast_path: Path = args.forecast
+    dashboard_out: Path = args.output
+
+    if not forecast_path.exists():
+        print(f"ERROR: {forecast_path} not found. Run fetch_gfs_wave.py first.", file=sys.stderr)
         return 1
-    forecast = json.loads(FORECAST_JSON.read_text(encoding="utf-8"))
+    forecast = json.loads(forecast_path.read_text(encoding="utf-8"))
     rules = ScoringRules.default()
 
     tide_cache = None
@@ -124,6 +143,7 @@ def main() -> int:
             "point_name": name,
             "raw_point_name": raw_name,
             "name_en": meta.get("name_en"),
+            "area": meta.get("area", ""),
             "beach_direction": meta.get("beach_direction"),
             "beach_direction_deg": rules.beach_dir_for(name),
             "grid_lat": p["grid_lat"],
@@ -159,9 +179,12 @@ def main() -> int:
         "points": enriched_points,
     }
 
-    DASHBOARD_JSON.parent.mkdir(parents=True, exist_ok=True)
-    DASHBOARD_JSON.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"wrote {DASHBOARD_JSON} ({DASHBOARD_JSON.stat().st_size:,} bytes)")
+    dashboard_out.parent.mkdir(parents=True, exist_ok=True)
+    dashboard_out.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"wrote {dashboard_out} ({dashboard_out.stat().st_size:,} bytes)")
+
+    if args.no_html:
+        return 0
 
     # HTML 埋め込み
     if not TEMPLATE_HTML.exists():
