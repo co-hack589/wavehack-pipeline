@@ -17,8 +17,24 @@ name: daily-update
 
 on:
   schedule:
-    - cron: '0 19 * * *'   # JST 04:00
-  workflow_dispatch: {}
+    - cron: '0 19 * * *'   # JST 04:00 (default: 宮崎 9pt)
+  workflow_dispatch:
+    inputs:
+      points_file:
+        description: 'ポイントマスタ JSON (nationwide = 151pt 全国)'
+        type: choice
+        default: 'data/miyazaki_points.json'
+        options:
+          - 'data/miyazaki_points.json'
+          - 'data/all_points.json'
+      workers:
+        description: 'GFS 並列 workers (151pt では 2 推奨)'
+        type: choice
+        default: '4'
+        options:
+          - '4'
+          - '2'
+          - '1'
 
 concurrency:
   group: daily-update
@@ -30,7 +46,7 @@ permissions:
 jobs:
   update:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 180   # 151pt 全国モードは 60-90分想定 (bump from 90)
     steps:
       - name: Checkout pipeline
         uses: actions/checkout@v4
@@ -44,7 +60,8 @@ jobs:
           mkdir -p out && chmod 777 out
           docker run --rm \
             -e OUTPUT_TARGET=local \
-            -e GFS_WORKERS=4 \
+            -e POINTS_FILE="${{ inputs.points_file || 'data/miyazaki_points.json' }}" \
+            -e GFS_WORKERS="${{ inputs.workers || '4' }}" \
             -v "$PWD/out:/output" \
             wavehack-pipeline:ci
           ls -la out/data/

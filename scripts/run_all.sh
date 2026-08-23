@@ -13,6 +13,8 @@
 # Env vars:
 #   OUTPUT_TARGET       local | supabase | s3   (default: local)
 #   OUTPUT_MOUNT_DIR    where to copy artefacts on the host (default: /output)
+#   POINTS_FILE         points master JSON (default: data/miyazaki_points.json)
+#                         例: data/all_points.json で 151pt 全国モード
 #   GFS_HOURS_START     forecast hour start (default: 0)
 #   GFS_HOURS_END       forecast hour end   (default: 168)
 #   GFS_WORKERS         parallel NOAA downloader workers (default: 4)
@@ -25,6 +27,7 @@ PIPELINE_DIR="/app/output/code/wavehack-pipeline"
 WAVEHACK_OUTPUT="/app/output"
 MOUNT_DIR="${OUTPUT_MOUNT_DIR:-/output}"
 
+POINTS_FILE="${POINTS_FILE:-data/miyazaki_points.json}"
 HOURS_START="${GFS_HOURS_START:-0}"
 HOURS_END="${GFS_HOURS_END:-168}"
 WORKERS="${GFS_WORKERS:-4}"
@@ -38,8 +41,9 @@ mkdir -p "${WAVEHACK_OUTPUT}/data" "${WAVEHACK_OUTPUT}/html" "${PIPELINE_DIR}/ou
 # uv is not required at runtime — we already have /opt/venv on PATH.
 PY="${VIRTUAL_ENV:-/opt/venv}/bin/python"
 
-log "Step 1/4: fetch_gfs_wave (hours=${HOURS_START}..${HOURS_END}, workers=${WORKERS})"
+log "Step 1/4: fetch_gfs_wave (points=${POINTS_FILE}, hours=${HOURS_START}..${HOURS_END}, workers=${WORKERS})"
 "${PY}" scripts/fetch_gfs_wave.py \
+    --points "${POINTS_FILE}" \
     --hours "${HOURS_START}" "${HOURS_END}" \
     --workers "${WORKERS}"
 
@@ -50,8 +54,8 @@ else
   log "Step 2/4: fetch_tide SKIPPED"
 fi
 
-log "Step 3/4: generate_forecast --source gfs"
-"${PY}" scripts/generate_forecast.py --source gfs
+log "Step 3/4: generate_forecast --source gfs (points=${POINTS_FILE})"
+"${PY}" scripts/generate_forecast.py --source gfs --points "${POINTS_FILE}"
 
 log "Step 4/4: generate_dashboard"
 "${PY}" scripts/generate_dashboard.py
