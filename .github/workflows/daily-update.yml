@@ -35,6 +35,16 @@ on:
           - '4'
           - '2'
           - '1'
+      hours_end:
+        description: 'forecast hour 上限 (168=7日/72=3日/48=2日、slot数に線形)'
+        type: choice
+        default: '168'
+        options:
+          - '168'
+          - '96'
+          - '72'
+          - '48'
+          - '24'
 
 concurrency:
   group: daily-update
@@ -62,6 +72,7 @@ jobs:
             -e OUTPUT_TARGET=local \
             -e POINTS_FILE="${{ inputs.points_file || 'data/miyazaki_points.json' }}" \
             -e GFS_WORKERS="${{ inputs.workers || '4' }}" \
+            -e GFS_HOURS_END="${{ inputs.hours_end || '168' }}" \
             -v "$PWD/out:/output" \
             wavehack-pipeline:ci
           ls -la out/data/
