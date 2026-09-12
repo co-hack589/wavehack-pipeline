@@ -124,3 +124,23 @@ jobs:
       - name: Trigger Cloudflare rebuild
         if: steps.push_data.outputs.changed == 'true'
         run: curl -fsS -X POST "${{ secrets.CF_DEPLOY_HOOK_URL }}"
+
+      # ------------------------------------------------------------------
+      # R2 に dashboard.json を upload。
+      # CF Workers の /api/forecast-days/[pointId] Route Handler は R2 から
+      # 直接 fetch するため、Render 経由の cold start 依存が消える。
+      #
+      # 必要な GitHub Secrets:
+      #   CLOUDFLARE_API_TOKEN — Workers R2 Storage: Edit 権限
+      #   CLOUDFLARE_ACCOUNT_ID — a635e55d15a3f36157aa8b99b6693aa3
+      # ------------------------------------------------------------------
+      - name: Upload dashboard.json to R2
+        if: steps.push_data.outputs.changed == 'true'
+        run: |
+          npx wrangler@4 r2 object put wavehack-data/dashboard.json \
+            --file out/data/dashboard.json \
+            --content-type application/json \
+            --remote
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
