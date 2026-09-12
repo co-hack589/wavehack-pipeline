@@ -17,7 +17,10 @@ name: daily-update
 
 on:
   schedule:
-    - cron: '0 19 * * *'   # JST 04:00 (default: 宮崎 9pt)
+    # GFS 発表 (00/06/12/18 UTC) から ~30分後に取得。
+    # 1日 2回 (18UTC 発表分を 19 UTC / 06UTC 発表分を 07 UTC = JST 04時/16時) 実行。
+    - cron: '0 19 * * *'   # JST 04:00 (夕方 18UTC 発表分)
+    - cron: '0 7 * * *'    # JST 16:00 (朝 06UTC 発表分)
   workflow_dispatch:
     inputs:
       points_file:
