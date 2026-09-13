@@ -23,17 +23,10 @@ on:
     - cron: '0 7 * * *'    # JST 16:00 (朝 06UTC 発表分)
   workflow_dispatch:
     inputs:
-      points_file:
-        description: 'ポイントマスタ JSON (nationwide = 151pt 全国)'
-        type: choice
-        default: 'data/miyazaki_points.json'
-        options:
-          - 'data/miyazaki_points.json'
-          - 'data/all_points.json'
       workers:
         description: 'GFS 並列 workers (151pt では 2 推奨)'
         type: choice
-        default: '4'
+        default: '2'
         options:
           - '4'
           - '2'
@@ -73,12 +66,16 @@ jobs:
           mkdir -p out && chmod 777 out
           docker run --rm \
             -e OUTPUT_TARGET=local \
-            -e POINTS_FILE="${{ inputs.points_file || 'data/miyazaki_points.json' }}" \
-            -e GFS_WORKERS="${{ inputs.workers || '4' }}" \
+            -e POINTS_FILE=data/all_points.json \
+            -e GFS_WORKERS="${{ inputs.workers || '2' }}" \
             -e GFS_HOURS_END="${{ inputs.hours_end || '168' }}" \
             -v "$PWD/out:/output" \
             wavehack-pipeline:ci
           ls -la out/data/
+
+      # A regional/debug run must never replace the nationwide production feed.
+      - name: Validate nationwide coverage before publishing
+        run: python3 scripts/validate_dashboard.py out/data/dashboard.json
 
       - name: Checkout wavehack-api
         uses: actions/checkout@v4
