@@ -10,12 +10,19 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 JST = timezone(timedelta(hours=9))
+# The scoring dashboard calls 高鍋/蚊口 "Kakuchi"; the GFS master uses Takanabe.
+POINT_ALIASES = {"kakuchi": "takanabe", "kizakihama": "kisakihama"}
+
+
+def canonical_id(value: str) -> str:
+    lowered = value.lower()
+    return POINT_ALIASES.get(lowered, lowered)
 
 
 def validate_dashboard(dashboard: dict, master: list[dict], now: datetime) -> None:
-    expected = {p["name_en"].lower() for p in master}
+    expected = {canonical_id(p["name_en"]) for p in master}
     points = dashboard["points"]
-    ids = [p.get("name_en", "").lower() for p in points]
+    ids = [canonical_id(p.get("name_en", "")) for p in points]
     if len(ids) != len(set(ids)):
         raise ValueError("Duplicate point IDs in dashboard")
     missing = expected - set(ids)
