@@ -72,17 +72,12 @@ def _session() -> requests.Session:
 SURFACE_FILTER = {"typeOfLevel": "surface", "stepType": "instant"}
 SWELL_FILTER = {"typeOfLevel": "orderedSequenceData"}
 
-# 陸地マスク回避：最近傍が陸（NaN）の場合に試すオフセット (dlat, dlon)。
-# 宮崎沿岸は全て東向きなので「東に1グリッド」を最優先。0.16°=約18km。
-LANDMASK_OFFSETS: list[tuple[float, float]] = [
-    (0.0, 0.0),
-    (0.0, 0.17),    # 東 1
-    (0.17, 0.17),   # 北東
-    (-0.17, 0.17),  # 南東
-    (0.0, 0.33),    # 東 2
-    (0.17, 0.0),    # 北
-    (-0.17, 0.0),   # 南
-    (0.0, 0.50),    # 東 3
+# 全国の海岸に対応するため、西側も含む8方向を近い距離から探す。
+# 東向きだけでは福岡・日本海沿岸などで海上グリッドを見つけられない。
+LANDMASK_OFFSETS: list[tuple[float, float]] = [(0.0, 0.0)] + [
+    (dlat * distance, dlon * distance)
+    for distance in (0.17, 0.33, 0.50)
+    for dlat, dlon in ((0, 1), (0, -1), (1, 0), (-1, 0), (1, 1), (-1, 1), (1, -1), (-1, -1))
 ]
 
 
@@ -358,12 +353,16 @@ def fetch_forecast(
     f0_path = _download(run, fhour_list[0], cache_dir, progress=progress)
     ds_s0, ds_w0 = _open_two_datasets(f0_path)
     try:
+        # GRIBは地点ごとのsel().valuesでファイル全体を繰り返し展開する。
+        # 海陸判定に必要な波高を一度だけ読み込む。
+        ds_s0["swh"].load()
         grids: dict[str, tuple[float, float]] = {
             p.name: resolve_ocean_grid(ds_s0, p.latitude, p.longitude) for p in points_list
         }
     finally:
         ds_s0.close()
         ds_w0.close()
+    del ds_s0, ds_w0
 
     if progress:
         for p in points_list:
@@ -379,6 +378,10 @@ def fetch_forecast(
         path = _download(run, fh, cache_dir, progress=progress)
         ds_s, ds_w = _open_two_datasets(path)
         try:
+            # 1 forecast hour / workerにつき一度だけ展開し、全地点で共有。
+            # 読み込み後も抽出値・丸め・欠損の扱いは変更しない。
+            ds_s.load()
+            ds_w.load()
             per_point: dict[str, dict[str, float | None]] = {}
             for p in points_list:
                 glat, glon = grids[p.name]
