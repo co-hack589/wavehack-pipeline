@@ -4,12 +4,11 @@ name: daily-update
 # 毎日の予報更新パイプライン:
 #   1. Docker で GFS 取得 → forecast.json / dashboard.json 生成 (~35分)
 #   2. wavehack-api リポジトリの data/ にコミット → Render が自動再デプロイ
-#   3. Render の反映を待ってから Cloudflare デプロイフックでフロント再ビルド
+#   3. 検証済み dashboard.json を R2 へ配信（アプリはAPIから再取得）
 #
 # 必要な Secrets (このリポジトリの Settings → Secrets and variables → Actions):
 #   WAVEHACK_API_PUSH_TOKEN — co-hack589/wavehack-api に Contents write 可能な
 #                             Fine-grained PAT
-#   CF_DEPLOY_HOOK_URL      — Cloudflare Workers ビルドのデプロイフック URL
 #
 # GFS は 00/06/12/18 UTC 発表 → 配信まで ~30分。JST 朝サーフィンに間に合う
 # よう 18UTC(=JST 03時) 発表分を 19:00 UTC (JST 04時) に取り、朝までに反映。
@@ -102,6 +101,18 @@ jobs:
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
+      # 毎回配信し、前回R2だけ失敗した場合も再実行で回復する。
+      # 予報更新ではフロントを再ビルドしない。
+      - name: Upload dashboard.json to R2
+        run: |
+          npx wrangler@4 r2 object put wavehack-data/dashboard.json \
+            --file out/data/dashboard.json \
+            --content-type application/json \
+            --remote
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
       - name: Wait for Render redeploy
         if: steps.push_data.outputs.changed == 'true'
         run: |
@@ -116,28 +127,4 @@ jobs:
             fi
             sleep 30
           done
-          echo "::warning::Render 反映を20分待っても確認できず。フロント再ビルドは実行する"
-
-      - name: Trigger Cloudflare rebuild
-        if: steps.push_data.outputs.changed == 'true'
-        run: curl -fsS -X POST "${{ secrets.CF_DEPLOY_HOOK_URL }}"
-
-      # ------------------------------------------------------------------
-      # R2 に dashboard.json を upload。
-      # CF Workers の /api/forecast-days/[pointId] Route Handler は R2 から
-      # 直接 fetch するため、Render 経由の cold start 依存が消える。
-      #
-      # 必要な GitHub Secrets:
-      #   CLOUDFLARE_API_TOKEN — Workers R2 Storage: Edit 権限
-      #   CLOUDFLARE_ACCOUNT_ID — a635e55d15a3f36157aa8b99b6693aa3
-      # ------------------------------------------------------------------
-      - name: Upload dashboard.json to R2
-        if: steps.push_data.outputs.changed == 'true'
-        run: |
-          npx wrangler@4 r2 object put wavehack-data/dashboard.json \
-            --file out/data/dashboard.json \
-            --content-type application/json \
-            --remote
-        env:
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          echo "::warning::Render 反映を20分待っても確認できず。R2の予報は更新済み"
