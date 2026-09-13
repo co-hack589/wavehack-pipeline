@@ -14,8 +14,8 @@ class CoverageTests(unittest.TestCase):
         self.master = [{"name_en": "Kisakihama"}, {"name_en": "nami-01170001"}]
         # UTC is still Sep 12, but Japan has crossed midnight.
         self.now = datetime(2026, 9, 12, 15, 1, tzinfo=timezone.utc)
-        self.dashboard = {"points": [dict(p, slots=[
-            {"timestamp_jst": f"2026-09-{day}T06:00:00+09:00", "htsgw_m": 0.0}
+        self.dashboard = {"points": [dict(p, tide_port="MG", tide_station={"port": "MG"}, slots=[
+            {"timestamp_jst": f"2026-09-{day}T06:00:00+09:00", "htsgw_m": 0.0, "tide_m": 0.0}
             for day in (13, 14)
         ]) for p in self.master]}
 

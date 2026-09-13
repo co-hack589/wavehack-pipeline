@@ -49,7 +49,7 @@ log "Step 1/4: fetch_gfs_wave (points=${POINTS_FILE}, hours=${HOURS_START}..${HO
 
 if [[ "${SKIP_TIDE}" != "1" ]]; then
   log "Step 2/4: fetch_tide"
-  "${PY}" scripts/fetch_tide.py
+  "${PY}" scripts/fetch_tide.py --points "${POINTS_FILE}"
 else
   log "Step 2/4: fetch_tide SKIPPED"
 fi

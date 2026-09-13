@@ -33,7 +33,7 @@ from wavehack_pipeline.comments import (
 )
 from wavehack_pipeline.daylight import slot_is_daylight
 from wavehack_pipeline.scoring import ScoringRules, score_slot
-from wavehack_pipeline.tide import POINT_TO_PORT, load_tide_cache, tide_at
+from wavehack_pipeline.tide import POINT_TO_PORT, TIDE_STATIONS, load_tide_cache, tide_at
 
 # miyazaki_points.json と scoring_rules.yaml の名称差異吸収
 # （miyazaki_points.json は「高鍋」、yaml は「蚊口」にリネーム済）
@@ -151,6 +151,7 @@ def main() -> int:
             "point_lat": p["point_lat"],
             "point_lon": p["point_lon"],
             "tide_port": port,
+            "tide_station": TIDE_STATIONS.get(raw_name) or TIDE_STATIONS.get(name),
             "bottom_type": meta.get("bottom_type", ""),
             "tide_override": meta.get("tide_override", ""),
             "local_notes": meta.get("local_notes", ""),
@@ -172,7 +173,7 @@ def main() -> int:
         "generated_at": forecast.get("generated_at"),
         "run_base_utc": forecast.get("run_base_utc"),
         "source": forecast.get("source"),
-        "tide_source": "jma_suisan" if tide_cache else "fallback_0.5",
+        "tide_source": "jma_suisan" if tide_cache else None,
         "scoring_version": rules.scoring.get("version"),
         "forecast_range": rules.forecast_range,
         "area_topic": area_topic,

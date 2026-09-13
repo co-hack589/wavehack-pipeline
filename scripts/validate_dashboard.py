@@ -32,8 +32,13 @@ def validate_dashboard(dashboard: dict, master: list[dict], now: datetime) -> No
     today = now.astimezone(JST).date()
     required_dates = {(today + timedelta(days=i)).isoformat() for i in range(2)}
     for point in points:
+        if not point.get("tide_station") or point.get("tide_port") != point["tide_station"].get("port"):
+            raise ValueError(f"{point['name_en']}: missing tide reference station")
         available = set()
         for slot in point.get("slots", []):
+            tide = slot.get("tide_m")
+            if isinstance(tide, bool) or not isinstance(tide, (int, float)) or not math.isfinite(tide):
+                raise ValueError(f"{point['name_en']}: missing tide prediction at {slot.get('timestamp_jst')}")
             wave = slot.get("htsgw_m")
             if isinstance(wave, (int, float)) and not isinstance(wave, bool) and math.isfinite(wave) and wave >= 0:
                 available.add(datetime.fromisoformat(slot["timestamp_jst"]).astimezone(JST).date().isoformat())
