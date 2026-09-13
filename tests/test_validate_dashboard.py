@@ -27,6 +27,17 @@ class CoverageTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Missing 1 nationwide"):
             module.validate_dashboard(self.dashboard, self.master, self.now)
 
+    def test_existing_scoring_aliases_are_accepted(self):
+        self.master.append({"name_en": "Takanabe"})
+        self.dashboard["points"].append(dict(copy.deepcopy(self.dashboard["points"][0]), name_en="Kakuchi"))
+        self.dashboard["points"][0]["name_en"] = "Kizakihama"
+        module.validate_dashboard(self.dashboard, self.master, self.now)
+
+    def test_alias_duplicates_are_rejected(self):
+        self.dashboard["points"].append(dict(copy.deepcopy(self.dashboard["points"][0]), name_en="Kizakihama"))
+        with self.assertRaisesRegex(ValueError, "Duplicate"):
+            module.validate_dashboard(self.dashboard, self.master, self.now)
+
     def test_duplicate_ids_cannot_hide_missing_points(self):
         self.dashboard["points"].append(copy.deepcopy(self.dashboard["points"][0]))
         with self.assertRaisesRegex(ValueError, "Duplicate"):
