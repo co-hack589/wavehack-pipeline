@@ -1,0 +1,1365 @@
+{
+  "source": "https://www.data.jma.go.jp/kaiyou/db/tide/suisan/station2026.php",
+  "note": "気象庁の参照港における予測潮位。各サーフポイントの実測値ではない。距離に加えて海岸位置を確認した固定対応表。",
+  "stations": [
+    {
+      "point_id": "kisakihama",
+      "point_name": "木崎浜",
+      "port": "MG",
+      "name": "宮崎",
+      "lat": 31.9,
+      "lon": 131.45,
+      "distance_km": 8.3
+    },
+    {
+      "point_id": "hitotsuba",
+      "point_name": "一ツ葉",
+      "port": "MG",
+      "name": "宮崎",
+      "lat": 31.9,
+      "lon": 131.45,
+      "distance_km": 3.8
+    },
+    {
+      "point_id": "aoshima",
+      "point_name": "青島",
+      "port": "MG",
+      "name": "宮崎",
+      "lat": 31.9,
+      "lon": 131.45,
+      "distance_km": 10.5
+    },
+    {
+      "point_id": "sosanji",
+      "point_name": "曽山寺",
+      "port": "MG",
+      "name": "宮崎",
+      "lat": 31.9,
+      "lon": 131.45,
+      "distance_km": 9.6
+    },
+    {
+      "point_id": "okuragahama",
+      "point_name": "お倉ヶ浜",
+      "port": "Z6",
+      "name": "細島",
+      "lat": 32.43333333333333,
+      "lon": 131.66666666666666,
+      "distance_km": 4.0
+    },
+    {
+      "point_id": "kanegahama",
+      "point_name": "金ヶ浜",
+      "port": "Z6",
+      "name": "細島",
+      "lat": 32.43333333333333,
+      "lon": 131.66666666666666,
+      "distance_km": 9.0
+    },
+    {
+      "point_id": "isegahama",
+      "point_name": "伊勢ヶ浜",
+      "port": "Z6",
+      "name": "細島",
+      "lat": 32.43333333333333,
+      "lon": 131.66666666666666,
+      "distance_km": 2.7
+    },
+    {
+      "point_id": "ibii",
+      "point_name": "伊比井",
+      "port": "AB",
+      "name": "油津",
+      "lat": 31.583333333333332,
+      "lon": 131.41666666666666,
+      "distance_km": 14.9
+    },
+    {
+      "point_id": "odotsu",
+      "point_name": "大堂津",
+      "port": "AB",
+      "name": "油津",
+      "lat": 31.583333333333332,
+      "lon": 131.41666666666666,
+      "distance_km": 4.2
+    },
+    {
+      "point_id": "takanabe",
+      "point_name": "高鍋",
+      "port": "MG",
+      "name": "宮崎",
+      "lat": 31.9,
+      "lon": 131.45,
+      "distance_km": 25.6
+    },
+    {
+      "point_id": "nami-01020002",
+      "point_name": "毘砂別",
+      "port": "IK",
+      "name": "石狩新港",
+      "lat": 43.21666666666667,
+      "lon": 141.3,
+      "distance_km": 38.6
+    },
+    {
+      "point_id": "nami-01040008",
+      "point_name": "浜厚真",
+      "port": "C8",
+      "name": "苫小牧東",
+      "lat": 42.6,
+      "lon": 141.81666666666666,
+      "distance_km": 0.9
+    },
+    {
+      "point_id": "nami-01070005",
+      "point_name": "浪板",
+      "port": "Q6",
+      "name": "釜石",
+      "lat": 39.266666666666666,
+      "lon": 141.88333333333333,
+      "distance_km": 15.0
+    },
+    {
+      "point_id": "nami-01080006",
+      "point_name": "小豆浜",
+      "port": "SD",
+      "name": "仙台新港",
+      "lat": 38.266666666666666,
+      "lon": 141.0,
+      "distance_km": 7.1
+    },
+    {
+      "point_id": "nami-01080007",
+      "point_name": "仙台新港",
+      "port": "SD",
+      "name": "仙台新港",
+      "lat": 38.266666666666666,
+      "lon": 141.0,
+      "distance_km": 2.0
+    },
+    {
+      "point_id": "nami-01080011",
+      "point_name": "荒浜河口",
+      "port": "ZM",
+      "name": "相馬",
+      "lat": 37.833333333333336,
+      "lon": 140.96666666666667,
+      "distance_km": 24.1
+    },
+    {
+      "point_id": "nami-01080012",
+      "point_name": "荒浜プール",
+      "port": "ZM",
+      "name": "相馬",
+      "lat": 37.833333333333336,
+      "lon": 140.96666666666667,
+      "distance_km": 24.2
+    },
+    {
+      "point_id": "nami-01100007",
+      "point_name": "坂下",
+      "port": "ZM",
+      "name": "相馬",
+      "lat": 37.833333333333336,
+      "lon": 140.96666666666667,
+      "distance_km": 18.2
+    },
+    {
+      "point_id": "nami-01110020",
+      "point_name": "河原子",
+      "port": "D1",
+      "name": "日立",
+      "lat": 36.5,
+      "lon": 140.63333333333333,
+      "distance_km": 5.2
+    },
+    {
+      "point_id": "nami-01110009",
+      "point_name": "大洗",
+      "port": "D3",
+      "name": "大洗",
+      "lat": 36.3,
+      "lon": 140.56666666666666,
+      "distance_km": 4.4
+    },
+    {
+      "point_id": "nami-01110011",
+      "point_name": "大貫つるかめ下",
+      "port": "D3",
+      "name": "大洗",
+      "lat": 36.3,
+      "lon": 140.56666666666666,
+      "distance_km": 0.5
+    },
+    {
+      "point_id": "nami-01110010",
+      "point_name": "大貫海の子",
+      "port": "D3",
+      "name": "大洗",
+      "lat": 36.3,
+      "lon": 140.56666666666666,
+      "distance_km": 1.2
+    },
+    {
+      "point_id": "nami-01110017",
+      "point_name": "とっぷさんて下",
+      "port": "D2",
+      "name": "鹿島",
+      "lat": 35.93333333333333,
+      "lon": 140.7,
+      "distance_km": 19.2
+    },
+    {
+      "point_id": "nami-01110018",
+      "point_name": "平井浜・右側",
+      "port": "D2",
+      "name": "鹿島",
+      "lat": 35.93333333333333,
+      "lon": 140.7,
+      "distance_km": 4.8
+    },
+    {
+      "point_id": "nami-01110005",
+      "point_name": "波崎",
+      "port": "CS",
+      "name": "銚子漁港",
+      "lat": 35.75,
+      "lon": 140.86666666666667,
+      "distance_km": 3.3
+    },
+    {
+      "point_id": "nami-01160007",
+      "point_name": "作田",
+      "port": "CS",
+      "name": "銚子漁港",
+      "lat": 35.75,
+      "lon": 140.86666666666667,
+      "distance_km": 43.0
+    },
+    {
+      "point_id": "nami-01160008",
+      "point_name": "片貝漁港",
+      "port": "CS",
+      "name": "銚子漁港",
+      "lat": 35.75,
+      "lon": 140.86666666666667,
+      "distance_km": 44.1
+    },
+    {
+      "point_id": "nami-01160009",
+      "point_name": "片貝新堤",
+      "port": "CS",
+      "name": "銚子漁港",
+      "lat": 35.75,
+      "lon": 140.86666666666667,
+      "distance_km": 44.2
+    },
+    {
+      "point_id": "nami-01160010",
+      "point_name": "豊海",
+      "port": "ZF",
+      "name": "勝浦",
+      "lat": 35.13333333333333,
+      "lon": 140.25,
+      "distance_km": 45.0
+    },
+    {
+      "point_id": "nami-01160070",
+      "point_name": "白子（剃金）",
+      "port": "ZF",
+      "name": "勝浦",
+      "lat": 35.13333333333333,
+      "lon": 140.25,
+      "distance_km": 37.9
+    },
+    {
+      "point_id": "nami-09160017",
+      "point_name": "白子（古所）",
+      "port": "ZF",
+      "name": "勝浦",
+      "lat": 35.13333333333333,
+      "lon": 140.25,
+      "distance_km": 37.6
+    },
+    {
+      "point_id": "nami-01160011",
+      "point_name": "一宮",
+      "port": "ZF",
+      "name": "勝浦",
+      "lat": 35.13333333333333,
+      "lon": 140.25,
+      "distance_km": 30.2
+    },
+    {
+      "point_id": "nami-01160012",
+      "point_name": "サンライズ",
+      "port": "ZF",
+      "name": "勝浦",
+      "lat": 35.13333333333333,
+      "lon": 140.25,
+      "distance_km": 27.8
+    },
+    {
+      "point_id": "nami-01160013",
+      "point_name": "東浪見",
+      "port": "ZF",
+      "name": "勝浦",
+      "lat": 35.13333333333333,
+      "lon": 140.25,
+      "distance_km": 27.0
+    },
+    {
+      "point_id": "nami-01160014",
+      "point_name": "志田下",
+      "port": "ZF",
+      "name": "勝浦",
+      "lat": 35.13333333333333,
+      "lon": 140.25,
+      "distance_km": 25.9
+    },
+    {
+      "point_id": "nami-01160015",
+      "point_name": "太東",
+      "port": "ZF",
+      "name": "勝浦",
+      "lat": 35.13333333333333,
+      "lon": 140.25,
+      "distance_km": 25.6
+    },
+    {
+      "point_id": "nami-01160016",
+      "point_name": "夷隅",
+      "port": "ZF",
+      "name": "勝浦",
+      "lat": 35.13333333333333,
+      "lon": 140.25,
+      "distance_km": 23.1
+    },
+    {
+      "point_id": "nami-01160021",
+      "point_name": "大原",
+      "port": "ZF",
+      "name": "勝浦",
+      "lat": 35.13333333333333,
+      "lon": 140.25,
+      "distance_km": 19.7
+    },
+    {
+      "point_id": "nami-01160024",
+      "point_name": "御宿岩和田",
+      "port": "ZF",
+      "name": "勝浦",
+      "lat": 35.13333333333333,
+      "lon": 140.25,
+      "distance_km": 11.5
+    },
+    {
+      "point_id": "nami-01160025",
+      "point_name": "御宿中央〜浜",
+      "port": "ZF",
+      "name": "勝浦",
+      "lat": 35.13333333333333,
+      "lon": 140.25,
+      "distance_km": 11.0
+    },
+    {
+      "point_id": "nami-01160028",
+      "point_name": "部原",
+      "port": "ZF",
+      "name": "勝浦",
+      "lat": 35.13333333333333,
+      "lon": 140.25,
+      "distance_km": 8.7
+    },
+    {
+      "point_id": "nami-01160096",
+      "point_name": "飯岡マンション下",
+      "port": "CS",
+      "name": "銚子漁港",
+      "lat": 35.75,
+      "lon": 140.86666666666667,
+      "distance_km": 14.3
+    },
+    {
+      "point_id": "nami-01160001",
+      "point_name": "飯岡信号下",
+      "port": "CS",
+      "name": "銚子漁港",
+      "lat": 35.75,
+      "lon": 140.86666666666667,
+      "distance_km": 14.7
+    },
+    {
+      "point_id": "nami-01160004",
+      "point_name": "椎名内安太郎下",
+      "port": "CS",
+      "name": "銚子漁港",
+      "lat": 35.75,
+      "lon": 140.86666666666667,
+      "distance_km": 18.8
+    },
+    {
+      "point_id": "nami-01160058",
+      "point_name": "旧かんぽ下",
+      "port": "CS",
+      "name": "銚子漁港",
+      "lat": 35.75,
+      "lon": 140.86666666666667,
+      "distance_km": 20.6
+    },
+    {
+      "point_id": "nami-01160006",
+      "point_name": "吉崎浜",
+      "port": "CS",
+      "name": "銚子漁港",
+      "lat": 35.75,
+      "lon": 140.86666666666667,
+      "distance_km": 24.2
+    },
+    {
+      "point_id": "nami-09160010",
+      "point_name": "堀川浜",
+      "port": "CS",
+      "name": "銚子漁港",
+      "lat": 35.75,
+      "lon": 140.86666666666667,
+      "distance_km": 29.8
+    },
+    {
+      "point_id": "nami-01160031",
+      "point_name": "マルキ",
+      "port": "ZF",
+      "name": "勝浦",
+      "lat": 35.13333333333333,
+      "lon": 140.25,
+      "distance_km": 10.8
+    },
+    {
+      "point_id": "nami-01160040",
+      "point_name": "J's前",
+      "port": "MR",
+      "name": "布良",
+      "lat": 34.916666666666664,
+      "lon": 139.83333333333334,
+      "distance_km": 22.4
+    },
+    {
+      "point_id": "nami-01160041",
+      "point_name": "白渚",
+      "port": "MR",
+      "name": "布良",
+      "lat": 34.916666666666664,
+      "lon": 139.83333333333334,
+      "distance_km": 20.3
+    },
+    {
+      "point_id": "nami-01160097",
+      "point_name": "白渚右側",
+      "port": "MR",
+      "name": "布良",
+      "lat": 34.916666666666664,
+      "lon": 139.83333333333334,
+      "distance_km": 20.3
+    },
+    {
+      "point_id": "nami-01160043",
+      "point_name": "花篭前",
+      "port": "MR",
+      "name": "布良",
+      "lat": 34.916666666666664,
+      "lon": 139.83333333333334,
+      "distance_km": 18.8
+    },
+    {
+      "point_id": "nami-01160045",
+      "point_name": "千歳",
+      "port": "MR",
+      "name": "布良",
+      "lat": 34.916666666666664,
+      "lon": 139.83333333333334,
+      "distance_km": 15.5
+    },
+    {
+      "point_id": "nami-01160046",
+      "point_name": "千倉",
+      "port": "MR",
+      "name": "布良",
+      "lat": 34.916666666666664,
+      "lon": 139.83333333333334,
+      "distance_km": 12.9
+    },
+    {
+      "point_id": "nami-01160047",
+      "point_name": "平砂浦ファミリーパーク下",
+      "port": "MR",
+      "name": "布良",
+      "lat": 34.916666666666664,
+      "lon": 139.83333333333334,
+      "distance_km": 3.6
+    },
+    {
+      "point_id": "nami-01170001",
+      "point_name": "由比ガ浜",
+      "port": "D8",
+      "name": "湘南港",
+      "lat": 35.3,
+      "lon": 139.48333333333332,
+      "distance_km": 5.3
+    },
+    {
+      "point_id": "nami-01170003",
+      "point_name": "七里ガ浜正面",
+      "port": "D8",
+      "name": "湘南港",
+      "lat": 35.3,
+      "lon": 139.48333333333332,
+      "distance_km": 2.5
+    },
+    {
+      "point_id": "nami-01170007",
+      "point_name": "鎌高前",
+      "port": "D8",
+      "name": "湘南港",
+      "lat": 35.3,
+      "lon": 139.48333333333332,
+      "distance_km": 1.8
+    },
+    {
+      "point_id": "nami-02170002",
+      "point_name": "片瀬東浜海岸",
+      "port": "D8",
+      "name": "湘南港",
+      "lat": 35.3,
+      "lon": 139.48333333333332,
+      "distance_km": 0.6
+    },
+    {
+      "point_id": "nami-01170013",
+      "point_name": "水族館前",
+      "port": "D8",
+      "name": "湘南港",
+      "lat": 35.3,
+      "lon": 139.48333333333332,
+      "distance_km": 1.2
+    },
+    {
+      "point_id": "nami-01170100",
+      "point_name": "ボードウォーク前",
+      "port": "D8",
+      "name": "湘南港",
+      "lat": 35.3,
+      "lon": 139.48333333333332,
+      "distance_km": 1.4
+    },
+    {
+      "point_id": "nami-01170010",
+      "point_name": "鵠沼",
+      "port": "D8",
+      "name": "湘南港",
+      "lat": 35.3,
+      "lon": 139.48333333333332,
+      "distance_km": 2.1
+    },
+    {
+      "point_id": "nami-01170014",
+      "point_name": "マック前",
+      "port": "D8",
+      "name": "湘南港",
+      "lat": 35.3,
+      "lon": 139.48333333333332,
+      "distance_km": 1.9
+    },
+    {
+      "point_id": "nami-01170017",
+      "point_name": "地下道前",
+      "port": "D8",
+      "name": "湘南港",
+      "lat": 35.3,
+      "lon": 139.48333333333332,
+      "distance_km": 2.6
+    },
+    {
+      "point_id": "nami-01170020",
+      "point_name": "辻堂正面",
+      "port": "D8",
+      "name": "湘南港",
+      "lat": 35.3,
+      "lon": 139.48333333333332,
+      "distance_km": 3.4
+    },
+    {
+      "point_id": "nami-01170023",
+      "point_name": "辻堂第2駐車場前",
+      "port": "D8",
+      "name": "湘南港",
+      "lat": 35.3,
+      "lon": 139.48333333333332,
+      "distance_km": 4.2
+    },
+    {
+      "point_id": "nami-01170024",
+      "point_name": "汐小前",
+      "port": "D8",
+      "name": "湘南港",
+      "lat": 35.3,
+      "lon": 139.48333333333332,
+      "distance_km": 4.8
+    },
+    {
+      "point_id": "nami-01170025",
+      "point_name": "チサン",
+      "port": "D8",
+      "name": "湘南港",
+      "lat": 35.3,
+      "lon": 139.48333333333332,
+      "distance_km": 5.0
+    },
+    {
+      "point_id": "nami-01170027",
+      "point_name": "パーク",
+      "port": "D8",
+      "name": "湘南港",
+      "lat": 35.3,
+      "lon": 139.48333333333332,
+      "distance_km": 6.2
+    },
+    {
+      "point_id": "nami-01170036",
+      "point_name": "平塚生コン前",
+      "port": "D8",
+      "name": "湘南港",
+      "lat": 35.3,
+      "lon": 139.48333333333332,
+      "distance_km": 11.1
+    },
+    {
+      "point_id": "nami-01170101",
+      "point_name": "平塚生コン前壁横",
+      "port": "D8",
+      "name": "湘南港",
+      "lat": 35.3,
+      "lon": 139.48333333333332,
+      "distance_km": 11.1
+    },
+    {
+      "point_id": "nami-01170042",
+      "point_name": "大磯磯高前",
+      "port": "D8",
+      "name": "湘南港",
+      "lat": 35.3,
+      "lon": 139.48333333333332,
+      "distance_km": 14.2
+    },
+    {
+      "point_id": "nami-01170043",
+      "point_name": "大磯",
+      "port": "D8",
+      "name": "湘南港",
+      "lat": 35.3,
+      "lon": 139.48333333333332,
+      "distance_km": 14.8
+    },
+    {
+      "point_id": "nami-01170044",
+      "point_name": "大磯源二",
+      "port": "D8",
+      "name": "湘南港",
+      "lat": 35.3,
+      "lon": 139.48333333333332,
+      "distance_km": 15.0
+    },
+    {
+      "point_id": "nami-01170047",
+      "point_name": "吉浜地引寄り",
+      "port": "OD",
+      "name": "小田原",
+      "lat": 35.233333333333334,
+      "lon": 139.15,
+      "distance_km": 9.7
+    },
+    {
+      "point_id": "nami-01170045",
+      "point_name": "湯河原吉浜",
+      "port": "OD",
+      "name": "小田原",
+      "lat": 35.233333333333334,
+      "lon": 139.15,
+      "distance_km": 9.7
+    },
+    {
+      "point_id": "nami-09200011",
+      "point_name": "宇佐美海岸",
+      "port": "Z3",
+      "name": "伊東",
+      "lat": 34.9,
+      "lon": 139.13333333333333,
+      "distance_km": 12.4
+    },
+    {
+      "point_id": "nami-01200004",
+      "point_name": "白浜",
+      "port": "D6",
+      "name": "下田",
+      "lat": 34.68333333333333,
+      "lon": 138.96666666666667,
+      "distance_km": 0.8
+    },
+    {
+      "point_id": "nami-01200005",
+      "point_name": "多々戸浜",
+      "port": "D6",
+      "name": "下田",
+      "lat": 34.68333333333333,
+      "lon": 138.96666666666667,
+      "distance_km": 4.1
+    },
+    {
+      "point_id": "nami-01200007",
+      "point_name": "入田浜",
+      "port": "D6",
+      "name": "下田",
+      "lat": 34.68333333333333,
+      "lon": 138.96666666666667,
+      "distance_km": 4.5
+    },
+    {
+      "point_id": "nami-01200009",
+      "point_name": "大浜",
+      "port": "QK",
+      "name": "南伊豆",
+      "lat": 34.63333333333333,
+      "lon": 138.88333333333333,
+      "distance_km": 4.1
+    },
+    {
+      "point_id": "nami-01200012",
+      "point_name": "静波",
+      "port": "OM",
+      "name": "御前崎",
+      "lat": 34.61666666666667,
+      "lon": 138.21666666666667,
+      "distance_km": 12.9
+    },
+    {
+      "point_id": "nami-01200013",
+      "point_name": "片浜",
+      "port": "OM",
+      "name": "御前崎",
+      "lat": 34.61666666666667,
+      "lon": 138.21666666666667,
+      "distance_km": 10.9
+    },
+    {
+      "point_id": "nami-02200011",
+      "point_name": "御前崎・メロン",
+      "port": "OM",
+      "name": "御前崎",
+      "lat": 34.61666666666667,
+      "lon": 138.21666666666667,
+      "distance_km": 2.1
+    },
+    {
+      "point_id": "nami-01200014",
+      "point_name": "御前崎・メイン",
+      "port": "OM",
+      "name": "御前崎",
+      "lat": 34.61666666666667,
+      "lon": 138.21666666666667,
+      "distance_km": 2.1
+    },
+    {
+      "point_id": "nami-02200009",
+      "point_name": "御前崎・坂下",
+      "port": "OM",
+      "name": "御前崎",
+      "lat": 34.61666666666667,
+      "lon": 138.21666666666667,
+      "distance_km": 2.3
+    },
+    {
+      "point_id": "nami-01200019",
+      "point_name": "豊浜",
+      "port": "MI",
+      "name": "舞阪",
+      "lat": 34.68333333333333,
+      "lon": 137.61666666666667,
+      "distance_km": 27.1
+    },
+    {
+      "point_id": "nami-01200023",
+      "point_name": "中田島海岸（凧場）",
+      "port": "MI",
+      "name": "舞阪",
+      "lat": 34.68333333333333,
+      "lon": 137.61666666666667,
+      "distance_km": 10.3
+    },
+    {
+      "point_id": "nami-01200026",
+      "point_name": "舞阪灯台前",
+      "port": "MI",
+      "name": "舞阪",
+      "lat": 34.68333333333333,
+      "lon": 137.61666666666667,
+      "distance_km": 3.4
+    },
+    {
+      "point_id": "nami-01200028",
+      "point_name": "新居浜",
+      "port": "MI",
+      "name": "舞阪",
+      "lat": 34.68333333333333,
+      "lon": 137.61666666666667,
+      "distance_km": 4.3
+    },
+    {
+      "point_id": "nami-01200048",
+      "point_name": "潮見坂",
+      "port": "MI",
+      "name": "舞阪",
+      "lat": 34.68333333333333,
+      "lon": 137.61666666666667,
+      "distance_km": 8.1
+    },
+    {
+      "point_id": "nami-01210028",
+      "point_name": "小松原",
+      "port": "MI",
+      "name": "舞阪",
+      "lat": 34.68333333333333,
+      "lon": 137.61666666666667,
+      "distance_km": 16.3
+    },
+    {
+      "point_id": "nami-01210001",
+      "point_name": "寺沢",
+      "port": "MI",
+      "name": "舞阪",
+      "lat": 34.68333333333333,
+      "lon": 137.61666666666667,
+      "distance_km": 17.2
+    },
+    {
+      "point_id": "nami-01210014",
+      "point_name": "百々",
+      "port": "I4",
+      "name": "赤羽根",
+      "lat": 34.6,
+      "lon": 137.18333333333334,
+      "distance_km": 12.6
+    },
+    {
+      "point_id": "nami-01210012",
+      "point_name": "チキン",
+      "port": "I4",
+      "name": "赤羽根",
+      "lat": 34.6,
+      "lon": 137.18333333333334,
+      "distance_km": 7.6
+    },
+    {
+      "point_id": "nami-01210005",
+      "point_name": "ロングビーチ",
+      "port": "I4",
+      "name": "赤羽根",
+      "lat": 34.6,
+      "lon": 137.18333333333334,
+      "distance_km": 3.1
+    },
+    {
+      "point_id": "nami-01210006",
+      "point_name": "ロコ",
+      "port": "I4",
+      "name": "赤羽根",
+      "lat": 34.6,
+      "lon": 137.18333333333334,
+      "distance_km": 1.2
+    },
+    {
+      "point_id": "nami-01210007",
+      "point_name": "港",
+      "port": "I4",
+      "name": "赤羽根",
+      "lat": 34.6,
+      "lon": 137.18333333333334,
+      "distance_km": 0.5
+    },
+    {
+      "point_id": "nami-01210008",
+      "point_name": "全日本",
+      "port": "I4",
+      "name": "赤羽根",
+      "lat": 34.6,
+      "lon": 137.18333333333334,
+      "distance_km": 0.4
+    },
+    {
+      "point_id": "nami-01210009",
+      "point_name": "新日本",
+      "port": "I4",
+      "name": "赤羽根",
+      "lat": 34.6,
+      "lon": 137.18333333333334,
+      "distance_km": 0.5
+    },
+    {
+      "point_id": "nami-01230004",
+      "point_name": "国府ノ浜・テトラ前",
+      "port": "TB",
+      "name": "鳥羽",
+      "lat": 34.483333333333334,
+      "lon": 136.81666666666666,
+      "distance_km": 16.9
+    },
+    {
+      "point_id": "nami-01230014",
+      "point_name": "国府ノ浜・三角〜ラスタ前",
+      "port": "TB",
+      "name": "鳥羽",
+      "lat": 34.483333333333334,
+      "lon": 136.81666666666666,
+      "distance_km": 17.5
+    },
+    {
+      "point_id": "nami-01230008",
+      "point_name": "国府ノ浜・松林",
+      "port": "TB",
+      "name": "鳥羽",
+      "lat": 34.483333333333334,
+      "lon": 136.81666666666666,
+      "distance_km": 18.3
+    },
+    {
+      "point_id": "nami-01230001",
+      "point_name": "市後浜",
+      "port": "TB",
+      "name": "鳥羽",
+      "lat": 34.483333333333334,
+      "lon": 136.81666666666666,
+      "distance_km": 20.8
+    },
+    {
+      "point_id": "nami-01330002",
+      "point_name": "磯ノ浦",
+      "port": "WY",
+      "name": "和歌山",
+      "lat": 34.21666666666667,
+      "lon": 135.15,
+      "distance_km": 7.2
+    },
+    {
+      "point_id": "nami-01330028",
+      "point_name": "磯ノ浦2",
+      "port": "WY",
+      "name": "和歌山",
+      "lat": 34.21666666666667,
+      "lon": 135.15,
+      "distance_km": 7.2
+    },
+    {
+      "point_id": "nami-09420008",
+      "point_name": "白浜海水浴場",
+      "port": "L7",
+      "name": "甲浦",
+      "lat": 33.55,
+      "lon": 134.3,
+      "distance_km": 1.2
+    },
+    {
+      "point_id": "nami-01420001",
+      "point_name": "生見",
+      "port": "L7",
+      "name": "甲浦",
+      "lat": 33.55,
+      "lon": 134.3,
+      "distance_km": 3.0
+    },
+    {
+      "point_id": "nami-01420024",
+      "point_name": "生見右側",
+      "port": "L7",
+      "name": "甲浦",
+      "lat": 33.55,
+      "lon": 134.3,
+      "distance_km": 3.0
+    },
+    {
+      "point_id": "nami-01390003",
+      "point_name": "内妻",
+      "port": "HW",
+      "name": "日和佐",
+      "lat": 33.71666666666667,
+      "lon": 134.55,
+      "distance_km": 14.9
+    },
+    {
+      "point_id": "nami-01390004",
+      "point_name": "宍喰",
+      "port": "L7",
+      "name": "甲浦",
+      "lat": 33.55,
+      "lon": 134.3,
+      "distance_km": 2.0
+    },
+    {
+      "point_id": "nami-01430004",
+      "point_name": "汐入川河口",
+      "port": "QF",
+      "name": "博多",
+      "lat": 33.61666666666667,
+      "lon": 130.4,
+      "distance_km": 34.5
+    },
+    {
+      "point_id": "nami-01430005",
+      "point_name": "波津漁港",
+      "port": "QF",
+      "name": "博多",
+      "lat": 33.61666666666667,
+      "lon": 130.4,
+      "distance_km": 33.4
+    },
+    {
+      "point_id": "nami-01430023",
+      "point_name": "さつき松原",
+      "port": "QF",
+      "name": "博多",
+      "lat": 33.61666666666667,
+      "lon": 130.4,
+      "distance_km": 29.3
+    },
+    {
+      "point_id": "nami-01430007",
+      "point_name": "釣川河口",
+      "port": "QF",
+      "name": "博多",
+      "lat": 33.61666666666667,
+      "lon": 130.4,
+      "distance_km": 27.9
+    },
+    {
+      "point_id": "nami-01430010",
+      "point_name": "三苫",
+      "port": "QF",
+      "name": "博多",
+      "lat": 33.61666666666667,
+      "lon": 130.4,
+      "distance_km": 9.8
+    },
+    {
+      "point_id": "nami-01430011",
+      "point_name": "奈多",
+      "port": "QF",
+      "name": "博多",
+      "lat": 33.61666666666667,
+      "lon": 130.4,
+      "distance_km": 8.9
+    },
+    {
+      "point_id": "nami-01430014",
+      "point_name": "二見ヶ浦",
+      "port": "QF",
+      "name": "博多",
+      "lat": 33.61666666666667,
+      "lon": 130.4,
+      "distance_km": 18.7
+    },
+    {
+      "point_id": "nami-01430015",
+      "point_name": "大口",
+      "port": "QF",
+      "name": "博多",
+      "lat": 33.61666666666667,
+      "lon": 130.4,
+      "distance_km": 19.7
+    },
+    {
+      "point_id": "nami-01430017",
+      "point_name": "野北",
+      "port": "KA",
+      "name": "唐津",
+      "lat": 33.46666666666667,
+      "lon": 129.96666666666667,
+      "distance_km": 22.6
+    },
+    {
+      "point_id": "nami-01430018",
+      "point_name": "芥屋",
+      "port": "KA",
+      "name": "唐津",
+      "lat": 33.46666666666667,
+      "lon": 129.96666666666667,
+      "distance_km": 19.6
+    },
+    {
+      "point_id": "nami-02490003",
+      "point_name": "江口浜",
+      "port": "ZJ",
+      "name": "阿久根",
+      "lat": 32.016666666666666,
+      "lon": 130.18333333333334,
+      "distance_km": 43.2
+    },
+    {
+      "point_id": "nami-01060010",
+      "point_name": "西目",
+      "port": "S1",
+      "name": "秋田",
+      "lat": 39.75,
+      "lon": 140.06666666666666,
+      "distance_km": 45.2
+    },
+    {
+      "point_id": "nami-01240007",
+      "point_name": "五十嵐浜",
+      "port": "S6",
+      "name": "新潟西港",
+      "lat": 37.93333333333333,
+      "lon": 139.06666666666666,
+      "distance_km": 13.7
+    },
+    {
+      "point_id": "nami-01240021",
+      "point_name": "郷津",
+      "port": "T3",
+      "name": "直江津",
+      "lat": 37.18333333333333,
+      "lon": 138.25,
+      "distance_km": 4.4
+    },
+    {
+      "point_id": "nami-01260008",
+      "point_name": "大浜(内灘)",
+      "port": "T1",
+      "name": "金沢",
+      "lat": 36.61666666666667,
+      "lon": 136.6,
+      "distance_km": 3.8
+    },
+    {
+      "point_id": "nami-01260011",
+      "point_name": "徳光",
+      "port": "T1",
+      "name": "金沢",
+      "lat": 36.61666666666667,
+      "lon": 136.6,
+      "distance_km": 10.5
+    },
+    {
+      "point_id": "nami-01270002",
+      "point_name": "三国五木",
+      "port": "ZG",
+      "name": "三国",
+      "lat": 36.25,
+      "lon": 136.15,
+      "distance_km": 14.4
+    },
+    {
+      "point_id": "nami-01270003",
+      "point_name": "三国新港",
+      "port": "ZG",
+      "name": "三国",
+      "lat": 36.25,
+      "lon": 136.15,
+      "distance_km": 12.2
+    },
+    {
+      "point_id": "nami-01270005",
+      "point_name": "鳥居ヶ浜",
+      "port": "MZ",
+      "name": "舞鶴",
+      "lat": 35.483333333333334,
+      "lon": 135.38333333333333,
+      "distance_km": 16.0
+    },
+    {
+      "point_id": "nami-01270007",
+      "point_name": "難波江",
+      "port": "MZ",
+      "name": "舞鶴",
+      "lat": 35.483333333333334,
+      "lon": 135.38333333333333,
+      "distance_km": 11.7
+    },
+    {
+      "point_id": "nami-01290004",
+      "point_name": "高嶋",
+      "port": "T6",
+      "name": "津居山",
+      "lat": 35.65,
+      "lon": 134.83333333333334,
+      "distance_km": 32.0
+    },
+    {
+      "point_id": "nami-01290002",
+      "point_name": "八丁浜",
+      "port": "T6",
+      "name": "津居山",
+      "lat": 35.65,
+      "lon": 134.83333333333334,
+      "distance_km": 17.8
+    },
+    {
+      "point_id": "nami-01370007",
+      "point_name": "白兎 歩道橋前付近",
+      "port": "ZE",
+      "name": "田後",
+      "lat": 35.6,
+      "lon": 134.31666666666666,
+      "distance_km": 19.9
+    },
+    {
+      "point_id": "nami-01370006",
+      "point_name": "小沢見",
+      "port": "ZE",
+      "name": "田後",
+      "lat": 35.6,
+      "lon": 134.31666666666666,
+      "distance_km": 20.6
+    },
+    {
+      "point_id": "nami-01360008",
+      "point_name": "千畳",
+      "port": "HA",
+      "name": "浜田",
+      "lat": 34.9,
+      "lon": 132.06666666666666,
+      "distance_km": 5.4
+    },
+    {
+      "point_id": "nami-01360010",
+      "point_name": "大塚",
+      "port": "ZK",
+      "name": "須佐",
+      "lat": 34.63333333333333,
+      "lon": 131.6,
+      "distance_km": 21.9
+    },
+    {
+      "point_id": "nami-01150016",
+      "point_name": "間々下（新島）",
+      "port": "QO",
+      "name": "神津島",
+      "lat": 34.21666666666667,
+      "lon": 139.13333333333333,
+      "distance_km": 18.8
+    },
+    {
+      "point_id": "nami-01150018",
+      "point_name": "前浜Ｂ堤（新島）",
+      "port": "QO",
+      "name": "神津島",
+      "lat": 34.21666666666667,
+      "lon": 139.13333333333333,
+      "distance_km": 20.5
+    },
+    {
+      "point_id": "nami-01150011",
+      "point_name": "淡井浦（新島）",
+      "port": "QO",
+      "name": "神津島",
+      "lat": 34.21666666666667,
+      "lon": 139.13333333333333,
+      "distance_km": 26.0
+    },
+    {
+      "point_id": "nami-01150013",
+      "point_name": "羽伏浦（新島）",
+      "port": "QO",
+      "name": "神津島",
+      "lat": 34.21666666666667,
+      "lon": 139.13333333333333,
+      "distance_km": 22.3
+    },
+    {
+      "point_id": "nami-01150014",
+      "point_name": "ヘリ下（新島）",
+      "port": "QO",
+      "name": "神津島",
+      "lat": 34.21666666666667,
+      "lon": 139.13333333333333,
+      "distance_km": 21.4
+    },
+    {
+      "point_id": "nami-01150015",
+      "point_name": "シークレット（新島）",
+      "port": "QO",
+      "name": "神津島",
+      "lat": 34.21666666666667,
+      "lon": 139.13333333333333,
+      "distance_km": 20.0
+    },
+    {
+      "point_id": "nami-01150050",
+      "point_name": "堀切（新島）",
+      "port": "QO",
+      "name": "神津島",
+      "lat": 34.21666666666667,
+      "lon": 139.13333333333333,
+      "distance_km": 20.3
+    },
+    {
+      "point_id": "nami-01490026",
+      "point_name": "イセキ（種子島）",
+      "port": "TJ",
+      "name": "種子島",
+      "lat": 30.466666666666665,
+      "lon": 130.96666666666667,
+      "distance_km": 35.1
+    },
+    {
+      "point_id": "nami-01490013",
+      "point_name": "風本（種子島）",
+      "port": "TJ",
+      "name": "種子島",
+      "lat": 30.466666666666665,
+      "lon": 130.96666666666667,
+      "distance_km": 27.0
+    },
+    {
+      "point_id": "nami-01490014",
+      "point_name": "浅川（種子島）",
+      "port": "TJ",
+      "name": "種子島",
+      "lat": 30.466666666666665,
+      "lon": 130.96666666666667,
+      "distance_km": 26.1
+    },
+    {
+      "point_id": "nami-01490015",
+      "point_name": "鉄浜（種子島）",
+      "port": "TJ",
+      "name": "種子島",
+      "lat": 30.466666666666665,
+      "lon": 130.96666666666667,
+      "distance_km": 22.0
+    },
+    {
+      "point_id": "nami-01490025",
+      "point_name": "ヨキノ（種子島）",
+      "port": "QH",
+      "name": "西之表",
+      "lat": 30.733333333333334,
+      "lon": 131.0,
+      "distance_km": 5.8
+    },
+    {
+      "point_id": "nami-01500004",
+      "point_name": "スーサイド（沖縄本島）",
+      "port": "NH",
+      "name": "那覇",
+      "lat": 26.216666666666665,
+      "lon": 127.66666666666667,
+      "distance_km": 15.4
+    },
+    {
+      "point_id": "nami-01500008",
+      "point_name": "ボウル（沖縄本島）",
+      "port": "NH",
+      "name": "那覇",
+      "lat": 26.216666666666665,
+      "lon": 127.66666666666667,
+      "distance_km": 14.3
+    }
+  ]
+}

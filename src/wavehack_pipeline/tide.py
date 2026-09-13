@@ -47,10 +47,17 @@ POINT_TO_PORT: dict[str, str] = {
     "青島": PORT_MIYAZAKI,
     "蚊口": PORT_MIYAZAKI,
     "高鍋": PORT_MIYAZAKI,  # NAME_REMAP前の名称も保険
-    "伊勢ヶ浜": PORT_MIYAZAKI,  # 細島(HX)は気象庁推算未提供のためMGで代替
+    "伊勢ヶ浜": "Z6",
     "お倉ヶ浜": PORT_MIYAZAKI,
     "金ヶ浜": PORT_MIYAZAKI,
 }
+
+# Explicit, coast-reviewed reference stations; never choose a port at runtime
+# using distance alone (nearby ports can be on the other side of a peninsula).
+_STATIONS = json.loads((Path(__file__).resolve().parents[2] / "data/tide_stations.json").read_text())
+TIDE_STATIONS = {s["point_name"]: s for s in _STATIONS["stations"]}
+TIDE_STATIONS["蚊口"] = TIDE_STATIONS["高鍋"]
+POINT_TO_PORT.update({name: s["port"] for name, s in TIDE_STATIONS.items()})
 
 
 @dataclass(frozen=True)
@@ -161,13 +168,22 @@ def _hourly_height_m(table: dict[date, TideDay], dt: datetime) -> float | None:
     if today is None:
         return None
     lo_cm = today.hourly_cm[h_idx_lo]
+    if lo_cm == 999:
+        return None
+    if frac == 0:
+        return lo_cm / 100.0
 
     if h_idx_hi < 24:
         hi_cm = today.hourly_cm[h_idx_hi]
     else:
         # 23時超は翌日の0時を参照
         nxt = table.get(d + timedelta(days=1))
-        hi_cm = nxt.hourly_cm[0] if nxt else lo_cm
+        if nxt is None:
+            return None
+        hi_cm = nxt.hourly_cm[0]
+
+    if hi_cm == 999:
+        return None
 
     return (lo_cm + (hi_cm - lo_cm) * frac) / 100.0
 
@@ -232,6 +248,8 @@ def tide_at(
 ) -> tuple[float | None, TidePhase | None]:
     """指定JST時刻の (海面高さm, 潮位フェーズ) を返す。データ欠損時は (None, None)。"""
     h_m = _hourly_height_m(table, jst_dt)
+    if h_m is None:
+        return None, None
     prev, nxt = _surrounding_extremes(table, jst_dt)
     phase = _phase_from_extremes(jst_dt, prev, nxt)
     return h_m, phase

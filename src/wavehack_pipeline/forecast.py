@@ -32,7 +32,7 @@ class ForecastSlot:
     wave_direction_deg: int
     wind_speed_kmh: float
     wind_direction_deg: int
-    tide_m: float
+    tide_m: float | None
     temperature_c: float
     weather: str  # sunny / cloudy / rainy
     score: int  # 0-10
@@ -118,7 +118,7 @@ def _gfs_slot_to_forecast_slot(
         wave_direction_deg=int(round(float(dirpw))) if dirpw is not None else 0,
         wind_speed_kmh=round(float(wind_ms) * 3.6, 1),
         wind_direction_deg=int(round(float(wdir))) if wdir is not None else 0,
-        tide_m=round(tide_m, 2) if tide_m is not None else 0.0,
+        tide_m=round(tide_m, 2) if tide_m is not None else None,
         temperature_c=_TEMP_PLACEHOLDER_C,
         weather=_WEATHER_PLACEHOLDER,
         score=int(round(max(0.0, min(1.0, composite_0_1)) * 10)),

@@ -1,67 +1,74 @@
-"""気象庁 潮汐推算データを取得して JSON キャッシュに保存する。
+"""Fetch reference-port predictions for the complete forecast date range.
 
-使い方:
-    python scripts/fetch_tide.py                          # 当年・宮崎/油津
-    python scripts/fetch_tide.py --year 2027 --ports MG AB
-    python scripts/fetch_tide.py --output output/tide_jma.json
+An incomplete download must not replace the last valid cache or be published.
 """
-
 from __future__ import annotations
-
 import argparse
+from concurrent.futures import ThreadPoolExecutor
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
+from wavehack_pipeline.tide import JST, POINT_TO_PORT, fetch_jma_tide, parse_jma_text, to_jsonable
 
-from wavehack_pipeline.tide import (
-    PORT_ABURATSU,
-    PORT_MIYAZAKI,
-    fetch_jma_tide,
-    parse_jma_text,
-    to_jsonable,
-)
+
+def forecast_dates(forecast: dict) -> set:
+    dates = {datetime.fromisoformat(s["timestamp_jst"]).astimezone(JST).date()
+             for p in forecast["points"] for s in p["slots"]}
+    if not dates:
+        raise ValueError("Forecast has no dates")
+    return dates | {min(dates) - timedelta(days=1), max(dates) + timedelta(days=1)}
+
+
+def fetch_tables(ports: list[str], dates: set) -> dict:
+    years = sorted({d.year for d in dates})
+    def fetch_one(job):
+        port, year = job
+        for attempt in range(3):
+            try:
+                table = parse_jma_text(fetch_jma_tide(year, port))
+                expected = {d for d in dates if d.year == year}
+                if not expected <= table.keys():
+                    raise ValueError(f"{port}/{year}: missing forecast dates")
+                if any(len(table[d].hourly_cm) != 24 or 999 in table[d].hourly_cm for d in expected):
+                    raise ValueError(f"{port}/{year}: missing hourly predictions")
+                return port, table
+            except Exception:
+                if attempt == 2:
+                    raise
+    tables = {port: {} for port in ports}
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        for port, table in pool.map(fetch_one, [(p, y) for p in ports for y in years]):
+            tables[port].update(table)
+    return tables
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--year", type=int, default=datetime.now().year)
-    parser.add_argument(
-        "--ports",
-        nargs="+",
-        default=[PORT_MIYAZAKI, PORT_ABURATSU],
-        help="気象庁港コード（2文字）。既定: MG AB",
-    )
-    parser.add_argument(
-        "--output",
-        type=Path,
-        default=ROOT / "output" / "tide_jma.json",
-    )
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--year", type=int, help="Explicit full-year fetch for maintenance")
+    parser.add_argument("--ports", nargs="+")
+    parser.add_argument("--points", type=Path, default=ROOT / "data/all_points.json")
+    parser.add_argument("--forecast", type=Path, default=ROOT / "output/forecast_gfs_wave.json")
+    parser.add_argument("--output", type=Path, default=ROOT / "output/tide_jma.json")
     args = parser.parse_args()
-
-    payload: dict = {
-        "fetched_at": datetime.now(timezone.utc).isoformat(),
-        "year": args.year,
-        "source": "jma_suisan_txt",
-        "ports": {},
-    }
-
-    for port in args.ports:
-        try:
-            text = fetch_jma_tide(args.year, port)
-        except Exception as e:
-            print(f"  ERROR: fetch {port}: {e}", file=sys.stderr)
-            continue
-        table = parse_jma_text(text)
-        payload["ports"][port] = to_jsonable(table)
-        print(f"  OK: {port} {args.year} = {len(table)} days")
-
+    if args.year:
+        first = datetime(args.year, 1, 1).date()
+        dates = {first + timedelta(days=i) for i in range((datetime(args.year + 1, 1, 1).date() - first).days)}
+    else:
+        dates = forecast_dates(json.loads(args.forecast.read_text()))
+    ports = sorted(set(args.ports or [POINT_TO_PORT[p["name"]] for p in json.loads(args.points.read_text())]))
+    tables = fetch_tables(ports, dates)
+    payload = {"fetched_at": datetime.now(timezone.utc).isoformat(),
+               "years": sorted({d.year for d in dates}), "source": "jma_suisan_txt",
+               "ports": {p: to_jsonable(t) for p, t in tables.items()}}
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"wrote {args.output} ({args.output.stat().st_size:,} bytes)")
+    temporary = args.output.with_suffix(".tmp")
+    temporary.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+    temporary.replace(args.output)
+    print(f"Validated {len(ports)} ports, {len(dates)} forecast/adjacent dates; wrote {args.output}")
     return 0
 
 
