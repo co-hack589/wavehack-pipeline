@@ -33,7 +33,7 @@ from wavehack_pipeline.comments import (
 )
 from wavehack_pipeline.daylight import slot_is_daylight
 from wavehack_pipeline.scoring import ScoringRules, score_slot
-from wavehack_pipeline.tide import POINT_TO_PORT, TIDE_STATIONS, load_tide_cache, tide_at
+from wavehack_pipeline.tide import POINT_TO_PORT, TIDE_STATIONS, load_tide_cache, tide_at, hourly_tide_series
 
 # miyazaki_points.json と scoring_rules.yaml の名称差異吸収
 # （miyazaki_points.json は「高鍋」、yaml は「蚊口」にリネーム済）
@@ -160,6 +160,7 @@ def main() -> int:
             "best_rank": best["rank"] if best else None,
             "daily_summaries": daily_summaries,
             "slots": scored_slots,
+            "tide_hourly": hourly_tide_series(tide_table or {}, {datetime.fromisoformat(s["timestamp_jst"]).date() for s in scored_slots}),
         })
 
     # エリア全体（宮崎9ポイント集約）の Today's Topic

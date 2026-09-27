@@ -299,3 +299,14 @@ def load_tide_cache(path: Path) -> dict[str, dict[date, TideDay]]:
     """fetch_tide.py が出力した JSON を {port: {date: TideDay}} で返す。"""
     raw = json.loads(path.read_text(encoding="utf-8"))
     return {port: from_jsonable(items) for port, items in raw["ports"].items()}
+
+
+def hourly_tide_series(table: dict[date, TideDay], dates: set[date]) -> list[dict]:
+    """Preserve all JMA hours independently of the GFS sampling interval."""
+    result = []
+    for day in sorted(dates):
+        for hour in range(24):
+            stamp = datetime(day.year, day.month, day.day, hour, tzinfo=JST)
+            height, _ = tide_at(table, stamp)
+            result.append({"timestamp_jst": stamp.isoformat(), "tide_m": height})
+    return result

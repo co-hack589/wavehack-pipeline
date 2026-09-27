@@ -34,6 +34,13 @@ def validate_dashboard(dashboard: dict, master: list[dict], now: datetime) -> No
     for point in points:
         if not point.get("tide_station") or point.get("tide_port") != point["tide_station"].get("port"):
             raise ValueError(f"{point['name_en']}: missing tide reference station")
+        tide_hours = {s["timestamp_jst"]: s.get("tide_m") for s in point.get("tide_hourly", [])}
+        for day in required_dates:
+            for hour in range(24):
+                stamp = f"{day}T{hour:02d}:00:00+09:00"
+                value = tide_hours.get(stamp)
+                if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
+                    raise ValueError(f"{point['name_en']}: missing hourly tide at {stamp}")
         available = set()
         for slot in point.get("slots", []):
             tide = slot.get("tide_m")

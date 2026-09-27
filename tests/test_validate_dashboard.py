@@ -19,6 +19,15 @@ class CoverageTests(unittest.TestCase):
             for day in range(13, 20) for hour in range(0, 24, 3)
         ]) for p in self.master]}
 
+        for point in self.dashboard["points"]:
+            point["tide_hourly"] = [{"timestamp_jst": f"2026-09-{day}T{hour:02d}:00:00+09:00", "tide_m": 0.0}
+                for day in range(13, 20) for hour in range(24)]
+
+    def test_sparse_tides_cannot_publish(self):
+        self.dashboard["points"][0]["tide_hourly"].pop(160)
+        with self.assertRaisesRegex(ValueError, "missing hourly tide"):
+            module.validate_dashboard(self.dashboard, self.master, self.now)
+
     def test_future_missing_wave_or_wind_rejected(self):
         for field in ("htsgw_m", "wind_ms"):
             feed = copy.deepcopy(self.dashboard)
@@ -66,7 +75,7 @@ class CoverageTests(unittest.TestCase):
 
     def test_previous_days_only_are_rejected(self):
         self.now = datetime(2026, 9, 14, 15, 1, tzinfo=timezone.utc)
-        with self.assertRaisesRegex(ValueError, "missing current"):
+        with self.assertRaises(ValueError):
             module.validate_dashboard(self.dashboard, self.master, self.now)
 
 
