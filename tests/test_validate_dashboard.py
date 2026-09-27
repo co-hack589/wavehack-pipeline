@@ -15,9 +15,23 @@ class CoverageTests(unittest.TestCase):
         # UTC is still Sep 12, but Japan has crossed midnight.
         self.now = datetime(2026, 9, 12, 15, 1, tzinfo=timezone.utc)
         self.dashboard = {"points": [dict(p, tide_port="MG", tide_station={"port": "MG"}, slots=[
-            {"timestamp_jst": f"2026-09-{day}T06:00:00+09:00", "htsgw_m": 0.0, "tide_m": 0.0}
-            for day in (13, 14)
+            {"timestamp_jst": f"2026-09-{day}T{hour:02d}:00:00+09:00", "htsgw_m": 0.0, "wind_ms": 0.0, "tide_m": 0.0}
+            for day in range(13, 20) for hour in range(0, 24, 3)
         ]) for p in self.master]}
+
+    def test_future_missing_wave_or_wind_rejected(self):
+        for field in ("htsgw_m", "wind_ms"):
+            feed = copy.deepcopy(self.dashboard)
+            feed["points"][0]["slots"][22][field] = None
+            with self.assertRaises(ValueError):
+                module.validate_dashboard(feed, self.master, self.now)
+
+    def test_missing_evening_and_truncated_horizon_rejected(self):
+        for slots in (self.dashboard["points"][0]["slots"][:-4], self.dashboard["points"][0]["slots"][:21] + self.dashboard["points"][0]["slots"][24:]):
+            feed = copy.deepcopy(self.dashboard)
+            feed["points"][0]["slots"] = slots
+            with self.assertRaises(ValueError):
+                module.validate_dashboard(feed, self.master, self.now)
 
     def test_complete_feed_including_zero_waves(self):
         module.validate_dashboard(self.dashboard, self.master, self.now)

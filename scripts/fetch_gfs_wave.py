@@ -66,7 +66,6 @@ def main() -> int:
             print(f"ERROR: no points matched {sorted(keys)}", file=sys.stderr)
             return 1
 
-    run = latest_run_base()
     # f0..step_3h_after は1時間刻み、それ以降は3時間刻み
     fhours: list[int] = []
     for h in range(args.hours[0], args.hours[1] + 1):
@@ -74,6 +73,10 @@ def main() -> int:
             fhours.append(h)
         elif (h - args.step_3h_after) % 3 == 0:
             fhours.append(h)
+
+    if not fhours:
+        raise ValueError("No forecast hours requested")
+    run = latest_run_base(required_fhour=max(fhours))
 
     print(f"run base UTC: {run.strftime('%Y-%m-%dT%H:%M:%S')}")
     print(f"run base JST: {run.astimezone(timezone(timedelta(hours=9))).strftime('%Y-%m-%dT%H:%M:%S')}")

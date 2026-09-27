@@ -128,7 +128,7 @@ def _grib_url(run: datetime, fhour: int, *, source: str = "s3") -> str:
     return f"{S3_BASE}/gfs.{date_s}/{hh}/wave/gridded/{fname}"
 
 
-def latest_run_base(*, max_lookback: int = 8, timeout: float = 15.0) -> datetime:
+def latest_run_base(*, max_lookback: int = 8, timeout: float = 15.0, required_fhour: int = 168) -> datetime:
     """利用可能な最新 GFS Wave run を S3 HEAD で判定して UTC datetime を返す。
 
     S3 で見つからない場合は NOMADS にもフォールバック。
@@ -142,7 +142,7 @@ def latest_run_base(*, max_lookback: int = 8, timeout: float = 15.0) -> datetime
         for source in ("s3", "nomads"):
             try:
                 resp = sess.head(
-                    _grib_url(cand, 0, source=source),
+                    _grib_url(cand, required_fhour, source=source),
                     timeout=(DEFAULT_CONNECT_TIMEOUT, timeout),
                     allow_redirects=True,
                 )
@@ -336,9 +336,11 @@ def fetch_forecast(
     fhours: 取得する forecast hour のリスト。Noneなら 0..80 (1時間刻み)。
     cache_dir: grib2 を保存するディレクトリ。Noneなら一時ディレクトリを使い終了時に削除。
     """
+    fhour_list = sorted(set(fhours)) if fhours is not None else list(range(0, 81))
+    if not fhour_list:
+        raise ValueError("At least one forecast hour is required")
     if run is None:
-        run = latest_run_base()
-    fhour_list = list(fhours) if fhours is not None else list(range(0, 81))
+        run = latest_run_base(required_fhour=max(fhour_list))
     points_list = list(points)
 
     cleanup = False
@@ -409,31 +411,16 @@ def fetch_forecast(
                             f"  FAILED f{fh:03d}: {type(e).__name__}: {e}",
                             flush=True,
                         )
-                    # 欠損として None スロットを記録（後段で None 入り slot として残す）
-                    empty: dict[str, float | None] = {
-                        k: None
-                        for k in (
-                            "htsgw_m", "perpw_s", "dirpw_deg",
-                            "wvhgt_m", "wvper_s", "wvdir_deg",
-                            "swell1_m", "swell2_m", "swell3_m",
-                            "swper1_s", "swper2_s", "swper3_s",
-                            "swdir1_deg", "swdir2_deg", "swdir3_deg",
-                            "wind_ms", "wdir_deg", "ugrd_ms", "vgrd_ms",
-                        )
-                    }
-                    for p in points_list:
-                        rows[p.name][fh] = empty
                 completed += 1
                 if progress:
                     print(
                         f"  fetched f{fh:03d} ({completed}/{len(fhour_list)})",
                         flush=True,
                     )
-        if failed_fhours and progress:
-            print(
-                f"\n  WARN: {len(failed_fhours)} slot(s) failed after all retries: "
-                f"{sorted(failed_fhours)}",
-                flush=True,
+        if failed_fhours:
+            raise RuntimeError(
+                f"Incomplete GFS forecast: {len(failed_fhours)} failed slots "
+                f"{sorted(failed_fhours)}; refusing to publish"
             )
     finally:
         if cleanup:
