@@ -8,13 +8,22 @@ from unittest.mock import patch
 
 ROOT = Path(__file__).parents[1]
 sys.path.insert(0, str(ROOT / "src"))
-from wavehack_pipeline.tide import JST, POINT_TO_PORT, TIDE_STATIONS, TideDay, tide_at
+from wavehack_pipeline.tide import JST, POINT_TO_PORT, TIDE_STATIONS, TideDay, tide_at, hourly_tide_series
 spec = importlib.util.spec_from_file_location("fetch_tide", ROOT / "scripts/fetch_tide.py")
 fetch = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(fetch)
 
 
 class TideTests(unittest.TestCase):
+    def test_hourly_series_keeps_every_hour_and_missing_source(self):
+        day = date(2026, 10, 3)
+        table = {day: TideDay(day, [-20, 0] + list(range(2,24)), [], [])}
+        rows = hourly_tide_series(table, {day})
+        self.assertEqual(len(rows), 24)
+        self.assertEqual([x["tide_m"] for x in rows[:3]], [-0.2, 0, 0.02])
+        self.assertEqual(rows[-1]["timestamp_jst"], "2026-10-03T23:00:00+09:00")
+        self.assertTrue(all(x["tide_m"] is None for x in hourly_tide_series({}, {day})))
+
     def test_all_points_have_reviewed_stations(self):
         master = json.loads((ROOT / "data/all_points.json").read_text())
         self.assertEqual(len(master), 151)
