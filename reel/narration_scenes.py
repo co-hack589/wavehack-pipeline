@@ -1,0 +1,75 @@
+"""リールの4シーンそれぞれに合わせたナレーションを、予報データから定型で組み立てて Gemini TTS (Aoede) で音声化する。
+シーンごとに別ファイルにすることで、各シーンの頭で再生でき、映像とズレない。キーは環境変数 GEMINI_API_KEY から読む。"""
+from __future__ import annotations
+
+import json, os, sys
+sys.path.insert(0, os.path.dirname(__file__))
+from narration import speak  # noqa: E402
+
+DAYJ = {"sat": "土曜", "sun": "日曜"}
+
+def jtime(t: str) -> str:
+    h = int(t[:2])
+    return "正午" if h == 12 else f"午後{h - 12}時" if h > 12 else f"午前{h}時"
+
+# アプリの waveSizeLabel (src/app/_shared/wave-size.ts) と同じ閾値。読み上げ用の言い回し
+def size_words(m: float) -> str:
+    cm = m * 100
+    if cm < 50: return "すねからひざくらい"
+    if cm < 80: return "ももから腰くらい"
+    if cm < 120: return "腹から胸くらい"
+    if cm < 180: return "肩から頭くらい"
+    return "頭オーバー"
+
+def lines(P: dict) -> list[str]:
+    key, s = max(((k, x) for k in ("sat", "sun") for x in P["days"][k]), key=lambda kx: kx[1]["score"])
+    other = "sun" if key == "sat" else "sat"
+    o = max(P["days"][other], key=lambda x: x["score"])
+    good = sum(1 for m in P["members"] if (m[key] or 0) >= 55)
+    area = P["group"].replace("・", "")
+    size = size_words(s["h"])
+    both = abs(o["h"] - s["h"]) < 0.3
+    return [
+        f"今週末の{area}エリアは、{len(P['members'])}地点中{good}地点がおすすめ。",
+        f"{P['name']}は{'土日とも' if both else DAYJ[key] + 'が'}{size}のサイズ。ベストは{DAYJ[key]}の{jtime(s['t'])}です。",
+        f"うねりは{s['swell']}から、周期{round(s['per'])}秒。風は{s['wms']:.0f}メートルの{s['wind']}です。",
+    ]
+
+# 誘導の一言は全地点共通。1回だけ音声化して使い回す
+CTA_TEXT = "詳しくはプロフィールのリンクから、ウェーブハックでチェックしてね！"
+CTA_FILE = "common_cta.wav"
+
+def generate(points: list[dict], out_dir: str, cta_dir: str, names: list[str] | None = None) -> None:
+    """シーン1〜3はポイントごとに音声化、4（誘導）は cta_dir の共通音声を使い回す。"""
+    cta_path, cta_meta = f"{cta_dir}/{CTA_FILE}", f"{cta_dir}/common_cta.json"
+    if not (os.path.exists(cta_path) and os.path.exists(cta_meta) and json.load(open(cta_meta))["text"] == CTA_TEXT):
+        json.dump({"text": CTA_TEXT, "seconds": round(speak(CTA_TEXT, cta_path), 2)}, open(cta_meta, "w"), ensure_ascii=False)
+    cta = json.load(open(cta_meta))
+    for P in points:
+        if names and P["name"] not in names:
+            continue
+        prev = f"{out_dir}/{P['name']}_scenes.json"
+        done = json.load(open(prev)) if os.path.exists(prev) else []
+        meta = []
+        for i, text in enumerate(lines(P), 1):
+            out = f"{out_dir}/{P['name']}_s{i}.wav"
+            if os.path.exists(out) and len(done) >= i and done[i - 1]["text"] == text:
+                sec = done[i - 1]["seconds"]  # 同じ原稿の音声は作り直さない（再実行時）
+            else:
+                sec = speak(text, out)
+            meta.append({"text": text, "seconds": round(sec, 2), "file": out})
+            print(P["name"], i, f"{sec:.1f}s", text, flush=True)
+            json.dump(meta, open(prev, "w"), ensure_ascii=False, indent=1)  # 途中経過も保存
+        json.dump(meta + [{"text": cta["text"], "seconds": cta["seconds"], "file": cta_path}], open(prev, "w"), ensure_ascii=False, indent=1)
+
+
+if __name__ == "__main__":
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--data", required=True, help="build_reel_data.py の出力")
+    ap.add_argument("--out-dir", required=True)
+    ap.add_argument("--cta-dir", default=os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets", "voice"))
+    ap.add_argument("names", nargs="*")
+    a = ap.parse_args()
+    os.makedirs(a.out_dir, exist_ok=True)
+    generate(json.load(open(a.data))["points"], a.out_dir, a.cta_dir, a.names)

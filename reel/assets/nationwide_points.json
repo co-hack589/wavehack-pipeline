@@ -1,0 +1,2684 @@
+{
+  "total": 150,
+  "areas": [
+    {
+      "code": "02",
+      "name": "北海道",
+      "region": "北海道",
+      "prefectures": [
+        "北海道"
+      ],
+      "point_count": 2,
+      "point_ids": [
+        "nami-01020002",
+        "nami-01040008"
+      ]
+    },
+    {
+      "code": "03",
+      "name": "東北",
+      "region": "東北",
+      "prefectures": [
+        "岩手",
+        "宮城",
+        "福島"
+      ],
+      "point_count": 6,
+      "point_ids": [
+        "nami-01070005",
+        "nami-01080006",
+        "nami-01080007",
+        "nami-01080011",
+        "nami-01080012",
+        "nami-01100007"
+      ]
+    },
+    {
+      "code": "04",
+      "name": "茨城",
+      "region": "茨城",
+      "prefectures": [
+        "茨城"
+      ],
+      "point_count": 7,
+      "point_ids": [
+        "nami-01110020",
+        "nami-01110009",
+        "nami-01110011",
+        "nami-01110010",
+        "nami-01110017",
+        "nami-01110018",
+        "nami-01110005"
+      ]
+    },
+    {
+      "code": "05",
+      "name": "千葉北",
+      "region": "千葉北",
+      "prefectures": [
+        "千葉"
+      ],
+      "point_count": 22,
+      "point_ids": [
+        "nami-01160007",
+        "nami-01160008",
+        "nami-01160009",
+        "nami-01160010",
+        "nami-01160070",
+        "nami-09160017",
+        "nami-01160011",
+        "nami-01160012",
+        "nami-01160013",
+        "nami-01160014",
+        "nami-01160015",
+        "nami-01160016",
+        "nami-01160021",
+        "nami-01160024",
+        "nami-01160025",
+        "nami-01160028",
+        "nami-01160096",
+        "nami-01160001",
+        "nami-01160004",
+        "nami-01160058",
+        "nami-01160006",
+        "nami-09160010"
+      ]
+    },
+    {
+      "code": "06",
+      "name": "千葉南",
+      "region": "千葉南",
+      "prefectures": [
+        "千葉"
+      ],
+      "point_count": 8,
+      "point_ids": [
+        "nami-01160031",
+        "nami-01160040",
+        "nami-01160041",
+        "nami-01160097",
+        "nami-01160043",
+        "nami-01160045",
+        "nami-01160046",
+        "nami-01160047"
+      ]
+    },
+    {
+      "code": "07",
+      "name": "湘南",
+      "region": "湘南",
+      "prefectures": [
+        "神奈川"
+      ],
+      "point_count": 21,
+      "point_ids": [
+        "nami-01170001",
+        "nami-01170003",
+        "nami-01170007",
+        "nami-02170002",
+        "nami-01170013",
+        "nami-01170100",
+        "nami-01170010",
+        "nami-01170014",
+        "nami-01170017",
+        "nami-01170020",
+        "nami-01170023",
+        "nami-01170024",
+        "nami-01170025",
+        "nami-01170027",
+        "nami-01170036",
+        "nami-01170101",
+        "nami-01170042",
+        "nami-01170043",
+        "nami-01170044",
+        "nami-01170047",
+        "nami-01170045"
+      ]
+    },
+    {
+      "code": "08",
+      "name": "伊豆・伊東",
+      "region": "伊豆・伊東",
+      "prefectures": [
+        "静岡"
+      ],
+      "point_count": 5,
+      "point_ids": [
+        "nami-09200011",
+        "nami-01200004",
+        "nami-01200005",
+        "nami-01200007",
+        "nami-01200009"
+      ]
+    },
+    {
+      "code": "09",
+      "name": "静岡・浜松",
+      "region": "静岡・浜松",
+      "prefectures": [
+        "静岡"
+      ],
+      "point_count": 10,
+      "point_ids": [
+        "nami-01200012",
+        "nami-01200013",
+        "nami-02200011",
+        "nami-01200014",
+        "nami-02200009",
+        "nami-01200019",
+        "nami-01200023",
+        "nami-01200026",
+        "nami-01200028",
+        "nami-01200048"
+      ]
+    },
+    {
+      "code": "10",
+      "name": "伊良湖",
+      "region": "伊良湖",
+      "prefectures": [
+        "愛知",
+        "静岡"
+      ],
+      "point_count": 9,
+      "point_ids": [
+        "nami-01210028",
+        "nami-01210001",
+        "nami-01210014",
+        "nami-01210012",
+        "nami-01210005",
+        "nami-01210006",
+        "nami-01210007",
+        "nami-01210008",
+        "nami-01210009"
+      ]
+    },
+    {
+      "code": "11",
+      "name": "伊勢・志摩",
+      "region": "伊勢・志摩",
+      "prefectures": [
+        "三重"
+      ],
+      "point_count": 4,
+      "point_ids": [
+        "nami-01230004",
+        "nami-01230014",
+        "nami-01230008",
+        "nami-01230001"
+      ]
+    },
+    {
+      "code": "12",
+      "name": "和歌山",
+      "region": "和歌山",
+      "prefectures": [
+        "和歌山"
+      ],
+      "point_count": 2,
+      "point_ids": [
+        "nami-01330002",
+        "nami-01330028"
+      ]
+    },
+    {
+      "code": "13",
+      "name": "四国",
+      "region": "四国",
+      "prefectures": [
+        "徳島",
+        "高知",
+        "愛媛"
+      ],
+      "point_count": 5,
+      "point_ids": [
+        "nami-09420008",
+        "nami-01420001",
+        "nami-01420024",
+        "nami-01390003",
+        "nami-01390004"
+      ]
+    },
+    {
+      "code": "14",
+      "name": "宮崎",
+      "region": "宮崎",
+      "prefectures": [
+        "宮崎"
+      ],
+      "point_count": 9,
+      "point_ids": [
+        "kizakihama",
+        "hitotsuba",
+        "aoshima",
+        "okuragahama",
+        "kanegahama",
+        "isegahama",
+        "ibii",
+        "odotsu",
+        "kakuchi"
+      ]
+    },
+    {
+      "code": "15",
+      "name": "福岡周辺",
+      "region": "福岡周辺",
+      "prefectures": [
+        "福岡"
+      ],
+      "point_count": 10,
+      "point_ids": [
+        "nami-01430004",
+        "nami-01430005",
+        "nami-01430023",
+        "nami-01430007",
+        "nami-01430010",
+        "nami-01430011",
+        "nami-01430014",
+        "nami-01430015",
+        "nami-01430017",
+        "nami-01430018"
+      ]
+    },
+    {
+      "code": "16",
+      "name": "東シナ海",
+      "region": "東シナ海",
+      "prefectures": [
+        "鹿児島"
+      ],
+      "point_count": 1,
+      "point_ids": [
+        "nami-02490003"
+      ]
+    },
+    {
+      "code": "17",
+      "name": "日本海北部",
+      "region": "日本海北部",
+      "prefectures": [
+        "新潟"
+      ],
+      "point_count": 3,
+      "point_ids": [
+        "nami-01060010",
+        "nami-01240007",
+        "nami-01240021"
+      ]
+    },
+    {
+      "code": "18",
+      "name": "日本海西部",
+      "region": "日本海西部",
+      "prefectures": [
+        "鳥取",
+        "島根"
+      ],
+      "point_count": 12,
+      "point_ids": [
+        "nami-01260008",
+        "nami-01260011",
+        "nami-01270002",
+        "nami-01270003",
+        "nami-01270005",
+        "nami-01270007",
+        "nami-01290004",
+        "nami-01290002",
+        "nami-01370007",
+        "nami-01370006",
+        "nami-01360008",
+        "nami-01360010"
+      ]
+    },
+    {
+      "code": "20",
+      "name": "アイランド",
+      "region": "アイランド",
+      "prefectures": [
+        "東京(伊豆諸島)",
+        "鹿児島(種子島)",
+        "沖縄"
+      ],
+      "point_count": 14,
+      "point_ids": [
+        "nami-01150016",
+        "nami-01150018",
+        "nami-01150011",
+        "nami-01150013",
+        "nami-01150014",
+        "nami-01150015",
+        "nami-01150050",
+        "nami-01490026",
+        "nami-01490013",
+        "nami-01490014",
+        "nami-01490015",
+        "nami-01490025",
+        "nami-01500004",
+        "nami-01500008"
+      ]
+    }
+  ],
+  "points": [
+    {
+      "id": "nami-01020002",
+      "pinpoint": "01020002",
+      "name": "毘砂別",
+      "area_code": "02",
+      "area_name": "北海道",
+      "region": "北海道",
+      "prefectures": [
+        "北海道"
+      ],
+      "lat": 43.55924722,
+      "lng": 141.3761903,
+      "sort_key": "A",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=02&pinpoint=01020002"
+    },
+    {
+      "id": "nami-01040008",
+      "pinpoint": "01040008",
+      "name": "浜厚真",
+      "area_code": "02",
+      "area_name": "北海道",
+      "region": "北海道",
+      "prefectures": [
+        "北海道"
+      ],
+      "lat": 42.604031,
+      "lng": 141.825726,
+      "sort_key": "B",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=02&pinpoint=01040008"
+    },
+    {
+      "id": "nami-01070005",
+      "pinpoint": "01070005",
+      "name": "浪板",
+      "area_code": "03",
+      "area_name": "東北",
+      "region": "東北",
+      "prefectures": [
+        "岩手",
+        "宮城",
+        "福島"
+      ],
+      "lat": 39.39216278,
+      "lng": 141.9461058,
+      "sort_key": "A",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=03&pinpoint=01070005"
+    },
+    {
+      "id": "nami-01080006",
+      "pinpoint": "01080006",
+      "name": "小豆浜",
+      "area_code": "03",
+      "area_name": "東北",
+      "region": "東北",
+      "prefectures": [
+        "岩手",
+        "宮城",
+        "福島"
+      ],
+      "lat": 38.294681,
+      "lng": 141.073397,
+      "sort_key": "B",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=03&pinpoint=01080006"
+    },
+    {
+      "id": "nami-01080007",
+      "pinpoint": "01080007",
+      "name": "仙台新港",
+      "area_code": "03",
+      "area_name": "東北",
+      "region": "東北",
+      "prefectures": [
+        "岩手",
+        "宮城",
+        "福島"
+      ],
+      "lat": 38.26291722,
+      "lng": 141.0219669,
+      "sort_key": "C",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=03&pinpoint=01080007"
+    },
+    {
+      "id": "nami-01080011",
+      "pinpoint": "01080011",
+      "name": "荒浜河口",
+      "area_code": "03",
+      "area_name": "東北",
+      "region": "東北",
+      "prefectures": [
+        "岩手",
+        "宮城",
+        "福島"
+      ],
+      "lat": 38.04697583,
+      "lng": 140.9217597,
+      "sort_key": "D",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=03&pinpoint=01080011"
+    },
+    {
+      "id": "nami-01080012",
+      "pinpoint": "01080012",
+      "name": "荒浜プール",
+      "area_code": "03",
+      "area_name": "東北",
+      "region": "東北",
+      "prefectures": [
+        "岩手",
+        "宮城",
+        "福島"
+      ],
+      "lat": 38.04805722,
+      "lng": 140.9221031,
+      "sort_key": "E",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=03&pinpoint=01080012"
+    },
+    {
+      "id": "nami-01100007",
+      "pinpoint": "01100007",
+      "name": "坂下",
+      "area_code": "03",
+      "area_name": "東北",
+      "region": "東北",
+      "prefectures": [
+        "岩手",
+        "宮城",
+        "福島"
+      ],
+      "lat": 37.67410639,
+      "lng": 141.0152292,
+      "sort_key": "F",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=03&pinpoint=01100007"
+    },
+    {
+      "id": "nami-01110020",
+      "pinpoint": "01110020",
+      "name": "河原子",
+      "area_code": "04",
+      "area_name": "茨城",
+      "region": "茨城",
+      "prefectures": [
+        "茨城"
+      ],
+      "lat": 36.54593194,
+      "lng": 140.6459642,
+      "sort_key": "A",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=04&pinpoint=01110020"
+    },
+    {
+      "id": "nami-01110009",
+      "pinpoint": "01110009",
+      "name": "大洗",
+      "area_code": "04",
+      "area_name": "茨城",
+      "region": "茨城",
+      "prefectures": [
+        "茨城"
+      ],
+      "lat": 36.33282806,
+      "lng": 140.59453,
+      "sort_key": "B",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=04&pinpoint=01110009"
+    },
+    {
+      "id": "nami-01110011",
+      "pinpoint": "01110011",
+      "name": "大貫つるかめ下",
+      "area_code": "04",
+      "area_name": "茨城",
+      "region": "茨城",
+      "prefectures": [
+        "茨城"
+      ],
+      "lat": 36.29710694,
+      "lng": 140.5629014,
+      "sort_key": "C",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=04&pinpoint=01110011"
+    },
+    {
+      "id": "nami-01110010",
+      "pinpoint": "01110010",
+      "name": "大貫海の子",
+      "area_code": "04",
+      "area_name": "茨城",
+      "region": "茨城",
+      "prefectures": [
+        "茨城"
+      ],
+      "lat": 36.29039667,
+      "lng": 140.5597258,
+      "sort_key": "D",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=04&pinpoint=01110010"
+    },
+    {
+      "id": "nami-01110017",
+      "pinpoint": "01110017",
+      "name": "とっぷさんて下",
+      "area_code": "04",
+      "area_name": "茨城",
+      "region": "茨城",
+      "prefectures": [
+        "茨城"
+      ],
+      "lat": 36.08850556,
+      "lng": 140.6075978,
+      "sort_key": "E",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=04&pinpoint=01110017"
+    },
+    {
+      "id": "nami-01110018",
+      "pinpoint": "01110018",
+      "name": "平井浜・右側",
+      "area_code": "04",
+      "area_name": "茨城",
+      "region": "茨城",
+      "prefectures": [
+        "茨城"
+      ],
+      "lat": 35.97033083,
+      "lng": 140.6731725,
+      "sort_key": "F",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=04&pinpoint=01110018"
+    },
+    {
+      "id": "nami-01110005",
+      "pinpoint": "01110005",
+      "name": "波崎",
+      "area_code": "04",
+      "area_name": "茨城",
+      "region": "茨城",
+      "prefectures": [
+        "茨城"
+      ],
+      "lat": 35.754105,
+      "lng": 140.8305644,
+      "sort_key": "G",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=04&pinpoint=01110005"
+    },
+    {
+      "id": "nami-01160007",
+      "pinpoint": "01160007",
+      "name": "作田",
+      "area_code": "05",
+      "area_name": "千葉北",
+      "region": "千葉北",
+      "prefectures": [
+        "千葉"
+      ],
+      "lat": 35.54182972,
+      "lng": 140.4660417,
+      "sort_key": "A",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=05&pinpoint=01160007"
+    },
+    {
+      "id": "nami-01160008",
+      "pinpoint": "01160008",
+      "name": "片貝漁港",
+      "area_code": "05",
+      "area_name": "千葉北",
+      "region": "千葉北",
+      "prefectures": [
+        "千葉"
+      ],
+      "lat": 35.53337861,
+      "lng": 140.4583167,
+      "sort_key": "B",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=05&pinpoint=01160008"
+    },
+    {
+      "id": "nami-01160009",
+      "pinpoint": "01160009",
+      "name": "片貝新堤",
+      "area_code": "05",
+      "area_name": "千葉北",
+      "region": "千葉北",
+      "prefectures": [
+        "千葉"
+      ],
+      "lat": 35.53212139,
+      "lng": 140.4569436,
+      "sort_key": "C",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=05&pinpoint=01160009"
+    },
+    {
+      "id": "nami-01160010",
+      "pinpoint": "01160010",
+      "name": "豊海",
+      "area_code": "05",
+      "area_name": "千葉北",
+      "region": "千葉北",
+      "prefectures": [
+        "千葉"
+      ],
+      "lat": 35.50816,
+      "lng": 140.4373742,
+      "sort_key": "D",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=05&pinpoint=01160010"
+    },
+    {
+      "id": "nami-01160070",
+      "pinpoint": "01160070",
+      "name": "白子（剃金）",
+      "area_code": "05",
+      "area_name": "千葉北",
+      "region": "千葉北",
+      "prefectures": [
+        "千葉"
+      ],
+      "lat": 35.44937861,
+      "lng": 140.4070972,
+      "sort_key": "E",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=05&pinpoint=01160070"
+    },
+    {
+      "id": "nami-09160017",
+      "pinpoint": "09160017",
+      "name": "白子（古所）",
+      "area_code": "05",
+      "area_name": "千葉北",
+      "region": "千葉北",
+      "prefectures": [
+        "千葉"
+      ],
+      "lat": 35.446459,
+      "lng": 140.405681,
+      "sort_key": "F",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=05&pinpoint=09160017"
+    },
+    {
+      "id": "nami-01160011",
+      "pinpoint": "01160011",
+      "name": "一宮",
+      "area_code": "05",
+      "area_name": "千葉北",
+      "region": "千葉北",
+      "prefectures": [
+        "千葉"
+      ],
+      "lat": 35.37907833,
+      "lng": 140.3911972,
+      "sort_key": "G",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=05&pinpoint=01160011"
+    },
+    {
+      "id": "nami-01160012",
+      "pinpoint": "01160012",
+      "name": "サンライズ",
+      "area_code": "05",
+      "area_name": "千葉北",
+      "region": "千葉北",
+      "prefectures": [
+        "千葉"
+      ],
+      "lat": 35.35461611,
+      "lng": 140.3921628,
+      "sort_key": "H",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=05&pinpoint=01160012"
+    },
+    {
+      "id": "nami-01160013",
+      "pinpoint": "01160013",
+      "name": "東浪見",
+      "area_code": "05",
+      "area_name": "千葉北",
+      "region": "千葉北",
+      "prefectures": [
+        "千葉"
+      ],
+      "lat": 35.34681056,
+      "lng": 140.392785,
+      "sort_key": "I",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=05&pinpoint=01160013"
+    },
+    {
+      "id": "nami-01160014",
+      "pinpoint": "01160014",
+      "name": "志田下",
+      "area_code": "05",
+      "area_name": "千葉北",
+      "region": "千葉北",
+      "prefectures": [
+        "千葉"
+      ],
+      "lat": 35.33385778,
+      "lng": 140.3952528,
+      "sort_key": "J",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=05&pinpoint=01160014"
+    },
+    {
+      "id": "nami-01160015",
+      "pinpoint": "01160015",
+      "name": "太東",
+      "area_code": "05",
+      "area_name": "千葉北",
+      "region": "千葉北",
+      "prefectures": [
+        "千葉"
+      ],
+      "lat": 35.32927139,
+      "lng": 140.3986858,
+      "sort_key": "K",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=05&pinpoint=01160015"
+    },
+    {
+      "id": "nami-01160016",
+      "pinpoint": "01160016",
+      "name": "夷隅",
+      "area_code": "05",
+      "area_name": "千葉北",
+      "region": "千葉北",
+      "prefectures": [
+        "千葉"
+      ],
+      "lat": 35.2954075,
+      "lng": 140.4084278,
+      "sort_key": "L",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=05&pinpoint=01160016"
+    },
+    {
+      "id": "nami-01160021",
+      "pinpoint": "01160021",
+      "name": "大原",
+      "area_code": "05",
+      "area_name": "千葉北",
+      "region": "千葉北",
+      "prefectures": [
+        "千葉"
+      ],
+      "lat": 35.26096889,
+      "lng": 140.4000806,
+      "sort_key": "M",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=05&pinpoint=01160021"
+    },
+    {
+      "id": "nami-01160024",
+      "pinpoint": "01160024",
+      "name": "御宿岩和田",
+      "area_code": "05",
+      "area_name": "千葉北",
+      "region": "千葉北",
+      "prefectures": [
+        "千葉"
+      ],
+      "lat": 35.18185861,
+      "lng": 140.3622078,
+      "sort_key": "N",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=05&pinpoint=01160024"
+    },
+    {
+      "id": "nami-01160025",
+      "pinpoint": "01160025",
+      "name": "御宿中央〜浜",
+      "area_code": "05",
+      "area_name": "千葉北",
+      "region": "千葉北",
+      "prefectures": [
+        "千葉"
+      ],
+      "lat": 35.18208667,
+      "lng": 140.3554917,
+      "sort_key": "O",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=05&pinpoint=01160025"
+    },
+    {
+      "id": "nami-01160028",
+      "pinpoint": "01160028",
+      "name": "部原",
+      "area_code": "05",
+      "area_name": "千葉北",
+      "region": "千葉北",
+      "prefectures": [
+        "千葉"
+      ],
+      "lat": 35.16751139,
+      "lng": 140.3364372,
+      "sort_key": "P",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=05&pinpoint=01160028"
+    },
+    {
+      "id": "nami-01160096",
+      "pinpoint": "01160096",
+      "name": "飯岡マンション下",
+      "area_code": "05",
+      "area_name": "千葉北",
+      "region": "千葉北",
+      "prefectures": [
+        "千葉"
+      ],
+      "lat": 35.69946,
+      "lng": 140.72054,
+      "sort_key": "Q",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=05&pinpoint=01160096"
+    },
+    {
+      "id": "nami-01160001",
+      "pinpoint": "01160001",
+      "name": "飯岡信号下",
+      "area_code": "05",
+      "area_name": "千葉北",
+      "region": "千葉北",
+      "prefectures": [
+        "千葉"
+      ],
+      "lat": 35.700603,
+      "lng": 140.715111,
+      "sort_key": "R",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=05&pinpoint=01160001"
+    },
+    {
+      "id": "nami-01160004",
+      "pinpoint": "01160004",
+      "name": "椎名内安太郎下",
+      "area_code": "05",
+      "area_name": "千葉北",
+      "region": "千葉北",
+      "prefectures": [
+        "千葉"
+      ],
+      "lat": 35.69332583,
+      "lng": 140.6709408,
+      "sort_key": "S",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=05&pinpoint=01160004"
+    },
+    {
+      "id": "nami-01160058",
+      "pinpoint": "01160058",
+      "name": "旧かんぽ下",
+      "area_code": "05",
+      "area_name": "千葉北",
+      "region": "千葉北",
+      "prefectures": [
+        "千葉"
+      ],
+      "lat": 35.68673806,
+      "lng": 140.6520367,
+      "sort_key": "T",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=05&pinpoint=01160058"
+    },
+    {
+      "id": "nami-01160006",
+      "pinpoint": "01160006",
+      "name": "吉崎浜",
+      "area_code": "05",
+      "area_name": "千葉北",
+      "region": "千葉北",
+      "prefectures": [
+        "千葉"
+      ],
+      "lat": 35.66869778,
+      "lng": 140.6182194,
+      "sort_key": "U",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=05&pinpoint=01160006"
+    },
+    {
+      "id": "nami-09160010",
+      "pinpoint": "09160010",
+      "name": "堀川浜",
+      "area_code": "05",
+      "area_name": "千葉北",
+      "region": "千葉北",
+      "prefectures": [
+        "千葉"
+      ],
+      "lat": 35.63431,
+      "lng": 140.568987,
+      "sort_key": "V",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=05&pinpoint=09160010"
+    },
+    {
+      "id": "nami-01160031",
+      "pinpoint": "01160031",
+      "name": "マルキ",
+      "area_code": "06",
+      "area_name": "千葉南",
+      "region": "千葉南",
+      "prefectures": [
+        "千葉"
+      ],
+      "lat": 35.12108444,
+      "lng": 140.1326967,
+      "sort_key": "A",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=06&pinpoint=01160031"
+    },
+    {
+      "id": "nami-01160040",
+      "pinpoint": "01160040",
+      "name": "J's前",
+      "area_code": "06",
+      "area_name": "千葉南",
+      "region": "千葉南",
+      "prefectures": [
+        "千葉"
+      ],
+      "lat": 35.04331389,
+      "lng": 140.0241208,
+      "sort_key": "B",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=06&pinpoint=01160040"
+    },
+    {
+      "id": "nami-01160041",
+      "pinpoint": "01160041",
+      "name": "白渚",
+      "area_code": "06",
+      "area_name": "千葉南",
+      "region": "千葉南",
+      "prefectures": [
+        "千葉"
+      ],
+      "lat": 35.03245611,
+      "lng": 140.006075,
+      "sort_key": "C",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=06&pinpoint=01160041"
+    },
+    {
+      "id": "nami-01160097",
+      "pinpoint": "01160097",
+      "name": "白渚右側",
+      "area_code": "06",
+      "area_name": "千葉南",
+      "region": "千葉南",
+      "prefectures": [
+        "千葉"
+      ],
+      "lat": 35.03245611,
+      "lng": 140.006075,
+      "sort_key": "D",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=06&pinpoint=01160097"
+    },
+    {
+      "id": "nami-01160043",
+      "pinpoint": "01160043",
+      "name": "花篭前",
+      "area_code": "06",
+      "area_name": "千葉南",
+      "region": "千葉南",
+      "prefectures": [
+        "千葉"
+      ],
+      "lat": 35.02360028,
+      "lng": 139.9934578,
+      "sort_key": "E",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=06&pinpoint=01160043"
+    },
+    {
+      "id": "nami-01160045",
+      "pinpoint": "01160045",
+      "name": "千歳",
+      "area_code": "06",
+      "area_name": "千葉南",
+      "region": "千葉南",
+      "prefectures": [
+        "千葉"
+      ],
+      "lat": 34.99639444,
+      "lng": 139.9727083,
+      "sort_key": "F",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=06&pinpoint=01160045"
+    },
+    {
+      "id": "nami-01160046",
+      "pinpoint": "01160046",
+      "name": "千倉",
+      "area_code": "06",
+      "area_name": "千葉南",
+      "region": "千葉南",
+      "prefectures": [
+        "千葉"
+      ],
+      "lat": 34.96708694,
+      "lng": 139.9604558,
+      "sort_key": "G",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=06&pinpoint=01160046"
+    },
+    {
+      "id": "nami-01160047",
+      "pinpoint": "01160047",
+      "name": "平砂浦ファミリーパーク下",
+      "area_code": "06",
+      "area_name": "千葉南",
+      "region": "千葉南",
+      "prefectures": [
+        "千葉"
+      ],
+      "lat": 34.94378444,
+      "lng": 139.8109389,
+      "sort_key": "H",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=06&pinpoint=01160047"
+    },
+    {
+      "id": "nami-01170001",
+      "pinpoint": "01170001",
+      "name": "由比ガ浜",
+      "area_code": "07",
+      "area_name": "湘南",
+      "region": "湘南",
+      "prefectures": [
+        "神奈川"
+      ],
+      "lat": 35.30945194,
+      "lng": 139.5407439,
+      "sort_key": "A",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=07&pinpoint=01170001"
+    },
+    {
+      "id": "nami-01170003",
+      "pinpoint": "01170003",
+      "name": "七里ガ浜正面",
+      "area_code": "07",
+      "area_name": "湘南",
+      "region": "湘南",
+      "prefectures": [
+        "神奈川"
+      ],
+      "lat": 35.30491667,
+      "lng": 139.5104886,
+      "sort_key": "C",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=07&pinpoint=01170003"
+    },
+    {
+      "id": "nami-01170007",
+      "pinpoint": "01170007",
+      "name": "鎌高前",
+      "area_code": "07",
+      "area_name": "湘南",
+      "region": "湘南",
+      "prefectures": [
+        "神奈川"
+      ],
+      "lat": 35.306195,
+      "lng": 139.5015728,
+      "sort_key": "E",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=07&pinpoint=01170007"
+    },
+    {
+      "id": "nami-02170002",
+      "pinpoint": "02170002",
+      "name": "片瀬東浜海岸",
+      "area_code": "07",
+      "area_name": "湘南",
+      "region": "湘南",
+      "prefectures": [
+        "神奈川"
+      ],
+      "lat": 35.305705,
+      "lng": 139.484825,
+      "sort_key": "F",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=07&pinpoint=02170002"
+    },
+    {
+      "id": "nami-01170013",
+      "pinpoint": "01170013",
+      "name": "水族館前",
+      "area_code": "07",
+      "area_name": "湘南",
+      "region": "湘南",
+      "prefectures": [
+        "神奈川"
+      ],
+      "lat": 35.30967972,
+      "lng": 139.4786025,
+      "sort_key": "G",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=07&pinpoint=01170013"
+    },
+    {
+      "id": "nami-01170100",
+      "pinpoint": "01170100",
+      "name": "ボードウォーク前",
+      "area_code": "07",
+      "area_name": "湘南",
+      "region": "湘南",
+      "prefectures": [
+        "神奈川"
+      ],
+      "lat": 35.311448,
+      "lng": 139.476146,
+      "sort_key": "H",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=07&pinpoint=01170100"
+    },
+    {
+      "id": "nami-01170010",
+      "pinpoint": "01170010",
+      "name": "鵠沼",
+      "area_code": "07",
+      "area_name": "湘南",
+      "region": "湘南",
+      "prefectures": [
+        "神奈川"
+      ],
+      "lat": 35.315694,
+      "lng": 139.469982,
+      "sort_key": "I",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=07&pinpoint=01170010"
+    },
+    {
+      "id": "nami-01170014",
+      "pinpoint": "01170014",
+      "name": "マック前",
+      "area_code": "07",
+      "area_name": "湘南",
+      "region": "湘南",
+      "prefectures": [
+        "神奈川"
+      ],
+      "lat": 35.31407472,
+      "lng": 139.4719506,
+      "sort_key": "J",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=07&pinpoint=01170014"
+    },
+    {
+      "id": "nami-01170017",
+      "pinpoint": "01170017",
+      "name": "地下道前",
+      "area_code": "07",
+      "area_name": "湘南",
+      "region": "湘南",
+      "prefectures": [
+        "神奈川"
+      ],
+      "lat": 35.3155,
+      "lng": 139.4615,
+      "sort_key": "K",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=07&pinpoint=01170017"
+    },
+    {
+      "id": "nami-01170020",
+      "pinpoint": "01170020",
+      "name": "辻堂正面",
+      "area_code": "07",
+      "area_name": "湘南",
+      "region": "湘南",
+      "prefectures": [
+        "神奈川"
+      ],
+      "lat": 35.31801417,
+      "lng": 139.4531964,
+      "sort_key": "L",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=07&pinpoint=01170020"
+    },
+    {
+      "id": "nami-01170023",
+      "pinpoint": "01170023",
+      "name": "辻堂第2駐車場前",
+      "area_code": "07",
+      "area_name": "湘南",
+      "region": "湘南",
+      "prefectures": [
+        "神奈川"
+      ],
+      "lat": 35.31866639,
+      "lng": 139.4437069,
+      "sort_key": "M",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=07&pinpoint=01170023"
+    },
+    {
+      "id": "nami-01170024",
+      "pinpoint": "01170024",
+      "name": "汐小前",
+      "area_code": "07",
+      "area_name": "湘南",
+      "region": "湘南",
+      "prefectures": [
+        "神奈川"
+      ],
+      "lat": 35.31915222,
+      "lng": 139.4361806,
+      "sort_key": "N",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=07&pinpoint=01170024"
+    },
+    {
+      "id": "nami-01170025",
+      "pinpoint": "01170025",
+      "name": "チサン",
+      "area_code": "07",
+      "area_name": "湘南",
+      "region": "湘南",
+      "prefectures": [
+        "神奈川"
+      ],
+      "lat": 35.31927472,
+      "lng": 139.4332194,
+      "sort_key": "O",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=07&pinpoint=01170025"
+    },
+    {
+      "id": "nami-01170027",
+      "pinpoint": "01170027",
+      "name": "パーク",
+      "area_code": "07",
+      "area_name": "湘南",
+      "region": "湘南",
+      "prefectures": [
+        "神奈川"
+      ],
+      "lat": 35.31675361,
+      "lng": 139.4177483,
+      "sort_key": "P",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=07&pinpoint=01170027"
+    },
+    {
+      "id": "nami-01170036",
+      "pinpoint": "01170036",
+      "name": "平塚生コン前",
+      "area_code": "07",
+      "area_name": "湘南",
+      "region": "湘南",
+      "prefectures": [
+        "神奈川"
+      ],
+      "lat": 35.314845,
+      "lng": 139.3620228,
+      "sort_key": "Q",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=07&pinpoint=01170036"
+    },
+    {
+      "id": "nami-01170101",
+      "pinpoint": "01170101",
+      "name": "平塚生コン前壁横",
+      "area_code": "07",
+      "area_name": "湘南",
+      "region": "湘南",
+      "prefectures": [
+        "神奈川"
+      ],
+      "lat": 35.314845,
+      "lng": 139.3620228,
+      "sort_key": "R",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=07&pinpoint=01170101"
+    },
+    {
+      "id": "nami-01170042",
+      "pinpoint": "01170042",
+      "name": "大磯磯高前",
+      "area_code": "07",
+      "area_name": "湘南",
+      "region": "湘南",
+      "prefectures": [
+        "神奈川"
+      ],
+      "lat": 35.31158833,
+      "lng": 139.3272186,
+      "sort_key": "S",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=07&pinpoint=01170042"
+    },
+    {
+      "id": "nami-01170043",
+      "pinpoint": "01170043",
+      "name": "大磯",
+      "area_code": "07",
+      "area_name": "湘南",
+      "region": "湘南",
+      "prefectures": [
+        "神奈川"
+      ],
+      "lat": 35.30963583,
+      "lng": 139.3201697,
+      "sort_key": "T",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=07&pinpoint=01170043"
+    },
+    {
+      "id": "nami-01170044",
+      "pinpoint": "01170044",
+      "name": "大磯源二",
+      "area_code": "07",
+      "area_name": "湘南",
+      "region": "湘南",
+      "prefectures": [
+        "神奈川"
+      ],
+      "lat": 35.308375,
+      "lng": 139.3186461,
+      "sort_key": "U",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=07&pinpoint=01170044"
+    },
+    {
+      "id": "nami-01170047",
+      "pinpoint": "01170047",
+      "name": "吉浜地引寄り",
+      "area_code": "07",
+      "area_name": "湘南",
+      "region": "湘南",
+      "prefectures": [
+        "神奈川"
+      ],
+      "lat": 35.14952111,
+      "lng": 139.1205275,
+      "sort_key": "V",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=07&pinpoint=01170047"
+    },
+    {
+      "id": "nami-01170045",
+      "pinpoint": "01170045",
+      "name": "湯河原吉浜",
+      "area_code": "07",
+      "area_name": "湘南",
+      "region": "湘南",
+      "prefectures": [
+        "神奈川"
+      ],
+      "lat": 35.14952111,
+      "lng": 139.1205275,
+      "sort_key": "W",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=07&pinpoint=01170045"
+    },
+    {
+      "id": "nami-09200011",
+      "pinpoint": "09200011",
+      "name": "宇佐美海岸",
+      "area_code": "08",
+      "area_name": "伊豆・伊東",
+      "region": "伊豆・伊東",
+      "prefectures": [
+        "静岡"
+      ],
+      "lat": 35.004163,
+      "lng": 139.08494,
+      "sort_key": "A",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=08&pinpoint=09200011"
+    },
+    {
+      "id": "nami-01200004",
+      "pinpoint": "01200004",
+      "name": "白浜",
+      "area_code": "08",
+      "area_name": "伊豆・伊東",
+      "region": "伊豆・伊東",
+      "prefectures": [
+        "静岡"
+      ],
+      "lat": 34.68843361,
+      "lng": 138.9731456,
+      "sort_key": "B",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=08&pinpoint=01200004"
+    },
+    {
+      "id": "nami-01200005",
+      "pinpoint": "01200005",
+      "name": "多々戸浜",
+      "area_code": "08",
+      "area_name": "伊豆・伊東",
+      "region": "伊豆・伊東",
+      "prefectures": [
+        "静岡"
+      ],
+      "lat": 34.66060472,
+      "lng": 138.9318181,
+      "sort_key": "D",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=08&pinpoint=01200005"
+    },
+    {
+      "id": "nami-01200007",
+      "pinpoint": "01200007",
+      "name": "入田浜",
+      "area_code": "08",
+      "area_name": "伊豆・伊東",
+      "region": "伊豆・伊東",
+      "prefectures": [
+        "静岡"
+      ],
+      "lat": 34.6588575,
+      "lng": 138.9278269,
+      "sort_key": "E",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=08&pinpoint=01200007"
+    },
+    {
+      "id": "nami-01200009",
+      "pinpoint": "01200009",
+      "name": "大浜",
+      "area_code": "08",
+      "area_name": "伊豆・伊東",
+      "region": "伊豆・伊東",
+      "prefectures": [
+        "静岡"
+      ],
+      "lat": 34.65373861,
+      "lng": 138.9203811,
+      "sort_key": "F",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=08&pinpoint=01200009"
+    },
+    {
+      "id": "nami-01200012",
+      "pinpoint": "01200012",
+      "name": "静波",
+      "area_code": "09",
+      "area_name": "静岡・浜松",
+      "region": "静岡・浜松",
+      "prefectures": [
+        "静岡"
+      ],
+      "lat": 34.73173778,
+      "lng": 138.2331561,
+      "sort_key": "A",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=09&pinpoint=01200012"
+    },
+    {
+      "id": "nami-01200013",
+      "pinpoint": "01200013",
+      "name": "片浜",
+      "area_code": "09",
+      "area_name": "静岡・浜松",
+      "region": "静岡・浜松",
+      "prefectures": [
+        "静岡"
+      ],
+      "lat": 34.71461278,
+      "lng": 138.2174064,
+      "sort_key": "B",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=09&pinpoint=01200013"
+    },
+    {
+      "id": "nami-02200011",
+      "pinpoint": "02200011",
+      "name": "御前崎・メロン",
+      "area_code": "09",
+      "area_name": "静岡・浜松",
+      "region": "静岡・浜松",
+      "prefectures": [
+        "静岡"
+      ],
+      "lat": 34.59838389,
+      "lng": 138.2135869,
+      "sort_key": "C",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=09&pinpoint=02200011"
+    },
+    {
+      "id": "nami-01200014",
+      "pinpoint": "01200014",
+      "name": "御前崎・メイン",
+      "area_code": "09",
+      "area_name": "静岡・浜松",
+      "region": "静岡・浜松",
+      "prefectures": [
+        "静岡"
+      ],
+      "lat": 34.59990278,
+      "lng": 138.2065486,
+      "sort_key": "D",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=09&pinpoint=01200014"
+    },
+    {
+      "id": "nami-02200009",
+      "pinpoint": "02200009",
+      "name": "御前崎・坂下",
+      "area_code": "09",
+      "area_name": "静岡・浜松",
+      "region": "静岡・浜松",
+      "prefectures": [
+        "静岡"
+      ],
+      "lat": 34.60071528,
+      "lng": 138.2007981,
+      "sort_key": "E",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=09&pinpoint=02200009"
+    },
+    {
+      "id": "nami-01200019",
+      "pinpoint": "01200019",
+      "name": "豊浜",
+      "area_code": "09",
+      "area_name": "静岡・浜松",
+      "region": "静岡・浜松",
+      "prefectures": [
+        "静岡"
+      ],
+      "lat": 34.66699361,
+      "lng": 137.9128361,
+      "sort_key": "F",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=09&pinpoint=01200019"
+    },
+    {
+      "id": "nami-01200023",
+      "pinpoint": "01200023",
+      "name": "中田島海岸（凧場）",
+      "area_code": "09",
+      "area_name": "静岡・浜松",
+      "region": "静岡・浜松",
+      "prefectures": [
+        "静岡"
+      ],
+      "lat": 34.66194611,
+      "lng": 137.7259828,
+      "sort_key": "G",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=09&pinpoint=01200023"
+    },
+    {
+      "id": "nami-01200026",
+      "pinpoint": "01200026",
+      "name": "舞阪灯台前",
+      "area_code": "09",
+      "area_name": "静岡・浜松",
+      "region": "静岡・浜松",
+      "prefectures": [
+        "静岡"
+      ],
+      "lat": 34.67352333,
+      "lng": 137.6519967,
+      "sort_key": "H",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=09&pinpoint=01200026"
+    },
+    {
+      "id": "nami-01200028",
+      "pinpoint": "01200028",
+      "name": "新居浜",
+      "area_code": "09",
+      "area_name": "静岡・浜松",
+      "region": "静岡・浜松",
+      "prefectures": [
+        "静岡"
+      ],
+      "lat": 34.68001722,
+      "lng": 137.5694275,
+      "sort_key": "I",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=09&pinpoint=01200028"
+    },
+    {
+      "id": "nami-01200048",
+      "pinpoint": "01200048",
+      "name": "潮見坂",
+      "area_code": "09",
+      "area_name": "静岡・浜松",
+      "region": "静岡・浜松",
+      "prefectures": [
+        "静岡"
+      ],
+      "lat": 34.67782917,
+      "lng": 137.5281214,
+      "sort_key": "J",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=09&pinpoint=01200048"
+    },
+    {
+      "id": "nami-01210028",
+      "pinpoint": "01210028",
+      "name": "小松原",
+      "area_code": "10",
+      "area_name": "伊良湖",
+      "region": "伊良湖",
+      "prefectures": [
+        "愛知",
+        "静岡"
+      ],
+      "lat": 34.667,
+      "lng": 137.439,
+      "sort_key": "A",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=10&pinpoint=01210028"
+    },
+    {
+      "id": "nami-01210001",
+      "pinpoint": "01210001",
+      "name": "寺沢",
+      "area_code": "10",
+      "area_name": "伊良湖",
+      "region": "伊良湖",
+      "prefectures": [
+        "愛知",
+        "静岡"
+      ],
+      "lat": 34.6656525,
+      "lng": 137.4301242,
+      "sort_key": "B",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=10&pinpoint=01210001"
+    },
+    {
+      "id": "nami-01210014",
+      "pinpoint": "01210014",
+      "name": "百々",
+      "area_code": "10",
+      "area_name": "伊良湖",
+      "region": "伊良湖",
+      "prefectures": [
+        "愛知",
+        "静岡"
+      ],
+      "lat": 34.64012861,
+      "lng": 137.3120642,
+      "sort_key": "C",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=10&pinpoint=01210014"
+    },
+    {
+      "id": "nami-01210012",
+      "pinpoint": "01210012",
+      "name": "チキン",
+      "area_code": "10",
+      "area_name": "伊良湖",
+      "region": "伊良湖",
+      "prefectures": [
+        "愛知",
+        "静岡"
+      ],
+      "lat": 34.62614528,
+      "lng": 137.2595786,
+      "sort_key": "D",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=10&pinpoint=01210012"
+    },
+    {
+      "id": "nami-01210005",
+      "pinpoint": "01210005",
+      "name": "ロングビーチ",
+      "area_code": "10",
+      "area_name": "伊良湖",
+      "region": "伊良湖",
+      "prefectures": [
+        "愛知",
+        "静岡"
+      ],
+      "lat": 34.61329,
+      "lng": 137.2132731,
+      "sort_key": "E",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=10&pinpoint=01210005"
+    },
+    {
+      "id": "nami-01210006",
+      "pinpoint": "01210006",
+      "name": "ロコ",
+      "area_code": "10",
+      "area_name": "伊良湖",
+      "region": "伊良湖",
+      "prefectures": [
+        "愛知",
+        "静岡"
+      ],
+      "lat": 34.60626111,
+      "lng": 137.1934033,
+      "sort_key": "F",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=10&pinpoint=01210006"
+    },
+    {
+      "id": "nami-01210007",
+      "pinpoint": "01210007",
+      "name": "港",
+      "area_code": "10",
+      "area_name": "伊良湖",
+      "region": "伊良湖",
+      "prefectures": [
+        "愛知",
+        "静岡"
+      ],
+      "lat": 34.60431833,
+      "lng": 137.1848203,
+      "sort_key": "G",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=10&pinpoint=01210007"
+    },
+    {
+      "id": "nami-01210008",
+      "pinpoint": "01210008",
+      "name": "全日本",
+      "area_code": "10",
+      "area_name": "伊良湖",
+      "region": "伊良湖",
+      "prefectures": [
+        "愛知",
+        "静岡"
+      ],
+      "lat": 34.60396528,
+      "lng": 137.1827172,
+      "sort_key": "H",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=10&pinpoint=01210008"
+    },
+    {
+      "id": "nami-01210009",
+      "pinpoint": "01210009",
+      "name": "新日本",
+      "area_code": "10",
+      "area_name": "伊良湖",
+      "region": "伊良湖",
+      "prefectures": [
+        "愛知",
+        "静岡"
+      ],
+      "lat": 34.60332944,
+      "lng": 137.1801425,
+      "sort_key": "I",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=10&pinpoint=01210009"
+    },
+    {
+      "id": "nami-01230004",
+      "pinpoint": "01230004",
+      "name": "国府ノ浜・テトラ前",
+      "area_code": "11",
+      "area_name": "伊勢・志摩",
+      "region": "伊勢・志摩",
+      "prefectures": [
+        "三重"
+      ],
+      "lat": 34.34088472,
+      "lng": 136.8799281,
+      "sort_key": "A",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=11&pinpoint=01230004"
+    },
+    {
+      "id": "nami-01230014",
+      "pinpoint": "01230014",
+      "name": "国府ノ浜・三角〜ラスタ前",
+      "area_code": "11",
+      "area_name": "伊勢・志摩",
+      "region": "伊勢・志摩",
+      "prefectures": [
+        "三重"
+      ],
+      "lat": 34.33455944,
+      "lng": 136.8773103,
+      "sort_key": "B",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=11&pinpoint=01230014"
+    },
+    {
+      "id": "nami-01230008",
+      "pinpoint": "01230008",
+      "name": "国府ノ浜・松林",
+      "area_code": "11",
+      "area_name": "伊勢・志摩",
+      "region": "伊勢・志摩",
+      "prefectures": [
+        "三重"
+      ],
+      "lat": 34.32686917,
+      "lng": 136.8781472,
+      "sort_key": "C",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=11&pinpoint=01230008"
+    },
+    {
+      "id": "nami-01230001",
+      "pinpoint": "01230001",
+      "name": "市後浜",
+      "area_code": "11",
+      "area_name": "伊勢・志摩",
+      "region": "伊勢・志摩",
+      "prefectures": [
+        "三重"
+      ],
+      "lat": 34.305403,
+      "lng": 136.885455,
+      "sort_key": "D",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=11&pinpoint=01230001"
+    },
+    {
+      "id": "nami-01330002",
+      "pinpoint": "01330002",
+      "name": "磯ノ浦",
+      "area_code": "12",
+      "area_name": "和歌山",
+      "region": "和歌山",
+      "prefectures": [
+        "和歌山"
+      ],
+      "lat": 34.25987667,
+      "lng": 135.0911522,
+      "sort_key": "A",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=12&pinpoint=01330002"
+    },
+    {
+      "id": "nami-01330028",
+      "pinpoint": "01330028",
+      "name": "磯ノ浦2",
+      "area_code": "12",
+      "area_name": "和歌山",
+      "region": "和歌山",
+      "prefectures": [
+        "和歌山"
+      ],
+      "lat": 34.25987667,
+      "lng": 135.0911522,
+      "sort_key": "B",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=12&pinpoint=01330028"
+    },
+    {
+      "id": "nami-09420008",
+      "pinpoint": "09420008",
+      "name": "白浜海水浴場",
+      "area_code": "13",
+      "area_name": "四国",
+      "region": "四国",
+      "prefectures": [
+        "徳島",
+        "高知",
+        "愛媛"
+      ],
+      "lat": 33.540626,
+      "lng": 134.29445,
+      "sort_key": "A",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=13&pinpoint=09420008"
+    },
+    {
+      "id": "nami-01420001",
+      "pinpoint": "01420001",
+      "name": "生見",
+      "area_code": "13",
+      "area_name": "四国",
+      "region": "四国",
+      "prefectures": [
+        "徳島",
+        "高知",
+        "愛媛"
+      ],
+      "lat": 33.52671,
+      "lng": 134.2836786,
+      "sort_key": "B",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=13&pinpoint=01420001"
+    },
+    {
+      "id": "nami-01420024",
+      "pinpoint": "01420024",
+      "name": "生見右側",
+      "area_code": "13",
+      "area_name": "四国",
+      "region": "四国",
+      "prefectures": [
+        "徳島",
+        "高知",
+        "愛媛"
+      ],
+      "lat": 33.52671,
+      "lng": 134.2836786,
+      "sort_key": "C",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=13&pinpoint=01420024"
+    },
+    {
+      "id": "nami-01390003",
+      "pinpoint": "01390003",
+      "name": "内妻",
+      "area_code": "13",
+      "area_name": "四国",
+      "region": "四国",
+      "prefectures": [
+        "徳島",
+        "高知",
+        "愛媛"
+      ],
+      "lat": 33.65997806,
+      "lng": 134.4036483,
+      "sort_key": "D",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=13&pinpoint=01390003"
+    },
+    {
+      "id": "nami-01390004",
+      "pinpoint": "01390004",
+      "name": "宍喰",
+      "area_code": "13",
+      "area_name": "四国",
+      "region": "四国",
+      "prefectures": [
+        "徳島",
+        "高知",
+        "愛媛"
+      ],
+      "lat": 33.56689444,
+      "lng": 134.3082689,
+      "sort_key": "E",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=13&pinpoint=01390004"
+    },
+    {
+      "id": "kizakihama",
+      "pinpoint": null,
+      "name": "木崎浜",
+      "area_code": "14",
+      "area_name": "宮崎",
+      "region": "宮崎",
+      "prefectures": [
+        "宮崎"
+      ],
+      "lat": 31.8251,
+      "lng": 131.4532,
+      "sort_key": "A",
+      "namidensetsu_url": null
+    },
+    {
+      "id": "hitotsuba",
+      "pinpoint": null,
+      "name": "一ツ葉",
+      "area_code": "14",
+      "area_name": "宮崎",
+      "region": "宮崎",
+      "prefectures": [
+        "宮崎"
+      ],
+      "lat": 31.9303,
+      "lng": 131.4689,
+      "sort_key": "B",
+      "namidensetsu_url": null
+    },
+    {
+      "id": "aoshima",
+      "pinpoint": null,
+      "name": "青島",
+      "area_code": "14",
+      "area_name": "宮崎",
+      "region": "宮崎",
+      "prefectures": [
+        "宮崎"
+      ],
+      "lat": 31.8052,
+      "lng": 131.4759,
+      "sort_key": "C",
+      "namidensetsu_url": null
+    },
+    {
+      "id": "okuragahama",
+      "pinpoint": null,
+      "name": "お倉ヶ浜",
+      "area_code": "14",
+      "area_name": "宮崎",
+      "region": "宮崎",
+      "prefectures": [
+        "宮崎"
+      ],
+      "lat": 32.404,
+      "lng": 131.6413,
+      "sort_key": "D",
+      "namidensetsu_url": null
+    },
+    {
+      "id": "kanegahama",
+      "pinpoint": null,
+      "name": "金ヶ浜",
+      "area_code": "14",
+      "area_name": "宮崎",
+      "region": "宮崎",
+      "prefectures": [
+        "宮崎"
+      ],
+      "lat": 32.3613,
+      "lng": 131.6223,
+      "sort_key": "E",
+      "namidensetsu_url": null
+    },
+    {
+      "id": "isegahama",
+      "pinpoint": null,
+      "name": "伊勢ヶ浜",
+      "area_code": "14",
+      "area_name": "宮崎",
+      "region": "宮崎",
+      "prefectures": [
+        "宮崎"
+      ],
+      "lat": 32.4286,
+      "lng": 131.6555,
+      "sort_key": "F",
+      "namidensetsu_url": null
+    },
+    {
+      "id": "ibii",
+      "pinpoint": null,
+      "name": "伊比井",
+      "area_code": "14",
+      "area_name": "宮崎",
+      "region": "宮崎",
+      "prefectures": [
+        "宮崎"
+      ],
+      "lat": 31.7111,
+      "lng": 131.464,
+      "sort_key": "G",
+      "namidensetsu_url": null
+    },
+    {
+      "id": "odotsu",
+      "pinpoint": null,
+      "name": "大堂津",
+      "area_code": "14",
+      "area_name": "宮崎",
+      "region": "宮崎",
+      "prefectures": [
+        "宮崎"
+      ],
+      "lat": 31.557,
+      "lng": 131.385,
+      "sort_key": "H",
+      "namidensetsu_url": null
+    },
+    {
+      "id": "kakuchi",
+      "pinpoint": null,
+      "name": "高鍋",
+      "area_code": "14",
+      "area_name": "宮崎",
+      "region": "宮崎",
+      "prefectures": [
+        "宮崎"
+      ],
+      "lat": 32.1202,
+      "lng": 131.531,
+      "sort_key": "I",
+      "namidensetsu_url": null
+    },
+    {
+      "id": "nami-01430004",
+      "pinpoint": "01430004",
+      "name": "汐入川河口",
+      "area_code": "15",
+      "area_name": "福岡周辺",
+      "region": "福岡周辺",
+      "prefectures": [
+        "福岡"
+      ],
+      "lat": 33.87823667,
+      "lng": 130.6012417,
+      "sort_key": "A",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=15&pinpoint=01430004"
+    },
+    {
+      "id": "nami-01430005",
+      "pinpoint": "01430005",
+      "name": "波津漁港",
+      "area_code": "15",
+      "area_name": "福岡周辺",
+      "region": "福岡周辺",
+      "prefectures": [
+        "福岡"
+      ],
+      "lat": 33.88277917,
+      "lng": 130.5665875,
+      "sort_key": "B",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=15&pinpoint=01430005"
+    },
+    {
+      "id": "nami-01430023",
+      "pinpoint": "01430023",
+      "name": "さつき松原",
+      "area_code": "15",
+      "area_name": "福岡周辺",
+      "region": "福岡周辺",
+      "prefectures": [
+        "福岡"
+      ],
+      "lat": 33.86077639,
+      "lng": 130.5181144,
+      "sort_key": "C",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=15&pinpoint=01430023"
+    },
+    {
+      "id": "nami-01430007",
+      "pinpoint": "01430007",
+      "name": "釣川河口",
+      "area_code": "15",
+      "area_name": "福岡周辺",
+      "region": "福岡周辺",
+      "prefectures": [
+        "福岡"
+      ],
+      "lat": 33.85320333,
+      "lng": 130.5000472,
+      "sort_key": "D",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=15&pinpoint=01430007"
+    },
+    {
+      "id": "nami-01430010",
+      "pinpoint": "01430010",
+      "name": "三苫",
+      "area_code": "15",
+      "area_name": "福岡周辺",
+      "region": "福岡周辺",
+      "prefectures": [
+        "福岡"
+      ],
+      "lat": 33.70352778,
+      "lng": 130.4169203,
+      "sort_key": "E",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=15&pinpoint=01430010"
+    },
+    {
+      "id": "nami-01430011",
+      "pinpoint": "01430011",
+      "name": "奈多",
+      "area_code": "15",
+      "area_name": "福岡周辺",
+      "region": "福岡周辺",
+      "prefectures": [
+        "福岡"
+      ],
+      "lat": 33.69649417,
+      "lng": 130.4100536,
+      "sort_key": "F",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=15&pinpoint=01430011"
+    },
+    {
+      "id": "nami-01430014",
+      "pinpoint": "01430014",
+      "name": "二見ヶ浦",
+      "area_code": "15",
+      "area_name": "福岡周辺",
+      "region": "福岡周辺",
+      "prefectures": [
+        "福岡"
+      ],
+      "lat": 33.64099056,
+      "lng": 130.1996614,
+      "sort_key": "G",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=15&pinpoint=01430014"
+    },
+    {
+      "id": "nami-01430015",
+      "pinpoint": "01430015",
+      "name": "大口",
+      "area_code": "15",
+      "area_name": "福岡周辺",
+      "region": "福岡周辺",
+      "prefectures": [
+        "福岡"
+      ],
+      "lat": 33.63488083,
+      "lng": 130.1882244,
+      "sort_key": "H",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=15&pinpoint=01430015"
+    },
+    {
+      "id": "nami-01430017",
+      "pinpoint": "01430017",
+      "name": "野北",
+      "area_code": "15",
+      "area_name": "福岡周辺",
+      "region": "福岡周辺",
+      "prefectures": [
+        "福岡"
+      ],
+      "lat": 33.599125,
+      "lng": 130.1518322,
+      "sort_key": "I",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=15&pinpoint=01430017"
+    },
+    {
+      "id": "nami-01430018",
+      "pinpoint": "01430018",
+      "name": "芥屋",
+      "area_code": "15",
+      "area_name": "福岡周辺",
+      "region": "福岡周辺",
+      "prefectures": [
+        "福岡"
+      ],
+      "lat": 33.59394167,
+      "lng": 130.1134658,
+      "sort_key": "J",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=15&pinpoint=01430018"
+    },
+    {
+      "id": "nami-02490003",
+      "pinpoint": "02490003",
+      "name": "江口浜",
+      "area_code": "16",
+      "area_name": "東シナ海",
+      "region": "東シナ海",
+      "prefectures": [
+        "鹿児島"
+      ],
+      "lat": 31.6467325,
+      "lng": 130.321455,
+      "sort_key": "A",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=16&pinpoint=02490003"
+    },
+    {
+      "id": "nami-01060010",
+      "pinpoint": "01060010",
+      "name": "西目",
+      "area_code": "17",
+      "area_name": "日本海北部",
+      "region": "日本海北部",
+      "prefectures": [
+        "新潟"
+      ],
+      "lat": 39.34661111,
+      "lng": 139.9982644,
+      "sort_key": "A",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=17&pinpoint=01060010"
+    },
+    {
+      "id": "nami-01240007",
+      "pinpoint": "01240007",
+      "name": "五十嵐浜",
+      "area_code": "17",
+      "area_name": "日本海北部",
+      "region": "日本海北部",
+      "prefectures": [
+        "新潟"
+      ],
+      "lat": 37.87258361,
+      "lng": 138.9310456,
+      "sort_key": "B",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=17&pinpoint=01240007"
+    },
+    {
+      "id": "nami-01240021",
+      "pinpoint": "01240021",
+      "name": "郷津",
+      "area_code": "17",
+      "area_name": "日本海北部",
+      "region": "日本海北部",
+      "prefectures": [
+        "新潟"
+      ],
+      "lat": 37.16984111,
+      "lng": 138.2038881,
+      "sort_key": "C",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=17&pinpoint=01240021"
+    },
+    {
+      "id": "nami-01260008",
+      "pinpoint": "01260008",
+      "name": "大浜(内灘)",
+      "area_code": "18",
+      "area_name": "日本海西部",
+      "region": "日本海西部",
+      "prefectures": [
+        "鳥取",
+        "島根"
+      ],
+      "lat": 36.64425056,
+      "lng": 136.6259767,
+      "sort_key": "A",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=18&pinpoint=01260008"
+    },
+    {
+      "id": "nami-01260011",
+      "pinpoint": "01260011",
+      "name": "徳光",
+      "area_code": "18",
+      "area_name": "日本海西部",
+      "region": "日本海西部",
+      "prefectures": [
+        "鳥取",
+        "島根"
+      ],
+      "lat": 36.54039833,
+      "lng": 136.5313053,
+      "sort_key": "B",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=18&pinpoint=01260011"
+    },
+    {
+      "id": "nami-01270002",
+      "pinpoint": "01270002",
+      "name": "三国五木",
+      "area_code": "18",
+      "area_name": "日本海西部",
+      "region": "日本海西部",
+      "prefectures": [
+        "鳥取",
+        "島根"
+      ],
+      "lat": 36.13603778,
+      "lng": 136.0729908,
+      "sort_key": "C",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=18&pinpoint=01270002"
+    },
+    {
+      "id": "nami-01270003",
+      "pinpoint": "01270003",
+      "name": "三国新港",
+      "area_code": "18",
+      "area_name": "日本海西部",
+      "region": "日本海西部",
+      "prefectures": [
+        "鳥取",
+        "島根"
+      ],
+      "lat": 36.15083583,
+      "lng": 136.0909725,
+      "sort_key": "D",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=18&pinpoint=01270003"
+    },
+    {
+      "id": "nami-01270005",
+      "pinpoint": "01270005",
+      "name": "鳥居ヶ浜",
+      "area_code": "18",
+      "area_name": "日本海西部",
+      "region": "日本海西部",
+      "prefectures": [
+        "鳥取",
+        "島根"
+      ],
+      "lat": 35.49034139,
+      "lng": 135.5595303,
+      "sort_key": "E",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=18&pinpoint=01270005"
+    },
+    {
+      "id": "nami-01270007",
+      "pinpoint": "01270007",
+      "name": "難波江",
+      "area_code": "18",
+      "area_name": "日本海西部",
+      "region": "日本海西部",
+      "prefectures": [
+        "鳥取",
+        "島根"
+      ],
+      "lat": 35.50501583,
+      "lng": 135.5097483,
+      "sort_key": "F",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=18&pinpoint=01270007"
+    },
+    {
+      "id": "nami-01290004",
+      "pinpoint": "01290004",
+      "name": "高嶋",
+      "area_code": "18",
+      "area_name": "日本海西部",
+      "region": "日本海西部",
+      "prefectures": [
+        "鳥取",
+        "島根"
+      ],
+      "lat": 35.75483639,
+      "lng": 135.1633358,
+      "sort_key": "G",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=18&pinpoint=01290004"
+    },
+    {
+      "id": "nami-01290002",
+      "pinpoint": "01290002",
+      "name": "八丁浜",
+      "area_code": "18",
+      "area_name": "日本海西部",
+      "region": "日本海西部",
+      "prefectures": [
+        "鳥取",
+        "島根"
+      ],
+      "lat": 35.68950917,
+      "lng": 135.0247622,
+      "sort_key": "H",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=18&pinpoint=01290002"
+    },
+    {
+      "id": "nami-01370007",
+      "pinpoint": "01370007",
+      "name": "白兎 歩道橋前付近",
+      "area_code": "18",
+      "area_name": "日本海西部",
+      "region": "日本海西部",
+      "prefectures": [
+        "鳥取",
+        "島根"
+      ],
+      "lat": 35.52609694,
+      "lng": 134.1168667,
+      "sort_key": "I",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=18&pinpoint=01370007"
+    },
+    {
+      "id": "nami-01370006",
+      "pinpoint": "01370006",
+      "name": "小沢見",
+      "area_code": "18",
+      "area_name": "日本海西部",
+      "region": "日本海西部",
+      "prefectures": [
+        "鳥取",
+        "島根"
+      ],
+      "lat": 35.52532833,
+      "lng": 134.1082619,
+      "sort_key": "J",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=18&pinpoint=01370006"
+    },
+    {
+      "id": "nami-01360008",
+      "pinpoint": "01360008",
+      "name": "千畳",
+      "area_code": "18",
+      "area_name": "日本海西部",
+      "region": "日本海西部",
+      "prefectures": [
+        "鳥取",
+        "島根"
+      ],
+      "lat": 34.93555222,
+      "lng": 132.1063042,
+      "sort_key": "K",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=18&pinpoint=01360008"
+    },
+    {
+      "id": "nami-01360010",
+      "pinpoint": "01360010",
+      "name": "大塚",
+      "area_code": "18",
+      "area_name": "日本海西部",
+      "region": "日本海西部",
+      "prefectures": [
+        "鳥取",
+        "島根"
+      ],
+      "lat": 34.69879,
+      "lng": 131.8263244,
+      "sort_key": "L",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=18&pinpoint=01360010"
+    },
+    {
+      "id": "nami-01150016",
+      "pinpoint": "01150016",
+      "name": "間々下（新島）",
+      "area_code": "20",
+      "area_name": "アイランド",
+      "region": "アイランド",
+      "prefectures": [
+        "東京(伊豆諸島)",
+        "鹿児島(種子島)",
+        "沖縄"
+      ],
+      "lat": 34.35824611,
+      "lng": 139.2457008,
+      "sort_key": "A",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=20&pinpoint=01150016"
+    },
+    {
+      "id": "nami-01150018",
+      "pinpoint": "01150018",
+      "name": "前浜Ｂ堤（新島）",
+      "area_code": "20",
+      "area_name": "アイランド",
+      "region": "アイランド",
+      "prefectures": [
+        "東京(伊豆諸島)",
+        "鹿児島(種子島)",
+        "沖縄"
+      ],
+      "lat": 34.37347861,
+      "lng": 139.2501642,
+      "sort_key": "B",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=20&pinpoint=01150018"
+    },
+    {
+      "id": "nami-01150011",
+      "pinpoint": "01150011",
+      "name": "淡井浦（新島）",
+      "area_code": "20",
+      "area_name": "アイランド",
+      "region": "アイランド",
+      "prefectures": [
+        "東京(伊豆諸島)",
+        "鹿児島(種子島)",
+        "沖縄"
+      ],
+      "lat": 34.41285778,
+      "lng": 139.2865347,
+      "sort_key": "C",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=20&pinpoint=01150011"
+    },
+    {
+      "id": "nami-01150013",
+      "pinpoint": "01150013",
+      "name": "羽伏浦（新島）",
+      "area_code": "20",
+      "area_name": "アイランド",
+      "region": "アイランド",
+      "prefectures": [
+        "東京(伊豆諸島)",
+        "鹿児島(種子島)",
+        "沖縄"
+      ],
+      "lat": 34.37879167,
+      "lng": 139.2757417,
+      "sort_key": "D",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=20&pinpoint=01150013"
+    },
+    {
+      "id": "nami-01150014",
+      "pinpoint": "01150014",
+      "name": "ヘリ下（新島）",
+      "area_code": "20",
+      "area_name": "アイランド",
+      "region": "アイランド",
+      "prefectures": [
+        "東京(伊豆諸島)",
+        "鹿児島(種子島)",
+        "沖縄"
+      ],
+      "lat": 34.36866111,
+      "lng": 139.27557,
+      "sort_key": "E",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=20&pinpoint=01150014"
+    },
+    {
+      "id": "nami-01150015",
+      "pinpoint": "01150015",
+      "name": "シークレット（新島）",
+      "area_code": "20",
+      "area_name": "アイランド",
+      "region": "アイランド",
+      "prefectures": [
+        "東京(伊豆諸島)",
+        "鹿児島(種子島)",
+        "沖縄"
+      ],
+      "lat": 34.35342778,
+      "lng": 139.2753983,
+      "sort_key": "F",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=20&pinpoint=01150015"
+    },
+    {
+      "id": "nami-01150050",
+      "pinpoint": "01150050",
+      "name": "堀切（新島）",
+      "area_code": "20",
+      "area_name": "アイランド",
+      "region": "アイランド",
+      "prefectures": [
+        "東京(伊豆諸島)",
+        "鹿児島(種子島)",
+        "沖縄"
+      ],
+      "lat": 34.356,
+      "lng": 139.2756,
+      "sort_key": "G",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=20&pinpoint=01150050"
+    },
+    {
+      "id": "nami-01490026",
+      "pinpoint": "01490026",
+      "name": "イセキ（種子島）",
+      "area_code": "20",
+      "area_name": "アイランド",
+      "region": "アイランド",
+      "prefectures": [
+        "東京(伊豆諸島)",
+        "鹿児島(種子島)",
+        "沖縄"
+      ],
+      "lat": 30.76923722,
+      "lng": 131.0724092,
+      "sort_key": "H",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=20&pinpoint=01490026"
+    },
+    {
+      "id": "nami-01490013",
+      "pinpoint": "01490013",
+      "name": "風本（種子島）",
+      "area_code": "20",
+      "area_name": "アイランド",
+      "region": "アイランド",
+      "prefectures": [
+        "東京(伊豆諸島)",
+        "鹿児島(種子島)",
+        "沖縄"
+      ],
+      "lat": 30.69117944,
+      "lng": 131.0740186,
+      "sort_key": "I",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=20&pinpoint=01490013"
+    },
+    {
+      "id": "nami-01490014",
+      "pinpoint": "01490014",
+      "name": "浅川（種子島）",
+      "area_code": "20",
+      "area_name": "アイランド",
+      "region": "アイランド",
+      "prefectures": [
+        "東京(伊豆諸島)",
+        "鹿児島(種子島)",
+        "沖縄"
+      ],
+      "lat": 30.68566222,
+      "lng": 131.0658431,
+      "sort_key": "J",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=20&pinpoint=01490014"
+    },
+    {
+      "id": "nami-01490015",
+      "pinpoint": "01490015",
+      "name": "鉄浜（種子島）",
+      "area_code": "20",
+      "area_name": "アイランド",
+      "region": "アイランド",
+      "prefectures": [
+        "東京(伊豆諸島)",
+        "鹿児島(種子島)",
+        "沖縄"
+      ],
+      "lat": 30.65124083,
+      "lng": 131.0503078,
+      "sort_key": "K",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=20&pinpoint=01490015"
+    },
+    {
+      "id": "nami-01490025",
+      "pinpoint": "01490025",
+      "name": "ヨキノ（種子島）",
+      "area_code": "20",
+      "area_name": "アイランド",
+      "region": "アイランド",
+      "prefectures": [
+        "東京(伊豆諸島)",
+        "鹿児島(種子島)",
+        "沖縄"
+      ],
+      "lat": 30.69247111,
+      "lng": 130.9623314,
+      "sort_key": "L",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=20&pinpoint=01490025"
+    },
+    {
+      "id": "nami-01500004",
+      "pinpoint": "01500004",
+      "name": "スーサイド（沖縄本島）",
+      "area_code": "20",
+      "area_name": "アイランド",
+      "region": "アイランド",
+      "prefectures": [
+        "東京(伊豆諸島)",
+        "鹿児島(種子島)",
+        "沖縄"
+      ],
+      "lat": 26.07914167,
+      "lng": 127.6840281,
+      "sort_key": "M",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=20&pinpoint=01500004"
+    },
+    {
+      "id": "nami-01500008",
+      "pinpoint": "01500008",
+      "name": "ボウル（沖縄本島）",
+      "area_code": "20",
+      "area_name": "アイランド",
+      "region": "アイランド",
+      "prefectures": [
+        "東京(伊豆諸島)",
+        "鹿児島(種子島)",
+        "沖縄"
+      ],
+      "lat": 26.32338333,
+      "lng": 127.7461267,
+      "sort_key": "N",
+      "namidensetsu_url": "https://www.namidensetsu.com/area/pointdetail.php?surf_gaikyo_area=20&pinpoint=01500008"
+    }
+  ]
+}

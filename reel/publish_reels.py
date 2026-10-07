@@ -1,0 +1,120 @@
+"""render_reel.py の MP4 を Instagram リールとして投稿する（Instagram API with Facebook Login）。
+
+動画は resumable upload で rupload.facebook.com に直接送るので、公開 URL は不要。
+  1. POST graph.facebook.com/{v}/{ig-user-id}/media  media_type=REELS upload_type=resumable caption
+  2. POST rupload.facebook.com/ig-api-upload/{v}/{container}  (Authorization: OAuth, offset, file_size, 本体)
+  3. GET  /{container}?fields=status_code  が FINISHED になるまで待つ
+  4. POST /{ig-user-id}/media_publish  creation_id
+
+環境変数（/Users/takeda.toi/secret/wavehack/instagram.env）:
+  IG_USER_ID / IG_ACCESS_TOKEN（Facebook ページのアクセストークン）/ IG_API_VERSION（既定 v26.0）
+
+使い方:
+  python reel/publish_reels.py --data reel_data.json --video-dir videos/ [--interval-min 15] [--dry-run] [ポイント名 ...]
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import sys
+import time
+import urllib.error
+import urllib.parse
+import urllib.request
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from narration_scenes import size_words  # noqa: E402
+
+DAYJ = {"sat": "土", "sun": "日"}
+AREA_TAGS = {"千葉北": "千葉サーフィン", "湘南": "湘南サーフィン", "伊豆・伊東": "伊豆サーフィン", "静岡・浜松": "静岡サーフィン",
+             "伊良湖": "伊良湖サーフィン", "伊勢・志摩": "伊勢サーフィン", "和歌山": "和歌山サーフィン", "四国": "徳島サーフィン",
+             "宮崎": "宮崎サーフィン"}
+
+
+def caption(data: dict, P: dict) -> str:
+    key, s = max(((k, x) for k in ("sat", "sun") for x in P["days"][k]), key=lambda kx: kx[1]["score"])
+    good = sum(1 for m in P["members"] if (m[key] or 0) >= 55)
+    lines = [
+        f"🌊 今週末の{P['group']}エリア｜{P['name']}（{data['period']}）",
+        "",
+        f"ベスト: {DAYJ[key]}曜 {s['t']}〜／{size_words(s['h']).replace('くらい', '')}（{s['h']:.1f}m）／SCORE {s['score']}",
+        f"うねり: {s['swell']}から 周期{round(s['per'])}秒　風: {s['wind']} {s['wms']:.0f}m/s",
+        f"{P['group']}エリアは{len(P['members'])}地点中{good}地点がおすすめ（{DAYJ[key]}曜・日中平均SCORE55以上）",
+        "",
+        "直前の最新予報・潮回り・7日間予報はプロフィールのリンク（wavehack.surf）から。",
+        "※ NOAA GFS / 気象庁データをもとにした自動生成の予報です。",
+        "",
+        " ".join(["#波情報", "#波予報", "#週末サーフィン", f"#{P['name'].replace('・', '')}", f"#{AREA_TAGS.get(P['group'], 'サーフィン')}",
+                  "#サーフィン", "#surf", "#surfjapan", "#wavehack"]),
+    ]
+    return "\n".join(lines)
+
+
+class IG:
+    def __init__(self) -> None:
+        self.user = os.environ["IG_USER_ID"]
+        self.token = os.environ["IG_ACCESS_TOKEN"]
+        self.v = os.environ.get("IG_API_VERSION", "v26.0")
+
+    def _req(self, method: str, url: str, data: bytes | None = None, headers: dict | None = None) -> dict:
+        h = {"Authorization": f"OAuth {self.token}", **(headers or {})}
+        req = urllib.request.Request(url, data=data, method=method, headers=h)
+        try:
+            with urllib.request.urlopen(req, timeout=300) as r:
+                return json.load(r)
+        except urllib.error.HTTPError as e:  # エラー本文にトークンは含まれない
+            raise SystemExit(f"{method} {url.split('?')[0]} -> {e.code}: {e.read().decode(errors='replace')[:500]}") from e
+
+    def publish_reel(self, video: Path, text: str, wait_sec: int = 600) -> str:
+        base = f"https://graph.facebook.com/{self.v}"
+        body = urllib.parse.urlencode({"media_type": "REELS", "upload_type": "resumable", "caption": text,
+                                       "share_to_feed": "true"}).encode()
+        container = self._req("POST", f"{base}/{self.user}/media", body)["id"]
+        size = video.stat().st_size
+        self._req("POST", f"https://rupload.facebook.com/ig-api-upload/{self.v}/{container}", video.read_bytes(),
+                  {"offset": "0", "file_size": str(size)})
+        deadline = time.monotonic() + wait_sec
+        while True:
+            st = self._req("GET", f"{base}/{container}?fields=status_code,status")
+            code = st.get("status_code")
+            if code == "FINISHED":
+                break
+            if code in ("ERROR", "EXPIRED") or time.monotonic() > deadline:
+                raise SystemExit(f"container {container} {code}: {st.get('status')}")
+            time.sleep(10)
+        media = self._req("POST", f"{base}/{self.user}/media_publish", urllib.parse.urlencode({"creation_id": container}).encode())
+        return media["id"]
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    ap.add_argument("--data", type=Path, required=True)
+    ap.add_argument("--video-dir", type=Path, required=True)
+    ap.add_argument("--interval-min", type=float, default=15, help="投稿間隔（分）。フィードが埋まらないようにずらす")
+    ap.add_argument("--log", type=Path, help="投稿結果を追記する JSONL")
+    ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("names", nargs="*")
+    a = ap.parse_args()
+    data = json.loads(a.data.read_text(encoding="utf-8"))
+    targets = [P for P in data["points"] if (not a.names or P["name"] in a.names) and (a.video_dir / f"{P['name']}.mp4").exists()]
+    ig = None if a.dry_run else IG()
+    for i, P in enumerate(targets):
+        if i and not a.dry_run:
+            time.sleep(a.interval_min * 60)
+        text = caption(data, P)
+        if a.dry_run:
+            print(f"--- {P['name']} ({len(text)}字)\n{text}\n", flush=True)
+            continue
+        media_id = ig.publish_reel(a.video_dir / f"{P['name']}.mp4", text)
+        print(P["name"], "published", media_id, time.strftime("%H:%M"), flush=True)
+        if a.log:
+            with a.log.open("a", encoding="utf-8") as f:
+                f.write(json.dumps({"name": P["name"], "media_id": media_id, "saturday": data["saturday"],
+                                    "at": time.strftime("%Y-%m-%dT%H:%M:%S%z")}, ensure_ascii=False) + "\n")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

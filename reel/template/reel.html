@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wave Hack Reel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;700;800;900&family=Zen+Kaku+Gothic+New:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#071a3a; --azure:#0877f9; --blue:#2e93ff; --sky:#8fc2ff; --teal:#0aa8a8;
+  --sand:#f1dfb4; --muted:#52627a; --faint:#718096; --line:#dce5ef; --low:#b5c0ce;
+  --page:#f7f9fc; --hl:#eef6ff;
+  --jp:"Zen Kaku Gothic New",sans-serif; --num:"Inter Tight",sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--page);color:var(--ink);font-family:var(--jp);padding:32px 16px 64px}
+.wrap{max-width:1100px;margin:0 auto}
+header small{font:700 12px/1 var(--num);letter-spacing:2.2px;color:#087fe5}
+header h1{font-size:26px;font-weight:900;letter-spacing:-.5px;margin:8px 0 6px}
+header p{font-size:14px;color:var(--muted);line-height:1.8}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 24px}
+.chips button{font:700 14px var(--jp);height:44px;padding:0 18px;border-radius:15px;border:1px solid var(--line);background:#fff;color:var(--ink);cursor:pointer}
+.chips button small{font:500 11px var(--jp);color:var(--faint);margin-right:6px}
+.chips button.on{background:var(--azure);border-color:var(--azure);color:#fff}
+.chips button.on small{color:#dbeaff}
+.main{display:grid;grid-template-columns:minmax(260px,400px) 1fr;gap:32px;align-items:start}
+@media (max-width:760px){.main{grid-template-columns:1fr}}
+.viewport{position:relative;width:100%;aspect-ratio:9/16;border-radius:20px;overflow:hidden;box-shadow:0 18px 34px rgba(7,28,59,.12);border:1px solid var(--line)}
+.stage{position:absolute;left:0;top:0;width:1080px;height:1920px;transform-origin:0 0;overflow:hidden;color:var(--ink);
+  background:linear-gradient(180deg,#d9eeff 0%,#f2f9ff 45%,#ffffff 100%)}
+.stage *{position:absolute}
+.side h2{font-size:18px;font-weight:900;margin-bottom:10px}
+.side ol{list-style:none;counter-reset:s}
+.side li{counter-increment:s;position:relative;padding:14px 16px 14px 52px;background:#fff;border:1px solid var(--line);border-radius:16px;margin-bottom:10px;font-size:13px;line-height:1.7;color:var(--muted)}
+.side li b{display:block;color:var(--ink);font-size:15px}
+.side li::before{content:counter(s);position:absolute;left:16px;top:14px;width:24px;height:24px;border-radius:50%;background:var(--azure);color:#fff;font:800 13px/24px var(--num);text-align:center}
+.side li.on{border-color:var(--azure);background:var(--hl)}
+.ctrl{margin-top:14px;display:flex;gap:8px}
+.ctrl button{font:700 13px var(--jp);height:44px;padding:0 16px;border-radius:15px;border:1px solid var(--azure);background:var(--azure);color:#fff;cursor:pointer}
+.note{font-size:12px;color:var(--faint);line-height:1.8;margin-top:16px}
+body.render{padding:0;background:#fff}
+body.render .wrap>header,body.render .chips,body.render .side{display:none}
+body.render .main{display:block}
+body.render .viewport{width:1080px;height:1920px;aspect-ratio:auto;border:0;border-radius:0;box-shadow:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <small>INSTAGRAM REELS · ポイント別 · 1080×1920 · 約22秒</small>
+  <h1>週末の波予想 ポイント別リール（マップ → 時間ごとの波高 → うねりと風）</h1>
+  <p>エリア内の全ポイントのスコアをマップで見せてから、主役ポイントの1時間ごとの波高、ベストタイムのうねりと風へ。明るい日中トーン。上のボタンで主役ポイントを切り替え。</p>
+</header>
+<div class="chips" id="chips"></div>
+<div class="main">
+  <div class="viewport" id="vp"><div class="stage"></div></div>
+  <div class="side">
+    <h2>シーン構成</h2>
+    <ol id="scenes">
+      <li><b>エリアマップ（約6秒）</b>エリア内の全ポイントを日中平均スコアで表示。土→日で切り替わり、主役ポイント（オレンジ）にズーム。</li>
+      <li><b>1時間ごとの波高（約7秒）</b>主役ポイントの時間ごとの波高を水柱で、各時間のスコアを下に表示。土→日で水位が動く。</li>
+      <li><b>うねりと風（約6秒）</b>週末ベストタイムの、浜の向きに対するうねり（青）・風（オレンジ）の矢印と言語化コメント。</li>
+      <li><b>誘導（約3秒）</b>プロフィールのリンク（wavehack.surf）へ。</li>
+    </ol>
+    <div class="ctrl"><button id="sound">▶ 音声つきで再生</button><button id="replay" style="background:#fff;color:var(--ink);border-color:var(--line)">最初から再生（無音）</button></div>
+    
+  </div>
+</div>
+</div>
+
+<script>
+const POINTS = window.__REEL__.points;
+const PROJ = window.__REEL__.proj;
+// Codex 生成のエリア背景（公開中スポット画像のトーンに合わせた写実調）。無いエリアはグラデーションのみ
+const BG = {"千葉北": "chiba-north", "伊豆・伊東": "izu", "宮崎": "miyazaki"};
+function areaBg(parent, P, t0, dur) {
+  const slug = BG[P.group];
+  if (!slug) return;
+  const wrap = el(parent, "left:0;top:0;width:1080px;height:1920px;overflow:hidden");
+  const img = document.createElement("img");
+  img.src = `../assets/bg/${slug}.jpg`;
+  img.style.cssText = "left:0;top:0;width:1080px;height:1620px;object-fit:cover;transform-origin:50% 30%";
+  wrap.appendChild(img);
+  el(wrap, "left:0;top:0;width:1080px;height:1920px;background:linear-gradient(180deg,rgba(255,255,255,.15) 0%,rgba(255,255,255,0) 28%,rgba(242,249,255,.55) 55%,#f2f9ff 82%,#ffffff 100%)");
+  anim(img, [{transform: "scale(1)"}, {transform: "scale(1.08)"}], t0, dur, "linear");
+  fadeIn(wrap, t0, 500);
+}
+// アプリの waveSizeLabel と同じ閾値
+const sizeLabel = m => m < .5 ? "スネ・ヒザ" : m < .8 ? "モモ・コシ" : m < 1.2 ? "ハラ・ムネ" : m < 1.8 ? "カタ・アタマ" : "オーバーヘッド";
+const DAYJ = {sat: "土", sun: "日"};
+const DAYLABEL = window.__REEL__.dayLabel;
+const HI = 55;
+const DIR = {"北":0,"北北東":22.5,"北東":45,"東北東":67.5,"東":90,"東南東":112.5,"南東":135,"南南東":157.5,"南":180,"南南西":202.5,"南西":225,"西南西":247.5,"西":270,"西北西":292.5,"北西":315,"北北西":337.5};
+
+// ---------- 小道具 ----------
+function el(parent, css, html = "") {
+  const e = document.createElement("div");
+  e.style.cssText = css;
+  e.innerHTML = html;
+  parent.appendChild(e);
+  return e;
+}
+// 同じ要素への2本目以降（退場など）は fill:"forwards" にしないと開始前の状態が登場アニメを上書きする
+function anim(e, kf, delay, dur, easing = "cubic-bezier(.2,.8,.2,1)", fill = "both") {
+  return e.animate(kf, {delay, duration: dur, easing, fill});
+}
+const fadeUp = (e, d, dur = 600, y = 60) => anim(e, [{opacity: 0, transform: `translateY(${y}px)`}, {opacity: 1, transform: "none"}], d, dur);
+const fadeIn = (e, d, dur = 500) => anim(e, [{opacity: 0}, {opacity: 1}], d, dur);
+const fadeOut = (e, d, dur = 400) => anim(e, [{opacity: 1}, {opacity: 0}], d, dur, "ease-in", "forwards");
+const pop = (e, d, dur = 500) => anim(e, [{opacity: 0, transform: "scale(.6)"}, {opacity: 1, transform: "scale(1.06)", offset: .7}, {opacity: 1, transform: "scale(1)"}], d, dur);
+function later(stage, d, fn) { setTimeout(() => { if (stage.isConnected) fn(); }, d); }
+function countUp(e, to, d, dur = 800) {
+  const t0 = performance.now() + d;
+  const from = parseFloat(e.textContent) || 0;
+  const tick = now => {
+    if (!e.isConnected) return;
+    const k = Math.min(1, Math.max(0, (now - t0) / dur));
+    e.textContent = Math.round(from + (to - from) * (1 - Math.pow(1 - k, 3)));
+    if (k < 1) requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+function typeText(e, text, d, cps = 26) {
+  e.textContent = "";
+  [...text].forEach((ch, i) => later(e, d + i * (1000 / cps), () => { e.textContent += ch; }));
+}
+const scoreCol = s => s >= HI ? "var(--azure)" : "#8a9bb3";
+const bestOf = slots => slots.reduce((a, b) => (b.score > a.score ? b : a));
+function weekendBest(P) {
+  const s = bestOf(P.days.sat), u = bestOf(P.days.sun);
+  return s.score >= u.score ? {key: "sat", slot: s} : {key: "sun", slot: u};
+}
+function arrowSvg(size, color, stroke = 10) {
+  return `<svg width="${size}" height="${size}" viewBox="0 0 100 100" style="position:static;display:block"><path d="M50 8 L50 88 M50 8 L28 32 M50 8 L72 32" stroke="${color}" stroke-width="${stroke}" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+}
+function brand(parent) { return el(parent, "left:72px;top:80px;font:800 30px/1 var(--num);letter-spacing:6px;color:var(--azure)", "WAVE HACK"); }
+function pillEl(parent, css, text) {
+  return el(parent, `${css};height:76px;padding:0 32px;border-radius:999px;background:var(--ink);color:#fff;font:800 36px/76px var(--num)`, text);
+}
+
+// ---------- シーン1: エリアマップ ----------
+function sceneMap(stage, P, t0, dur = 6200) {
+  const S = el(stage, "left:0;top:0;width:1080px;height:1920px");
+  areaBg(S, P, t0, 6200);
+  const b = brand(S);
+  const a = el(S, "left:72px;top:140px;font:700 38px var(--jp);color:var(--ink);text-shadow:0 0 18px rgba(255,255,255,.9)", `週末の波予想｜${window.__REEL__.period}`);
+  const n = el(S, "left:72px;top:194px;font:900 112px/1.1 var(--jp);letter-spacing:-3px", `${P.group}<span style="position:static;font-size:64px;letter-spacing:0">エリア</span>`);
+  fadeUp(b, t0, 500, 20); fadeUp(a, t0 + 120); fadeUp(n, t0 + 260);
+  const card = el(S, "left:56px;top:400px;width:968px;height:1060px;border-radius:32px;background:rgba(255,255,255,.88);border:4px solid #fff;box-shadow:0 18px 34px rgba(7,28,59,.10);overflow:hidden");
+  fadeUp(card, t0 + 300, 600, 40);
+  const inner = el(card, "left:0;top:0;width:968px;height:1060px;transform-origin:0 0");
+  const M = P.members;
+  // 地図は地球地図日本の海岸線から生成した SVG（reel-assets/maps）。投影パラメータを共有して点を正確に重ねる
+  const pr = PROJ[P.group];
+  const X = lon => 484 + (lon - pr.cx) * pr.k / pr.span;
+  const Y = lat => 530 - (lat - pr.cy) / pr.span;
+  const map = document.createElement("img");
+  map.src = `../assets/maps/${pr.file}`;
+  map.style.cssText = "left:0;top:0;width:968px;height:1060px";
+  inner.appendChild(map);
+  const crowded = M.length > 10;
+  const ranked = [...M].sort((a, b) => Math.max(b.sat ?? 0, b.sun ?? 0) - Math.max(a.sat ?? 0, a.sun ?? 0));
+  const labelled = new Set([P.raw, ...ranked.slice(0, crowded ? 5 : 10).map(m => m.name)]);
+  // ラベルは陸側（浜の向きの反対）に出して、海岸線に並ぶ他のドットと被らないようにする。
+  // 既存ラベルと矩形が被るものは数字ごと省略（主役は常に表示）
+  const landRad = ((P.beach_deg ?? DIR[P.beach] ?? 90) + 180) * Math.PI / 180;
+  const ldx = Math.sin(landRad), ldy = -Math.cos(landRad);
+  const boxes = [];
+  const LW = 230, LH = 96;
+  const rectOf = (px, py) => {
+    const ax = px + ldx * 46, ay = py + ldy * 46;
+    const x0 = ldx < -0.3 ? ax - LW : ldx > 0.3 ? ax : ax - LW / 2;
+    const y0 = ldy < -0.3 ? ay - LH : ldy > 0.3 ? ay : ay - LH / 2;
+    return [x0, y0];
+  };
+  const hit = ([x, y]) => boxes.some(([bx, by]) => x < bx + LW && bx < x + LW && y < by + LH && by < y + LH);
+  const order = [...M.keys()].sort((a, b) => (M[b].name === P.raw) - (M[a].name === P.raw));
+  const labelAt = new Map();
+  order.forEach(i => {
+    const m = M[i], me = m.name === P.raw;
+    if (!labelled.has(m.name)) return;
+    const r = rectOf(X(m.lon), Y(m.lat));
+    if (!me && hit(r)) return;
+    boxes.push(r); labelAt.set(i, r);
+  });
+  const nodes = M.map((m, i) => {
+    const me = m.name === P.raw;
+    const px = X(m.lon), py = Y(m.lat);
+    const g = el(inner, `left:${px}px;top:${py}px;width:0;height:0`);
+    const ring = el(g, "left:-60px;top:-60px;width:120px;height:120px;border-radius:50%;opacity:0;border:4px solid var(--azure)");
+    const r = me ? 24 : 14;
+    const dot = el(g, `left:-${r}px;top:-${r}px;width:${r * 2}px;height:${r * 2}px;border-radius:50%;border:5px solid #fff;box-shadow:0 4px 12px rgba(7,28,59,.2)`);
+    pop(dot, t0 + 700 + i * 40, 400);
+    ring.animate([{transform: "scale(.4)", opacity: .8}, {transform: "scale(1.3)", opacity: 0}], {delay: t0 + 900 + i * 40, duration: 1600, iterations: Infinity, fill: "backwards"});
+    let sc = null, lab = null;
+    if (labelAt.has(i)) {
+      const [lx, ly] = labelAt.get(i);
+      const align = ldx < -0.3 ? "right" : ldx > 0.3 ? "left" : "center";
+      lab = el(inner, `left:${lx}px;top:${ly}px;width:${LW}px;height:${LH}px;text-align:${align};white-space:nowrap;display:flex;flex-direction:column;justify-content:center;align-items:${align === "right" ? "flex-end" : align === "left" ? "flex-start" : "center"}`);
+      const label = me ? P.name : m.name.replace(/（.*?）/g, "");
+      el(lab, `position:relative;font:900 ${me ? 36 : 26}px/1.2 var(--jp);color:${me ? "#e56f2f" : "var(--ink)"};text-shadow:0 0 8px #fff,0 0 8px #fff`, label.length > 9 ? label.slice(0, 8) + "…" : label);
+      sc = el(lab, `position:relative;font:900 ${me ? 58 : 40}px/1.1 var(--num);text-shadow:0 0 8px #fff`, "0");
+      fadeUp(lab, t0 + 800 + i * 40, 400, 16);
+    }
+    return {m, me, dot, ring, sc, px, py, g, lab};
+  });
+  const pill = pillEl(S, "left:72px;top:1500px", DAYLABEL.sat);
+  pop(pill, t0 + 700);
+  const legend = el(S, "left:400px;top:1522px;font:700 28px var(--jp);color:var(--muted)", "日中の平均スコア（55以上が<span style='position:static;color:var(--azure)'>青</span>）");
+  fadeIn(legend, t0 + 900);
+  const cnt = el(S, "left:72px;top:1620px;width:936px;font:700 32px/1.6 var(--jp);color:var(--ink)", "");
+  const show = (key, d) => later(stage, d, () => {
+    pill.textContent = DAYLABEL[key]; pop(pill, 0, 400);
+    nodes.forEach(({m, me, dot, ring, sc}) => {
+      const v = m[key] ?? 0, c = v >= HI ? "#0877f9" : "#b5c0ce";
+      dot.style.background = me ? "#e56f2f" : c;
+      ring.style.borderColor = me ? "#e56f2f" : c;
+      ring.style.display = v >= HI || me ? "block" : "none";
+      if (sc) { sc.style.color = me ? "#e56f2f" : v >= HI ? "var(--azure)" : "#8a9bb3"; countUp(sc, v, 0, 600); }
+    });
+    const good = M.filter(m => (m[key] ?? 0) >= HI).length;
+    cnt.innerHTML = `${DAYJ[key]}曜は <span style="position:static;color:var(--azure);font-weight:900">${M.length}地点中 ${good}地点</span> がおすすめ`;
+    fadeUp(cnt, 200, 400, 16);
+  });
+  show("sat", t0 + 700);
+  show("sun", t0 + Math.max(3000, dur * .48));
+  const me = nodes.find(x => x.me);
+  // 主役以外を薄くしてからズーム（近接ポイントのラベル被りを防ぐ）
+  nodes.filter(x => !x.me).forEach(x => [x.g, x.lab].filter(Boolean).forEach(e => anim(e, [{opacity: 1}, {opacity: .15}], t0 + dur - 1500, 400, "ease", "forwards")));
+  const Z = 1.8;
+  anim(inner, [{transform: "none"}, {transform: `translate(${484 - me.px * Z}px,${540 - me.py * Z}px) scale(${Z})`}], t0 + dur - 1300, 900, "cubic-bezier(.6,0,.3,1)", "forwards");
+  fadeOut(S, t0 + dur - 400, 400);
+  return t0 + dur;
+}
+
+// ---------- シーン2: 1時間ごとの波高 ----------
+function sceneHours(stage, P, t0, dur = 7300) {
+  const S = el(stage, "left:0;top:0;width:1080px;height:1920px");
+  fadeIn(S, t0, 400);
+  brand(S);
+  el(S, "left:72px;top:140px;font:700 38px var(--jp);color:var(--muted)", `${P.area}｜1時間ごとの波`);
+  el(S, "left:72px;top:194px;font:900 120px/1.1 var(--jp);letter-spacing:-3px", P.name);
+  const pill = pillEl(S, "left:72px;top:360px", DAYLABEL.sat);
+  const card = el(S, "left:56px;top:470px;width:968px;height:1180px;border-radius:32px;background:rgba(255,255,255,.92);box-shadow:0 18px 34px rgba(7,28,59,.10)");
+  fadeUp(card, t0 + 100, 600, 40);
+  const maxH = Math.max(1.5, ...P.days.sat.map(s => s.h), ...P.days.sun.map(s => s.h)) * 1.15;
+  const base = 820, top = 150, H = base - top;
+  for (let m = .5; m < maxH; m += .5) {
+    const y = base - m / maxH * H;
+    el(card, `left:100px;top:${y}px;width:830px;height:2px;background:rgba(8,119,249,.08)`);
+    el(card, `left:20px;top:${y - 16}px;width:70px;text-align:right;font:700 24px var(--num);color:var(--faint)`, `${m.toFixed(1)}m`);
+  }
+  el(card, "left:40px;top:56px;font:800 26px var(--num);letter-spacing:4px;color:var(--azure)", "WAVE HEIGHT");
+  el(card, `left:14px;top:${base + 178}px;width:84px;text-align:center;font:800 20px var(--num);letter-spacing:2px;color:var(--faint)`, "SCORE");
+  const layer = el(card, "left:0;top:0;width:968px;height:1180px");
+  const build = (key, d) => later(stage, d, () => {
+    pill.textContent = DAYLABEL[key]; pop(pill, 0, 400);
+    layer.innerHTML = "";
+    const slots = P.days[key], best = bestOf(slots);
+    const n = slots.length, gap = n > 8 ? 10 : 22, x0 = 110, cw = (820 - gap * (n - 1)) / n;
+    const small = n > 8;
+    slots.forEach((s, j) => {
+      const x = x0 + j * (cw + gap), bh = Math.max(8, s.h / maxH * H), isB = s === best, good = s.score >= HI;
+      const col = el(layer, `left:${x}px;top:${top}px;width:${cw}px;height:${H}px;border-radius:${Math.min(cw / 2, 40)}px ${Math.min(cw / 2, 40)}px 10px 10px;background:rgba(8,119,249,.05);overflow:hidden`);
+      const water = el(col, `left:0;top:${H - bh}px;width:${cw}px;height:${bh}px;background:${good ? "linear-gradient(180deg,#5ab4ff,#0877f9)" : "linear-gradient(180deg,#dfe7f1,#b5c0ce)"};transform-origin:50% 100%`);
+      const surf = el(water, `left:0;top:-12px;width:${cw * 4}px;height:24px`, `<svg width="${cw * 4}" height="24" viewBox="0 0 ${cw * 4} 24" style="position:static;display:block"><path d="M0 12 ${Array.from({length: 8}, (_, q) => `Q ${q * cw / 2 + cw / 4} ${q % 2 ? 22 : 2} ${(q + 1) * cw / 2} 12`).join(" ")} V24 H0Z" fill="${good ? "#5ab4ff" : "#dfe7f1"}"/></svg>`);
+      surf.animate([{transform: "translateX(0)"}, {transform: `translateX(-${cw}px)`}], {duration: 1200 + j * 70, iterations: Infinity});
+      anim(water, [{transform: "scaleY(0)"}, {transform: "scaleY(1)"}], 100 + j * 60, 900, "cubic-bezier(.3,1.3,.5,1)");
+      const hl = el(layer, `left:${x - 20}px;width:${cw + 40}px;top:${top + H - bh - (small ? 40 : 52)}px;text-align:center;font:800 ${small ? 24 : 34}px var(--num);color:${isB ? "var(--azure)" : "var(--muted)"}`, s.h.toFixed(1));
+      fadeUp(hl, 500 + j * 60, 400, 20);
+      el(layer, `left:${x - 20}px;width:${cw + 40}px;top:${base + 18}px;text-align:center;font:700 ${small ? 24 : 32}px var(--num);color:var(--ink)`, `${parseInt(s.t, 10)}`);
+      const cs = small ? 58 : 76;
+      const chip = el(layer, `left:${x + cw / 2 - cs / 2}px;top:${base + 160}px;width:${cs}px;height:${cs}px;border-radius:50%;background:${isB ? "var(--azure)" : good ? "var(--hl)" : "#f1f4f8"};color:${isB ? "#fff" : scoreCol(s.score)};text-align:center;font:900 ${small ? 24 : 32}px/${cs}px var(--num)`, s.score);
+      pop(chip, 600 + j * 60, 400);
+      if (isB) {
+        const tag = el(layer, `left:${Math.max(100, Math.min(788, x + cw / 2 - 80))}px;top:${base + 78}px;width:160px;height:56px;border-radius:999px;background:var(--azure);color:#fff;text-align:center;font:900 28px/56px var(--jp)`, "ベスト");
+        pop(tag, 1300, 500);
+      }
+    });
+    el(layer, `left:40px;top:${base + 22}px;font:700 22px var(--jp);color:var(--faint)`, "時");
+    const sm = el(layer, "left:40px;top:1086px;width:888px;font:700 34px var(--jp);color:var(--ink)", `${DAYJ[key]}曜のベスト <span style="position:static;color:var(--azure);font-weight:900">${best.t}</span>　${sizeLabel(best.h)}（${best.h.toFixed(1)}m）`);
+    fadeUp(sm, 1300, 500, 20);
+  });
+  pop(pill, t0 + 200);
+  build("sat", t0 + 200);
+  build("sun", t0 + dur / 2);
+  fadeOut(S, t0 + dur - 400, 400);
+  return t0 + dur;
+}
+
+// ---------- シーン3: うねりと風 ----------
+function sceneCompass(stage, P, t0, dur = 6200) {
+  const S = el(stage, "left:0;top:0;width:1080px;height:1920px");
+  fadeIn(S, t0, 400);
+  const cv = document.createElement("canvas");
+  cv.width = 1080; cv.height = 1920; cv.style.cssText = "left:0;top:0";
+  S.appendChild(cv);
+  const ctx = cv.getContext("2d");
+  const wb = weekendBest(P), s = wb.slot;
+  const amp = 10 + s.h * 18, per = s.per || 10, start = performance.now();
+  (function draw(now) {
+    if (!cv.isConnected) return;
+    const t = (now - start) / 1000;
+    ctx.clearRect(0, 0, 1080, 1920);
+    for (let k = 0; k < 5; k++) {
+      const y0 = 1600 + k * 70, a = amp * (1 - k * .12);
+      ctx.beginPath(); ctx.moveTo(0, 1920);
+      for (let x = 0; x <= 1080; x += 12) ctx.lineTo(x, y0 + Math.sin(x / 150 + t * 12 / per + k) * a + Math.sin(x / 60 - t * 1.2 + k) * a * .15);
+      ctx.lineTo(1080, 1920); ctx.closePath();
+      ctx.fillStyle = ["rgba(143,194,255,.35)", "rgba(90,180,255,.35)", "rgba(46,147,255,.35)", "rgba(8,119,249,.35)", "rgba(8,100,220,.4)"][k];
+      ctx.fill();
+    }
+    requestAnimationFrame(draw);
+  })(start);
+  brand(S);
+  el(S, "left:72px;top:140px;font:700 38px var(--jp);color:var(--muted)", `${P.name}｜週末のベストタイム`);
+  const big = el(S, "left:72px;top:194px;font:900 112px/1.1 var(--jp);letter-spacing:-3px", `${DAYJ[wb.key]}曜 <span style="position:static;font-family:var(--num)">${s.t}</span>`);
+  fadeUp(big, t0 + 150);
+  const C = el(S, "left:190px;top:400px;width:700px;height:700px");
+  const bd = P.beach_deg ?? DIR[P.beach] ?? 90;
+  el(C, "left:0;top:0;width:700px;height:700px;border-radius:50%;background:#fff;box-shadow:0 18px 34px rgba(7,28,59,.10)");
+  // 浜の向き = 海の方角。海側半円を水色、陸側を砂色に
+  el(C, `left:0;top:0;width:700px;height:700px;border-radius:50%;background:conic-gradient(from ${bd - 90}deg, rgba(90,180,255,.28) 0deg 180deg, rgba(241,223,180,.4) 180deg 360deg)`);
+  el(C, "left:70px;top:70px;width:560px;height:560px;border-radius:50%;border:2px dashed rgba(8,119,249,.18)");
+  ["N", "E", "S", "W"].forEach((nm, k) => el(C, `left:${350 + Math.sin(k * Math.PI / 2) * 390 - 22}px;top:${350 - Math.cos(k * Math.PI / 2) * 390 - 24}px;width:44px;text-align:center;font:800 34px var(--num);color:var(--faint)`, nm));
+  el(C, `left:180px;top:334px;width:340px;height:32px;border-radius:16px;background:#e4c98a;transform:rotate(${bd}deg)`);
+  // 文字は回転させず、浜の向き（海側）とその反対（陸側）に置く
+  [[bd, "海", "var(--azure)"], [bd + 180, "陸", "#b08a3c"]].forEach(([deg, t, c]) => {
+    const r = deg * Math.PI / 180;
+    el(C, `left:${350 + Math.sin(r) * 95 - 40}px;top:${350 - Math.cos(r) * 95 - 22}px;width:80px;text-align:center;font:900 34px var(--jp);color:${c}`, t);
+  });
+  fadeIn(C, t0 + 200, 500);
+  const inward = (size, color, stroke) => `<div style="left:0;top:0;transform:rotate(180deg)">${arrowSvg(size, color, stroke)}</div>`;
+  const sw = el(C, "left:265px;top:40px;width:170px;height:310px;transform-origin:85px 310px", inward(170, "#0877f9", 13));
+  const wd = el(C, "left:290px;top:130px;width:120px;height:220px;transform-origin:60px 220px", inward(120, "#e56f2f", 10));
+  anim(sw, [{transform: `rotate(${s.swdeg}deg) translateY(-180px)`, opacity: 0}, {transform: `rotate(${s.swdeg}deg)`, opacity: 1}], t0 + 600, 800);
+  anim(wd, [{transform: `rotate(${s.wdeg}deg) translateY(-160px)`, opacity: 0}, {transform: `rotate(${s.wdeg}deg)`, opacity: 1}], t0 + 1000, 800);
+  const info = el(S, "left:56px;top:1150px;width:968px;height:260px;border-radius:28px;background:#fff;box-shadow:0 18px 34px rgba(7,28,59,.08)");
+  el(info, "left:40px;top:36px", `<div style="position:relative;font:800 24px var(--num);letter-spacing:4px;color:var(--azure)">● SWELL</div><div style="position:relative;font:900 42px/1.5 var(--jp);white-space:nowrap">${sizeLabel(s.h)}</div><div style="position:relative;font:700 28px var(--jp);color:var(--muted)">${s.h.toFixed(1)}m・${s.swell}から・${Math.round(s.per)}秒</div>`);
+  el(info, "left:380px;top:36px", `<div style="position:relative;font:800 24px var(--num);letter-spacing:4px;color:#e56f2f">● WIND</div><div style="position:relative;font:900 56px/1.3 var(--jp)">${s.wind}</div><div style="position:relative;font:700 28px var(--num);color:var(--muted)">${s.wms}m/s</div>`);
+  const scB = el(info, `right:40px;top:30px;width:200px;height:200px;border-radius:50%;background:${s.score >= HI ? "var(--azure)" : "#8a9bb3"};color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center`);
+  const scN = el(scB, "position:relative;font:900 92px/1 var(--num)", "0");
+  el(scB, "position:relative;font:800 20px var(--num);letter-spacing:4px;margin-top:4px", "SCORE");
+  fadeUp(info, t0 + 900, 500, 30);
+  pop(scB, t0 + 1300); countUp(scN, s.score, t0 + 1400, 700);
+  const cm = el(S, "left:72px;top:1440px;width:936px;font:700 36px/1.7 var(--jp);color:var(--ink);text-shadow:0 0 12px #fff", "");
+  typeText(cm, s.comment, t0 + 1700, 30);
+  return t0 + dur;
+}
+
+// ---------- シーン4: 誘導 ----------
+function sceneCta(stage, P, t0, dur = 3000) {
+  const S = el(stage, "left:0;top:0;width:1080px;height:1920px;background:linear-gradient(180deg,#d9eeff,#ffffff)");
+  fadeIn(S, t0, 400);
+  areaBg(S, P, t0, 3000);
+  if (BG[P.group]) fadeIn(el(S, "left:90px;top:640px;width:900px;height:680px;border-radius:40px;background:rgba(255,255,255,.82);box-shadow:0 18px 34px rgba(7,28,59,.10)"), t0 + 100, 400);
+  const t1 = el(S, "left:0;width:1080px;top:700px;text-align:center;font:900 72px/1.35 var(--jp)", `${P.name}の<br>最新予報をチェック`);
+  const t2 = el(S, "left:0;width:1080px;top:950px;text-align:center;font:700 36px/1.6 var(--jp);color:var(--muted)", "直前の予報・潮・7日間は<br>プロフィールのリンクから");
+  const t3 = el(S, "left:290px;top:1150px;width:500px;height:100px;border-radius:999px;background:var(--azure);color:#fff;display:flex;align-items:center;justify-content:center;font:800 42px var(--num)", "wavehack.surf");
+  fadeUp(t1, t0 + 200); fadeUp(t2, t0 + 450); pop(t3, t0 + 750);
+  return t0 + dur;
+}
+
+// ---------- 再生 ----------
+let current = Math.max(0, POINTS.findIndex(p => p.name === new URLSearchParams(location.search).get("point")));
+// シーンごとのナレーション（[秒数...]）。各シーンの頭で再生し、音声が長いシーンは尺を伸ばす
+const NARR = window.__REEL__.narr;
+const DEFAULT_DUR = [6200, 7300, 6200, 3000];
+const voices = [];
+let withSound = false;
+const RENDER = new URLSearchParams(location.search).has("render");
+if (RENDER) document.body.classList.add("render");
+const vp = document.getElementById("vp"), sceneLis = [...document.querySelectorAll("#scenes li")];
+function fit() { vp.querySelector(".stage").style.transform = `scale(${vp.clientWidth / 1080})`; }
+function mark(stage, i, d) { later(stage, d, () => sceneLis.forEach((li, j) => li.classList.toggle("on", j === i))); }
+function play() {
+  clearTimeout(vp._loop);
+  const st = document.createElement("div");
+  st.className = "stage";
+  vp.querySelector(".stage").replaceWith(st);
+  fit();
+  const P = POINTS[current];
+  voices.splice(0).forEach(a => a.pause());
+  const clips = (withSound || RENDER) ? NARR[P.name] : null;
+  const dur = DEFAULT_DUR.map((d, i) => clips ? Math.max(d, Math.round(clips[i].seconds * 1000) + 700) : d);
+  const say = (i, t) => clips && !RENDER && later(st, t + 250, () => { const a = new Audio(clips[i].src); voices.push(a); a.play().catch(() => {}); });
+  mark(st, 0, 0);
+  say(0, 0);
+  const t1 = sceneMap(st, P, 0, dur[0]);
+  mark(st, 1, t1);
+  say(1, t1);
+  const t2 = sceneHours(st, P, t1, dur[1]);
+  mark(st, 2, t2);
+  say(2, t2);
+  const t3 = sceneCompass(st, P, t2, dur[2]);
+  mark(st, 3, t3);
+  say(3, t3);
+  const end = sceneCta(st, P, t3, dur[3]);
+  if (RENDER) { window.__render = {starts: [0, t1, t2, t3], end}; return; }
+  vp._loop = setTimeout(play, end);
+}
+const chips = document.getElementById("chips");
+POINTS.forEach((P, i) => {
+  const b = document.createElement("button");
+  b.innerHTML = `<small>${P.area}</small>${P.name}`;
+  b.onclick = () => { current = i; chips.querySelectorAll("button").forEach((x, j) => x.classList.toggle("on", j === i)); play(); };
+  chips.appendChild(b);
+});
+chips.children[current].classList.add("on");
+document.getElementById("replay").onclick = () => { withSound = false; play(); };
+document.getElementById("sound").onclick = () => { withSound = true; play(); };
+addEventListener("resize", fit);
+// 書き出し時は外部（録画スクリプト）から window.startRender() で開始する
+window.startRender = () => play();
+if (!RENDER) document.fonts.ready.then(play);
+</script>
+</body>
+</html>
