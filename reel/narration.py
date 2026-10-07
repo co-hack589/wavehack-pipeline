@@ -19,14 +19,14 @@ def call(model: str, body: dict) -> dict:
         _last_call[0] = time.monotonic()
     req = urllib.request.Request(f"{API}/{model}:generateContent", data=json.dumps(body).encode(),
                                  headers={"content-type": "application/json", "x-goog-api-key": os.environ["GEMINI_API_KEY"]})
-    for attempt in range(3):  # 503/429 は一時的なので待って再試行
+    for attempt in range(2):  # 503/429 は一時的なので1回だけ待って再試行
         try:
             with urllib.request.urlopen(req, timeout=120) as r:
                 return json.load(r)
         except urllib.error.HTTPError as e:
-            if e.code not in (429, 500, 503) or attempt == 2:
+            if e.code not in (429, 500, 503) or attempt == 1:
                 raise SystemExit(f"{model}: HTTP {e.code} {e.read().decode(errors='replace')[:300]}")
-            time.sleep(60 * (attempt + 1))
+            time.sleep(60)
 
 def facts(P: dict) -> dict:
     best = max(((k, s) for k in ("sat", "sun") for s in P["days"][k]), key=lambda x: x[1]["score"])
@@ -86,3 +86,14 @@ if __name__ == "__main__":
         sec = speak(text, f"{out_dir}/narration_{P['name']}.wav")
         json.dump({"text": text, "seconds": round(sec, 1)}, open(f"{out_dir}/narration_{P['name']}.json", "w"), ensure_ascii=False)
         print(P["name"], f"{sec:.1f}s", len(text), text)
+
+
+def speak_local(text: str, out: str, voice: str = "Kyoko") -> float:
+    """Gemini TTS が使えないとき用の macOS 標準音声（Kyoko）。24kHz/mono/16bit WAV で出力。"""
+    import subprocess, tempfile
+    with tempfile.TemporaryDirectory() as d:
+        aiff = os.path.join(d, "v.aiff")
+        subprocess.run(["say", "-v", voice, "-r", "210", "-o", aiff, text], check=True)
+        subprocess.run(["afconvert", "-f", "WAVE", "-d", "LEI16@24000", "-c", "1", aiff, out], check=True)
+    with wave.open(out) as w:
+        return w.getnframes() / w.getframerate()

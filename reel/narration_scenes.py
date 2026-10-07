@@ -2,9 +2,9 @@
 シーンごとに別ファイルにすることで、各シーンの頭で再生でき、映像とズレない。キーは環境変数 GEMINI_API_KEY から読む。"""
 from __future__ import annotations
 
-import json, os, sys
+import json, os, shutil, sys
 sys.path.insert(0, os.path.dirname(__file__))
-from narration import speak  # noqa: E402
+from narration import speak, speak_local  # noqa: E402
 
 DAYJ = {"sat": "土曜", "sun": "日曜"}
 
@@ -45,23 +45,48 @@ def generate(points: list[dict], out_dir: str, cta_dir: str, names: list[str] | 
     if not (os.path.exists(cta_path) and os.path.exists(cta_meta) and json.load(open(cta_meta))["text"] == CTA_TEXT):
         json.dump({"text": CTA_TEXT, "seconds": round(speak(CTA_TEXT, cta_path), 2)}, open(cta_meta, "w"), ensure_ascii=False)
     cta = json.load(open(cta_meta))
+    gemini_ok = True
     for P in points:
         if names and P["name"] not in names:
             continue
         prev = f"{out_dir}/{P['name']}_scenes.json"
         done = json.load(open(prev)) if os.path.exists(prev) else []
-        meta = []
-        for i, text in enumerate(lines(P), 1):
-            out = f"{out_dir}/{P['name']}_s{i}.wav"
-            if os.path.exists(out) and len(done) >= i and done[i - 1]["text"] == text:
-                sec = done[i - 1]["seconds"]  # 同じ原稿の音声は作り直さない（再実行時）
-            else:
-                sec = speak(text, out)
-            meta.append({"text": text, "seconds": round(sec, 2), "file": out})
-            print(P["name"], i, f"{sec:.1f}s", text, flush=True)
-            json.dump(meta, open(prev, "w"), ensure_ascii=False, indent=1)  # 途中経過も保存
-        json.dump(meta + [{"text": cta["text"], "seconds": cta["seconds"], "file": cta_path}], open(prev, "w"), ensure_ascii=False, indent=1)
-
+        texts = lines(P)
+        meta, voice = [], "gemini"
+        try:
+            if not gemini_ok:
+                raise SystemExit("Gemini TTS は今回の実行では使用不可")
+            for i, text in enumerate(texts, 1):
+                out = f"{out_dir}/{P['name']}_s{i}.wav"
+                if os.path.exists(out) and len(done) >= i and done[i - 1]["text"] == text and done[i - 1].get("voice", "gemini") == "gemini":
+                    sec = done[i - 1]["seconds"]  # 同じ原稿の音声は作り直さない（再実行時）
+                else:
+                    sec = speak(text, out)
+                meta.append({"text": text, "seconds": round(sec, 2), "file": out, "voice": "gemini"})
+                json.dump(meta, open(prev, "w"), ensure_ascii=False, indent=1)  # 途中経過も保存
+            last = {"text": cta["text"], "seconds": cta["seconds"], "file": cta_path, "voice": "gemini"}
+        except SystemExit as e:
+            # 1本のリール内で声が混ざらないよう、このポイントは誘導も含め全部 Kyoko で作り直す
+            print(P["name"], "Gemini TTS 失敗 → macOS Kyoko で代替:", str(e)[:120], flush=True)
+            gemini_ok = False
+            if not shutil.which("say"):  # クラウド(Linux)には代替音声が無い → このポイントは動画化しない
+                if os.path.exists(prev):
+                    os.remove(prev)
+                print(P["name"], "代替音声なしのためスキップ", flush=True)
+                continue
+            voice, meta = "kyoko", []
+            for i, text in enumerate(texts, 1):
+                out = f"{out_dir}/{P['name']}_s{i}.wav"
+                meta.append({"text": text, "seconds": round(speak_local(text, out), 2), "file": out, "voice": "kyoko"})
+            kcta = f"{out_dir}/common_cta_kyoko.wav"
+            if not os.path.exists(kcta):
+                speak_local(CTA_TEXT, kcta)
+            import wave
+            with wave.open(kcta) as w:
+                last = {"text": CTA_TEXT, "seconds": round(w.getnframes() / w.getframerate(), 2), "file": kcta, "voice": "kyoko"}
+        for i, m in enumerate(meta, 1):
+            print(P["name"], i, voice, f"{m['seconds']:.1f}s", m["text"], flush=True)
+        json.dump(meta + [last], open(prev, "w"), ensure_ascii=False, indent=1)
 
 if __name__ == "__main__":
     import argparse

@@ -18,6 +18,8 @@ for a in "$@"; do case "$a" in --now) NOW=1 ;; --dry-run) DRY="--dry-run" ;; esa
 mkdir -p "$WORK"
 exec >>"$LOG" 2>&1
 echo "=== $(date '+%F %T') start (now=$NOW dry=${DRY:-no})"
+# 実行中（〜21:00 の最終投稿まで）はスリープさせない。スクリプト終了で自動解除
+caffeinate -i -s -w $$ &
 
 set -a
 . /Users/takeda.toi/secret/google/gemini.env

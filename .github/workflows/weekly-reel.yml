@@ -1,0 +1,114 @@
+name: weekly-reel
+
+# ---------------------------------------------------------------------------
+# 毎週木曜「週末の波予想」リール（主要9地点）を生成し、19:00 JST から15分おきに Instagram へ投稿する。
+#   R2 dashboard.json → reel/build_reel_data.py → reel/narration_scenes.py（Gemini TTS Aoede）
+#   → reel/render_reel.py（Chrome 録画 + ffmpeg）→ reel/publish_reels.py（resumable upload）
+#
+# 必要な Secrets:
+#   CLOUDFLARE_ACCOUNT_ID / CLOUDFLARE_API_TOKEN — daily-update と共通（R2 読み取り）
+#   GEMINI_API_KEY                               — ナレーション（Gemini TTS）
+#   IG_USER_ID / IG_ACCESS_TOKEN                 — Instagram ビジネスアカウント ID / Facebook ページトークン
+# 任意の Variables:
+#   WEEKLY_REEL_ENABLED — 'true' のときだけ schedule 実行で投稿（停止スイッチ）
+#
+# 17:40 JST 開始の理由: Gemini 無料枠の日次上限は太平洋時間 0 時（JST 16:00）にリセット、
+# daily-update（16:00 JST 開始、60〜90分）の結果があれば使えるため。
+# ---------------------------------------------------------------------------
+
+on:
+  schedule:
+    - cron: '40 8 * * 4'   # 木曜 UTC 08:40 = JST 17:40
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: '投稿せず動画とキャプションだけ作る（artifact で確認）'
+        type: boolean
+        default: true
+      post_now:
+        description: '19:00 を待たずにすぐ投稿を始める'
+        type: boolean
+        default: false
+      points:
+        description: '対象ポイント（空なら9地点すべて。例: 木崎浜 志田下）'
+        type: string
+        default: ''
+
+concurrency:
+  group: weekly-reel
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  reel:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    if: github.event_name == 'workflow_dispatch' || vars.WEEKLY_REEL_ENABLED == 'true'
+    env:
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      WORK: ${{ github.workspace }}/work
+      POINTS: ${{ inputs.points }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+
+      - name: Japanese fonts (web font fallback)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq fonts-noto-cjk >/dev/null
+
+      - name: Fetch production dashboard.json from R2
+        run: |
+          mkdir -p "$WORK"
+          npx -y wrangler@4 r2 object get wavehack-data/dashboard.json --remote --file "$WORK/dashboard.json"
+
+      - name: Build weekend data
+        run: uv run --extra social python reel/build_reel_data.py --dashboard "$WORK/dashboard.json" --out "$WORK/reel_data.json"
+
+      - name: Narration (Gemini TTS)
+        # 失敗したポイントは動画化されずスキップ（Linux には macOS Kyoko の代替が無い）
+        run: python3 reel/narration_scenes.py --data "$WORK/reel_data.json" --out-dir "$WORK/voice" $POINTS || true
+
+      - name: Render videos
+        run: |
+          uv run --with playwright --with imageio-ffmpeg python reel/render_reel.py \
+            --data "$WORK/reel_data.json" --voice-dir "$WORK/voice" --out-dir "$WORK/videos" $POINTS
+          ls -la "$WORK/videos"
+
+      - name: Captions (dry run)
+        run: python3 reel/publish_reels.py --data "$WORK/reel_data.json" --video-dir "$WORK/videos" --dry-run $POINTS
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: weekly-reel-${{ github.run_id }}
+          path: |
+            work/reel_data.json
+            work/videos/
+          retention-days: 14
+
+      - name: Wait until 19:00 JST
+        if: ${{ !inputs.dry_run && !inputs.post_now }}
+        run: |
+          python3 - <<'EOF'
+          import datetime, time
+          jst = datetime.timezone(datetime.timedelta(hours=9))
+          now = datetime.datetime.now(jst)
+          target = now.replace(hour=19, minute=0, second=0, microsecond=0)
+          if now < target:
+              print(f"sleep {(target - now).seconds}s until {target}")
+              time.sleep((target - now).total_seconds())
+          EOF
+
+      - name: Publish reels (19:00〜 15分おき)
+        if: ${{ !inputs.dry_run }}
+        env:
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+          IG_API_VERSION: v26.0
+        run: |
+          python3 reel/publish_reels.py --data "$WORK/reel_data.json" --video-dir "$WORK/videos" \
+            --interval-min 15 --log "$WORK/published.jsonl" $POINTS
+          cat "$WORK/published.jsonl"
