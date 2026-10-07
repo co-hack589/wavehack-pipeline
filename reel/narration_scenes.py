@@ -88,13 +88,33 @@ def generate(points: list[dict], out_dir: str, cta_dir: str, names: list[str] | 
             print(P["name"], i, voice, f"{m['seconds']:.1f}s", m["text"], flush=True)
         json.dump(meta + [last], open(prev, "w"), ensure_ascii=False, indent=1)
 
+def generate_silent(points: list[dict], out_dir: str, seconds: float = 3.0) -> None:
+    """動作確認用: ナレーションの代わりに無音を置く（Gemini の枠を使わずに動画化まで試す）。"""
+    import wave
+    for P in points:
+        meta = []
+        for i, text in enumerate(lines(P) + [CTA_TEXT], 1):
+            out = f"{out_dir}/{P['name']}_s{i}.wav"
+            with wave.open(out, "wb") as w:
+                w.setnchannels(1); w.setsampwidth(2); w.setframerate(24000)
+                w.writeframes(b"\x00\x00" * int(24000 * seconds))
+            meta.append({"text": text, "seconds": seconds, "file": out, "voice": "silent"})
+        json.dump(meta, open(f"{out_dir}/{P['name']}_scenes.json", "w"), ensure_ascii=False, indent=1)
+        print(P["name"], "silent", flush=True)
+
+
 if __name__ == "__main__":
     import argparse
     ap = argparse.ArgumentParser()
     ap.add_argument("--data", required=True, help="build_reel_data.py の出力")
     ap.add_argument("--out-dir", required=True)
     ap.add_argument("--cta-dir", default=os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets", "voice"))
+    ap.add_argument("--silent", action="store_true", help="無音で代用（動作確認用）")
     ap.add_argument("names", nargs="*")
     a = ap.parse_args()
     os.makedirs(a.out_dir, exist_ok=True)
+    if a.silent:
+        points = json.load(open(a.data))["points"]
+        generate_silent([p for p in points if not a.names or p["name"] in a.names], a.out_dir)
+        raise SystemExit(0)
     generate(json.load(open(a.data))["points"], a.out_dir, a.cta_dir, a.names)
