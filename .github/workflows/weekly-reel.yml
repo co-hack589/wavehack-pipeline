@@ -3,7 +3,7 @@ name: weekly-reel
 # ---------------------------------------------------------------------------
 # 毎週木曜「週末の波予想」リール（主要9地点）を生成し、19:00 JST から15分おきに Instagram へ投稿する。
 #   R2 dashboard.json → reel/build_reel_data.py → reel/narration_scenes.py（Gemini TTS Aoede）
-#   → reel/render_reel.py（Chrome 録画 + ffmpeg）→ reel/publish_reels.py（resumable upload）
+#   → reel/render_reel.py（Chrome でコマ撮り + ffmpeg）→ reel/publish_reels.py（resumable upload）
 #
 # 必要な Secrets:
 #   CLOUDFLARE_ACCOUNT_ID / CLOUDFLARE_API_TOKEN — daily-update と共通（R2 読み取り）
