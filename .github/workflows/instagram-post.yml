@@ -1,0 +1,92 @@
+name: instagram-post
+
+# ---------------------------------------------------------------------------
+# 毎週木曜 JST 19:00 に「週末の波予想」（主要9ポイントの土日）を Instagram へ投稿する。
+#   1. R2 の本番 dashboard.json を取得（daily-update 木曜16:00 の結果）
+#   2. scripts/generate_instagram_post.py で画像 + キャプション生成
+#   3. 画像を R2 social/weekend-<土曜>.jpg に置き、wavehack.surf/api/social/ で公開
+#   4. scripts/publish_instagram.py で Graph API 投稿
+#
+# 必要な Secrets:
+#   CLOUDFLARE_ACCOUNT_ID / CLOUDFLARE_API_TOKEN — daily-update と共通
+#   IG_USER_ID / IG_ACCESS_TOKEN                 — Instagram プロアカウント
+# 任意の Variables:
+#   IG_API_HOST (既定 graph.instagram.com) / IG_API_VERSION (既定 v23.0)
+#   INSTAGRAM_POST_ENABLED — 'true' のときだけ schedule 実行で投稿（停止スイッチ）
+# ---------------------------------------------------------------------------
+
+on:
+  schedule:
+    - cron: '0 10 * * 4'   # 木曜 UTC 10:00 = JST 19:00
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: '投稿せず画像とキャプションだけ生成 (artifact で確認)'
+        type: boolean
+        default: true
+
+concurrency:
+  group: instagram-post
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    if: github.event_name == 'workflow_dispatch' || vars.INSTAGRAM_POST_ENABLED == 'true'
+    env:
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+
+      - name: Download fonts (Design Regulation v1: Zen Kaku Gothic New / Inter Tight)
+        run: |
+          mkdir -p fonts
+          for w in Regular Bold Black; do
+            curl -fsSL -o fonts/ZenKakuGothicNew-$w.ttf \
+              "https://github.com/google/fonts/raw/main/ofl/zenkakugothicnew/ZenKakuGothicNew-$w.ttf"
+          done
+          curl -fsSL -o fonts/InterTight.ttf \
+            "https://github.com/google/fonts/raw/main/ofl/intertight/InterTight%5Bwght%5D.ttf"
+
+      - name: Fetch production dashboard.json from R2
+        run: |
+          mkdir -p out
+          npx wrangler@4 r2 object get wavehack-data/dashboard.json \
+            --file out/dashboard.json --remote
+
+      - name: Generate post
+        id: gen
+        run: |
+          uv run --extra social python scripts/generate_instagram_post.py \
+            --dashboard out/dashboard.json --font-dir fonts --out-dir out/instagram
+          echo "date=$(python3 -c "import json;print(json.load(open('out/instagram/post.json'))['saturday'])")" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: instagram-weekend-${{ steps.gen.outputs.date }}
+          path: out/instagram/
+
+      - name: Upload image to R2
+        if: ${{ !inputs.dry_run }}
+        run: |
+          npx wrangler@4 r2 object put "wavehack-data/social/weekend-${{ steps.gen.outputs.date }}.jpg" \
+            --file out/instagram/post.jpg --content-type image/jpeg --remote
+
+      - name: Publish to Instagram
+        if: ${{ !inputs.dry_run }}
+        env:
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+          IG_API_HOST: ${{ vars.IG_API_HOST || 'graph.instagram.com' }}
+          IG_API_VERSION: ${{ vars.IG_API_VERSION || 'v23.0' }}
+        run: |
+          python3 scripts/publish_instagram.py \
+            --post-json out/instagram/post.json \
+            --image-url "https://wavehack.surf/api/social/weekend-${{ steps.gen.outputs.date }}.jpg"

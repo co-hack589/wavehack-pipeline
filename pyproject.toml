@@ -16,6 +16,10 @@ gfs = [
     "requests>=2.31",
     "astral>=3.2",
 ]
+social = [
+    "pillow>=11.0",
+    "astral>=3.2",
+]
 scraping = [
     "playwright>=1.40",
 ]

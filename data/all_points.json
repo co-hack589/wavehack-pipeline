@@ -145,7 +145,7 @@
   {
     "name": "小豆浜",
     "name_en": "nami-01080006",
-    "area": "岩手",
+    "area": "宮城",
     "latitude": 38.294681,
     "longitude": 141.073397,
     "beach_direction": "東",
@@ -156,7 +156,7 @@
   {
     "name": "仙台新港",
     "name_en": "nami-01080007",
-    "area": "岩手",
+    "area": "宮城",
     "latitude": 38.26291722,
     "longitude": 141.0219669,
     "beach_direction": "東",
@@ -167,7 +167,7 @@
   {
     "name": "荒浜河口",
     "name_en": "nami-01080011",
-    "area": "岩手",
+    "area": "宮城",
     "latitude": 38.04697583,
     "longitude": 140.9217597,
     "beach_direction": "東",
@@ -178,7 +178,7 @@
   {
     "name": "荒浜プール",
     "name_en": "nami-01080012",
-    "area": "岩手",
+    "area": "宮城",
     "latitude": 38.04805722,
     "longitude": 140.9221031,
     "beach_direction": "東",
@@ -189,7 +189,7 @@
   {
     "name": "坂下",
     "name_en": "nami-01100007",
-    "area": "岩手",
+    "area": "福島",
     "latitude": 37.67410639,
     "longitude": 141.0152292,
     "beach_direction": "東",
@@ -1344,7 +1344,7 @@
   {
     "name": "西目",
     "name_en": "nami-01060010",
-    "area": "新潟",
+    "area": "秋田",
     "latitude": 39.34661111,
     "longitude": 139.9982644,
     "beach_direction": "北北西",
@@ -1377,7 +1377,7 @@
   {
     "name": "大浜(内灘)",
     "name_en": "nami-01260008",
-    "area": "鳥取",
+    "area": "石川",
     "latitude": 36.64425056,
     "longitude": 136.6259767,
     "beach_direction": "北",
@@ -1388,7 +1388,7 @@
   {
     "name": "徳光",
     "name_en": "nami-01260011",
-    "area": "鳥取",
+    "area": "石川",
     "latitude": 36.54039833,
     "longitude": 136.5313053,
     "beach_direction": "北",
@@ -1399,7 +1399,7 @@
   {
     "name": "三国五木",
     "name_en": "nami-01270002",
-    "area": "鳥取",
+    "area": "福井",
     "latitude": 36.13603778,
     "longitude": 136.0729908,
     "beach_direction": "北",
@@ -1410,7 +1410,7 @@
   {
     "name": "三国新港",
     "name_en": "nami-01270003",
-    "area": "鳥取",
+    "area": "福井",
     "latitude": 36.15083583,
     "longitude": 136.0909725,
     "beach_direction": "北",
@@ -1421,7 +1421,7 @@
   {
     "name": "鳥居ヶ浜",
     "name_en": "nami-01270005",
-    "area": "鳥取",
+    "area": "福井",
     "latitude": 35.49034139,
     "longitude": 135.5595303,
     "beach_direction": "北",
@@ -1432,7 +1432,7 @@
   {
     "name": "難波江",
     "name_en": "nami-01270007",
-    "area": "鳥取",
+    "area": "福井",
     "latitude": 35.50501583,
     "longitude": 135.5097483,
     "beach_direction": "北",
@@ -1443,7 +1443,7 @@
   {
     "name": "高嶋",
     "name_en": "nami-01290004",
-    "area": "鳥取",
+    "area": "京都",
     "latitude": 35.75483639,
     "longitude": 135.1633358,
     "beach_direction": "北",
@@ -1454,7 +1454,7 @@
   {
     "name": "八丁浜",
     "name_en": "nami-01290002",
-    "area": "鳥取",
+    "area": "京都",
     "latitude": 35.68950917,
     "longitude": 135.0247622,
     "beach_direction": "北",
@@ -1487,7 +1487,7 @@
   {
     "name": "千畳",
     "name_en": "nami-01360008",
-    "area": "鳥取",
+    "area": "島根",
     "latitude": 34.93555222,
     "longitude": 132.1063042,
     "beach_direction": "北",
@@ -1498,7 +1498,7 @@
   {
     "name": "大塚",
     "name_en": "nami-01360010",
-    "area": "鳥取",
+    "area": "島根",
     "latitude": 34.69879,
     "longitude": 131.8263244,
     "beach_direction": "北",
@@ -1586,7 +1586,7 @@
   {
     "name": "イセキ（種子島）",
     "name_en": "nami-01490026",
-    "area": "東京(伊豆諸島)",
+    "area": "鹿児島",
     "latitude": 30.76923722,
     "longitude": 131.0724092,
     "beach_direction": "東",
@@ -1597,7 +1597,7 @@
   {
     "name": "風本（種子島）",
     "name_en": "nami-01490013",
-    "area": "東京(伊豆諸島)",
+    "area": "鹿児島",
     "latitude": 30.69117944,
     "longitude": 131.0740186,
     "beach_direction": "東",
@@ -1608,7 +1608,7 @@
   {
     "name": "浅川（種子島）",
     "name_en": "nami-01490014",
-    "area": "東京(伊豆諸島)",
+    "area": "鹿児島",
     "latitude": 30.68566222,
     "longitude": 131.0658431,
     "beach_direction": "東",
@@ -1619,7 +1619,7 @@
   {
     "name": "鉄浜（種子島）",
     "name_en": "nami-01490015",
-    "area": "東京(伊豆諸島)",
+    "area": "鹿児島",
     "latitude": 30.65124083,
     "longitude": 131.0503078,
     "beach_direction": "東",
@@ -1630,7 +1630,7 @@
   {
     "name": "ヨキノ（種子島）",
     "name_en": "nami-01490025",
-    "area": "東京(伊豆諸島)",
+    "area": "鹿児島",
     "latitude": 30.69247111,
     "longitude": 130.9623314,
     "beach_direction": "東",
@@ -1641,7 +1641,7 @@
   {
     "name": "スーサイド（沖縄本島）",
     "name_en": "nami-01500004",
-    "area": "東京(伊豆諸島)",
+    "area": "沖縄",
     "latitude": 26.07914167,
     "longitude": 127.6840281,
     "beach_direction": "東",
@@ -1652,7 +1652,7 @@
   {
     "name": "ボウル（沖縄本島）",
     "name_en": "nami-01500008",
-    "area": "東京(伊豆諸島)",
+    "area": "沖縄",
     "latitude": 26.32338333,
     "longitude": 127.7461267,
     "beach_direction": "東",
