@@ -16,6 +16,7 @@ from pathlib import Path
 
 V = "v26.0"
 PAGE_NAME = "Wave Hack"
+PAGE_ID = "1340551445812528"  # business_management 無しだと me/accounts が空になるため ID で直接取得
 OUT = Path("/Users/takeda.toi/secret/wavehack/instagram.env")
 
 
@@ -29,10 +30,9 @@ def main() -> int:
     user_token = sys.stdin.read().strip()
     if not user_token:
         raise SystemExit("標準入力にトークンがありません")
-    pages = get("me/accounts", user_token, fields="id,name,access_token,instagram_business_account{id,username}")["data"]
-    page = next((p for p in pages if p["name"] == PAGE_NAME), None)
-    if not page:
-        raise SystemExit(f"ページ「{PAGE_NAME}」が見つかりません: {[p['name'] for p in pages]}")
+    page = get(PAGE_ID, user_token, fields="id,name,access_token,instagram_business_account{id,username}")
+    if page.get("name") != PAGE_NAME or "access_token" not in page:
+        raise SystemExit(f"ページ「{PAGE_NAME}」のトークンを取得できません: {page.get('name')}")
     ig = page.get("instagram_business_account")
     if not ig:
         raise SystemExit("ページに Instagram ビジネスアカウントが紐付いていません")
