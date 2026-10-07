@@ -33,6 +33,10 @@ on:
         description: '対象ポイント（空なら9地点すべて。例: 木崎浜 志田下）'
         type: string
         default: ''
+      silent:
+        description: 'ナレーションを無音で代用（Gemini の枠を使わない動作確認用。投稿はされない）'
+        type: boolean
+        default: false
 
 concurrency:
   group: weekly-reel
@@ -70,7 +74,7 @@ jobs:
 
       - name: Narration (Gemini TTS)
         # 失敗したポイントは動画化されずスキップ（Linux には macOS Kyoko の代替が無い）
-        run: python3 reel/narration_scenes.py --data "$WORK/reel_data.json" --out-dir "$WORK/voice" $POINTS || true
+        run: python3 reel/narration_scenes.py --data "$WORK/reel_data.json" --out-dir "$WORK/voice" ${{ inputs.silent && '--silent' || '' }} $POINTS || true
 
       - name: Render videos
         run: |
@@ -90,7 +94,7 @@ jobs:
           retention-days: 14
 
       - name: Wait until 19:00 JST
-        if: ${{ !inputs.dry_run && !inputs.post_now }}
+        if: ${{ !inputs.dry_run && !inputs.silent && !inputs.post_now }}
         run: |
           python3 - <<'EOF'
           import datetime, time
@@ -103,7 +107,7 @@ jobs:
           EOF
 
       - name: Publish reels (19:00〜 15分おき)
-        if: ${{ !inputs.dry_run }}
+        if: ${{ !inputs.dry_run && !inputs.silent }}
         env:
           IG_USER_ID: ${{ secrets.IG_USER_ID }}
           IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
