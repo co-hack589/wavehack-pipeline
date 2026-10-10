@@ -79,6 +79,7 @@ function areaBg(parent, P, t0, dur) {
   const slug = BG[P.group];
   if (!slug) return;
   const wrap = el(parent, "left:0;top:0;width:1080px;height:1920px;overflow:hidden");
+  wrap.dataset.bg = "1";
   const img = document.createElement("img");
   img.src = `../assets/bg/${slug}.jpg`;
   img.style.cssText = "left:0;top:0;width:1080px;height:1620px;object-fit:cover;transform-origin:50% 30%";
@@ -135,7 +136,20 @@ function weekendBest(P) {
 function arrowSvg(size, color, stroke = 10) {
   return `<svg width="${size}" height="${size}" viewBox="0 0 100 100" style="position:static;display:block"><path d="M50 8 L50 88 M50 8 L28 32 M50 8 L72 32" stroke="${color}" stroke-width="${stroke}" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 }
-function brand(parent) { return el(parent, "left:72px;top:80px;font:800 30px/1 var(--num);letter-spacing:6px;color:var(--azure)", "WAVE HACK"); }
+// Instagram のリールは上端（アカウント名など）と下端（キャプション・ボタン・音源表示）が UI で隠れる。
+// 文字・数字・カードは SAFE_TOP〜SAFE_BOTTOM（1080×1920 基準）の内側だけに置き、外側は背景（写真・グラデーション・波）のみ
+const SAFE_TOP = 270, SAFE_BOTTOM = 1480;
+function brand(parent) { return el(parent, "left:72px;top:288px;font:800 26px/1 var(--num);letter-spacing:6px;color:var(--azure)", "WAVE HACK"); }
+// 見出しブロック（ブランド・小見出し・大見出し）。大見出しは 376〜480px に収まる
+function heading(parent, sub, big, subCss = "color:var(--muted)") {
+  const b = brand(parent);
+  const a = el(parent, `left:72px;top:328px;font:700 32px var(--jp);${subCss}`, sub);
+  const n = el(parent, "left:72px;top:372px;font:900 96px/1.1 var(--jp);letter-spacing:-3px;white-space:nowrap", big);
+  // 右上の日付ピル（left≈750px〜）と被らないよう、長いエリア名・ポイント名は文字を縮める
+  const w = n.offsetWidth;
+  if (w > 650) n.style.fontSize = `${Math.floor(96 * 650 / w)}px`;
+  return [b, a, n];
+}
 function pillEl(parent, css, text) {
   return el(parent, `${css};height:76px;padding:0 32px;border-radius:999px;background:var(--ink);color:#fff;font:800 36px/76px var(--num)`, text);
 }
@@ -144,11 +158,11 @@ function pillEl(parent, css, text) {
 function sceneMap(stage, P, t0, dur = 6200) {
   const S = el(stage, "left:0;top:0;width:1080px;height:1920px");
   areaBg(S, P, t0, 6200);
-  const b = brand(S);
-  const a = el(S, "left:72px;top:140px;font:700 38px var(--jp);color:var(--ink);text-shadow:0 0 18px rgba(255,255,255,.9)", `週末の波予想｜${window.__REEL__.period}`);
-  const n = el(S, "left:72px;top:194px;font:900 112px/1.1 var(--jp);letter-spacing:-3px", `${P.group}<span style="position:static;font-size:64px;letter-spacing:0">エリア</span>`);
+  const [b, a, n] = heading(S, `週末の波予想｜${window.__REEL__.period}`, `${P.group}<span style="position:static;font-size:56px;letter-spacing:0">エリア</span>`, "color:var(--ink);text-shadow:0 0 18px rgba(255,255,255,.9)");
   fadeUp(b, t0, 500, 20); fadeUp(a, t0 + 120); fadeUp(n, t0 + 260);
-  const card = el(S, "left:56px;top:400px;width:968px;height:1060px;border-radius:32px;background:rgba(255,255,255,.88);border:4px solid #fff;box-shadow:0 18px 34px rgba(7,28,59,.10);overflow:hidden");
+  // 地図カードは SVG（968×1060・投影共有）の縦横比のまま 0.86 倍に縮めて 490〜1402px に収める
+  const cardBox = el(S, "left:124px;top:490px;width:968px;height:1060px;transform:scale(.86);transform-origin:0 0");
+  const card = el(cardBox, "left:0;top:0;width:968px;height:1060px;border-radius:32px;background:rgba(255,255,255,.88);border:4px solid #fff;box-shadow:0 18px 34px rgba(7,28,59,.10);overflow:hidden");
   fadeUp(card, t0 + 300, 600, 40);
   const inner = el(card, "left:0;top:0;width:968px;height:1060px;transform-origin:0 0");
   const M = P.members;
@@ -200,17 +214,17 @@ function sceneMap(stage, P, t0, dur = 6200) {
       const align = ldx < -0.3 ? "right" : ldx > 0.3 ? "left" : "center";
       lab = el(inner, `left:${lx}px;top:${ly}px;width:${LW}px;height:${LH}px;text-align:${align};white-space:nowrap;display:flex;flex-direction:column;justify-content:center;align-items:${align === "right" ? "flex-end" : align === "left" ? "flex-start" : "center"}`);
       const label = me ? P.name : m.name.replace(/（.*?）/g, "");
-      el(lab, `position:relative;font:900 ${me ? 36 : 26}px/1.2 var(--jp);color:${me ? "#e56f2f" : "var(--ink)"};text-shadow:0 0 8px #fff,0 0 8px #fff`, label.length > 9 ? label.slice(0, 8) + "…" : label);
-      sc = el(lab, `position:relative;font:900 ${me ? 58 : 40}px/1.1 var(--num);text-shadow:0 0 8px #fff`, "0");
+      el(lab, `position:relative;font:900 ${me ? 40 : 28}px/1.2 var(--jp);color:${me ? "#e56f2f" : "var(--ink)"};text-shadow:0 0 8px #fff,0 0 8px #fff`, label.length > 9 ? label.slice(0, 8) + "…" : label);
+      sc = el(lab, `position:relative;font:900 ${me ? 62 : 42}px/1.1 var(--num);text-shadow:0 0 8px #fff`, "0");
       fadeUp(lab, t0 + 800 + i * 40, 400, 16);
     }
     return {m, me, dot, ring, sc, px, py, g, lab};
   });
-  const pill = pillEl(S, "left:72px;top:1500px", DAYLABEL.sat);
+  const pill = pillEl(S, "right:72px;top:390px", DAYLABEL.sat);
   pop(pill, t0 + 700);
-  const legend = el(S, "left:400px;top:1522px;font:700 28px var(--jp);color:var(--muted)", "日中の平均スコア（55以上が<span style='position:static;color:var(--azure)'>青</span>）");
+  const legend = el(S, "right:72px;top:296px;font:700 24px var(--jp);color:var(--muted);text-shadow:0 0 12px rgba(255,255,255,.9)", "日中の平均スコア（55以上が<span style='position:static;color:var(--azure)'>青</span>）");
   fadeIn(legend, t0 + 900);
-  const cnt = el(S, "left:72px;top:1620px;width:936px;font:700 32px/1.6 var(--jp);color:var(--ink)", "");
+  const cnt = el(S, "left:72px;top:1416px;width:936px;font:700 32px/1.6 var(--jp);color:var(--ink);text-align:center;text-shadow:0 0 12px #fff", "");
   const show = (key, d) => later(stage, d, () => {
     pill.textContent = DAYLABEL[key]; pop(pill, 0, 400);
     nodes.forEach(({m, me, dot, ring, sc}) => {
@@ -239,22 +253,20 @@ function sceneMap(stage, P, t0, dur = 6200) {
 function sceneHours(stage, P, t0, dur = 7300) {
   const S = el(stage, "left:0;top:0;width:1080px;height:1920px");
   fadeIn(S, t0, 400);
-  brand(S);
-  el(S, "left:72px;top:140px;font:700 38px var(--jp);color:var(--muted)", `${P.area}｜1時間ごとの波`);
-  el(S, "left:72px;top:194px;font:900 120px/1.1 var(--jp);letter-spacing:-3px", P.name);
-  const pill = pillEl(S, "left:72px;top:360px", DAYLABEL.sat);
-  const card = el(S, "left:56px;top:470px;width:968px;height:1180px;border-radius:32px;background:rgba(255,255,255,.92);box-shadow:0 18px 34px rgba(7,28,59,.10)");
+  heading(S, `${P.area}｜1時間ごとの波`, P.name);
+  const pill = pillEl(S, "right:72px;top:390px", DAYLABEL.sat);
+  const card = el(S, "left:56px;top:500px;width:968px;height:950px;border-radius:32px;background:rgba(255,255,255,.92);box-shadow:0 18px 34px rgba(7,28,59,.10)");
   fadeUp(card, t0 + 100, 600, 40);
   const maxH = Math.max(1.5, ...P.days.sat.map(s => s.h), ...P.days.sun.map(s => s.h)) * 1.15;
-  const base = 820, top = 150, H = base - top;
+  const base = 640, top = 110, H = base - top;
   for (let m = .5; m < maxH; m += .5) {
     const y = base - m / maxH * H;
     el(card, `left:100px;top:${y}px;width:830px;height:2px;background:rgba(8,119,249,.08)`);
     el(card, `left:20px;top:${y - 16}px;width:70px;text-align:right;font:700 24px var(--num);color:var(--faint)`, `${m.toFixed(1)}m`);
   }
-  el(card, "left:40px;top:56px;font:800 26px var(--num);letter-spacing:4px;color:var(--azure)", "WAVE HEIGHT");
-  el(card, `left:14px;top:${base + 178}px;width:84px;text-align:center;font:800 20px var(--num);letter-spacing:2px;color:var(--faint)`, "SCORE");
-  const layer = el(card, "left:0;top:0;width:968px;height:1180px");
+  el(card, "left:40px;top:40px;font:800 26px var(--num);letter-spacing:4px;color:var(--azure)", "WAVE HEIGHT");
+  el(card, `left:14px;top:${base + 150}px;width:84px;text-align:center;font:800 20px var(--num);letter-spacing:2px;color:var(--faint)`, "SCORE");
+  const layer = el(card, "left:0;top:0;width:968px;height:950px");
   const build = (key, d) => later(stage, d, () => {
     pill.textContent = DAYLABEL[key]; pop(pill, 0, 400);
     layer.innerHTML = "";
@@ -270,17 +282,17 @@ function sceneHours(stage, P, t0, dur = 7300) {
       anim(water, [{transform: "scaleY(0)"}, {transform: "scaleY(1)"}], 100 + j * 60, 900, "cubic-bezier(.3,1.3,.5,1)");
       const hl = el(layer, `left:${x - 20}px;width:${cw + 40}px;top:${top + H - bh - (small ? 40 : 52)}px;text-align:center;font:800 ${small ? 24 : 34}px var(--num);color:${isB ? "var(--azure)" : "var(--muted)"}`, s.h.toFixed(1));
       fadeUp(hl, 500 + j * 60, 400, 20);
-      el(layer, `left:${x - 20}px;width:${cw + 40}px;top:${base + 18}px;text-align:center;font:700 ${small ? 24 : 32}px var(--num);color:var(--ink)`, `${parseInt(s.t, 10)}`);
+      el(layer, `left:${x - 20}px;width:${cw + 40}px;top:${base + 14}px;text-align:center;font:700 ${small ? 24 : 32}px var(--num);color:var(--ink)`, `${parseInt(s.t, 10)}`);
       const cs = small ? 58 : 76;
-      const chip = el(layer, `left:${x + cw / 2 - cs / 2}px;top:${base + 160}px;width:${cs}px;height:${cs}px;border-radius:50%;background:${isB ? "var(--azure)" : good ? "var(--hl)" : "#f1f4f8"};color:${isB ? "#fff" : scoreCol(s.score)};text-align:center;font:900 ${small ? 24 : 32}px/${cs}px var(--num)`, s.score);
+      const chip = el(layer, `left:${x + cw / 2 - cs / 2}px;top:${base + 124 + (76 - cs) / 2}px;width:${cs}px;height:${cs}px;border-radius:50%;background:${isB ? "var(--azure)" : good ? "var(--hl)" : "#f1f4f8"};color:${isB ? "#fff" : scoreCol(s.score)};text-align:center;font:900 ${small ? 24 : 32}px/${cs}px var(--num)`, s.score);
       pop(chip, 600 + j * 60, 400);
       if (isB) {
-        const tag = el(layer, `left:${Math.max(100, Math.min(788, x + cw / 2 - 80))}px;top:${base + 78}px;width:160px;height:56px;border-radius:999px;background:var(--azure);color:#fff;text-align:center;font:900 28px/56px var(--jp)`, "ベスト");
+        const tag = el(layer, `left:${Math.max(100, Math.min(788, x + cw / 2 - 80))}px;top:${base + 64}px;width:160px;height:52px;border-radius:999px;background:var(--azure);color:#fff;text-align:center;font:900 28px/52px var(--jp)`, "ベスト");
         pop(tag, 1300, 500);
       }
     });
-    el(layer, `left:40px;top:${base + 22}px;font:700 22px var(--jp);color:var(--faint)`, "時");
-    const sm = el(layer, "left:40px;top:1086px;width:888px;font:700 34px var(--jp);color:var(--ink)", `${DAYJ[key]}曜のベスト <span style="position:static;color:var(--azure);font-weight:900">${best.t}</span>　${sizeLabel(best.h)}（${best.h.toFixed(1)}m）`);
+    el(layer, `left:40px;top:${base + 20}px;font:700 22px var(--jp);color:var(--faint)`, "時");
+    const sm = el(layer, "left:40px;top:868px;width:888px;font:700 34px var(--jp);color:var(--ink)", `${DAYJ[key]}曜のベスト <span style="position:static;color:var(--azure);font-weight:900">${best.t}</span>　${sizeLabel(best.h)}（${best.h.toFixed(1)}m）`);
     fadeUp(sm, 1300, 500, 20);
   });
   pop(pill, t0 + 200);
@@ -296,6 +308,7 @@ function sceneCompass(stage, P, t0, dur = 6200) {
   fadeIn(S, t0, 400);
   const cv = document.createElement("canvas");
   cv.width = 1080; cv.height = 1920; cv.style.cssText = "left:0;top:0";
+  cv.dataset.bg = "1";
   S.appendChild(cv);
   const ctx = cv.getContext("2d");
   const wb = weekendBest(P), s = wb.slot;
@@ -314,22 +327,21 @@ function sceneCompass(stage, P, t0, dur = 6200) {
     }
     requestAnimationFrame(draw);
   })(start);
-  brand(S);
-  el(S, "left:72px;top:140px;font:700 38px var(--jp);color:var(--muted)", `${P.name}｜週末のベストタイム`);
-  const big = el(S, "left:72px;top:194px;font:900 112px/1.1 var(--jp);letter-spacing:-3px", `${DAYJ[wb.key]}曜 <span style="position:static;font-family:var(--num)">${s.t}</span>`);
+  const [, , big] = heading(S, `${P.name}｜週末のベストタイム`, `${DAYJ[wb.key]}曜 <span style="position:static;font-family:var(--num)">${s.t}</span>`);
   fadeUp(big, t0 + 150);
-  const C = el(S, "left:190px;top:400px;width:700px;height:700px");
+  // コンパスは 700px 基準で組んで 0.7 倍（方位文字込みで 495〜1070px）
+  const C = el(S, "left:190px;top:435px;width:700px;height:700px;transform:scale(.7);transform-origin:350px 350px");
   const bd = P.beach_deg ?? DIR[P.beach] ?? 90;
   el(C, "left:0;top:0;width:700px;height:700px;border-radius:50%;background:#fff;box-shadow:0 18px 34px rgba(7,28,59,.10)");
   // 浜の向き = 海の方角。海側半円を水色、陸側を砂色に
   el(C, `left:0;top:0;width:700px;height:700px;border-radius:50%;background:conic-gradient(from ${bd - 90}deg, rgba(90,180,255,.28) 0deg 180deg, rgba(241,223,180,.4) 180deg 360deg)`);
   el(C, "left:70px;top:70px;width:560px;height:560px;border-radius:50%;border:2px dashed rgba(8,119,249,.18)");
-  ["N", "E", "S", "W"].forEach((nm, k) => el(C, `left:${350 + Math.sin(k * Math.PI / 2) * 390 - 22}px;top:${350 - Math.cos(k * Math.PI / 2) * 390 - 24}px;width:44px;text-align:center;font:800 34px var(--num);color:var(--faint)`, nm));
+  ["N", "E", "S", "W"].forEach((nm, k) => el(C, `left:${350 + Math.sin(k * Math.PI / 2) * 390 - 22}px;top:${350 - Math.cos(k * Math.PI / 2) * 390 - 24}px;width:44px;text-align:center;font:800 40px var(--num);color:var(--faint)`, nm));
   el(C, `left:180px;top:334px;width:340px;height:32px;border-radius:16px;background:#e4c98a;transform:rotate(${bd}deg)`);
   // 文字は回転させず、浜の向き（海側）とその反対（陸側）に置く
   [[bd, "海", "var(--azure)"], [bd + 180, "陸", "#b08a3c"]].forEach(([deg, t, c]) => {
     const r = deg * Math.PI / 180;
-    el(C, `left:${350 + Math.sin(r) * 95 - 40}px;top:${350 - Math.cos(r) * 95 - 22}px;width:80px;text-align:center;font:900 34px var(--jp);color:${c}`, t);
+    el(C, `left:${350 + Math.sin(r) * 95 - 40}px;top:${350 - Math.cos(r) * 95 - 22}px;width:80px;text-align:center;font:900 42px var(--jp);color:${c}`, t);
   });
   fadeIn(C, t0 + 200, 500);
   const inward = (size, color, stroke) => `<div style="left:0;top:0;transform:rotate(180deg)">${arrowSvg(size, color, stroke)}</div>`;
@@ -337,15 +349,15 @@ function sceneCompass(stage, P, t0, dur = 6200) {
   const wd = el(C, "left:290px;top:130px;width:120px;height:220px;transform-origin:60px 220px", inward(120, "#e56f2f", 10));
   anim(sw, [{transform: `rotate(${s.swdeg}deg) translateY(-180px)`, opacity: 0}, {transform: `rotate(${s.swdeg}deg)`, opacity: 1}], t0 + 600, 800);
   anim(wd, [{transform: `rotate(${s.wdeg}deg) translateY(-160px)`, opacity: 0}, {transform: `rotate(${s.wdeg}deg)`, opacity: 1}], t0 + 1000, 800);
-  const info = el(S, "left:56px;top:1150px;width:968px;height:260px;border-radius:28px;background:#fff;box-shadow:0 18px 34px rgba(7,28,59,.08)");
-  el(info, "left:40px;top:36px", `<div style="position:relative;font:800 24px var(--num);letter-spacing:4px;color:var(--azure)">● SWELL</div><div style="position:relative;font:900 42px/1.5 var(--jp);white-space:nowrap">${sizeLabel(s.h)}</div><div style="position:relative;font:700 28px var(--jp);color:var(--muted)">${s.h.toFixed(1)}m・${s.swell}から・${Math.round(s.per)}秒</div>`);
-  el(info, "left:380px;top:36px", `<div style="position:relative;font:800 24px var(--num);letter-spacing:4px;color:#e56f2f">● WIND</div><div style="position:relative;font:900 56px/1.3 var(--jp)">${s.wind}</div><div style="position:relative;font:700 28px var(--num);color:var(--muted)">${s.wms}m/s</div>`);
-  const scB = el(info, `right:40px;top:30px;width:200px;height:200px;border-radius:50%;background:${s.score >= HI ? "var(--azure)" : "#8a9bb3"};color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center`);
-  const scN = el(scB, "position:relative;font:900 92px/1 var(--num)", "0");
+  const info = el(S, "left:56px;top:1086px;width:968px;height:204px;border-radius:28px;background:#fff;box-shadow:0 18px 34px rgba(7,28,59,.08)");
+  el(info, "left:40px;top:24px", `<div style="position:relative;font:800 24px var(--num);letter-spacing:4px;color:var(--azure)">● SWELL</div><div style="position:relative;font:900 42px/1.5 var(--jp);white-space:nowrap">${sizeLabel(s.h)}</div><div style="position:relative;font:700 28px var(--jp);color:var(--muted)">${s.h.toFixed(1)}m・${s.swell}から・${Math.round(s.per)}秒</div>`);
+  el(info, "left:380px;top:24px", `<div style="position:relative;font:800 24px var(--num);letter-spacing:4px;color:#e56f2f">● WIND</div><div style="position:relative;font:900 56px/1.3 var(--jp)">${s.wind}</div><div style="position:relative;font:700 28px var(--num);color:var(--muted)">${s.wms}m/s</div>`);
+  const scB = el(info, `right:36px;top:17px;width:170px;height:170px;border-radius:50%;background:${s.score >= HI ? "var(--azure)" : "#8a9bb3"};color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center`);
+  const scN = el(scB, "position:relative;font:900 78px/1 var(--num)", "0");
   el(scB, "position:relative;font:800 20px var(--num);letter-spacing:4px;margin-top:4px", "SCORE");
   fadeUp(info, t0 + 900, 500, 30);
   pop(scB, t0 + 1300); countUp(scN, s.score, t0 + 1400, 700);
-  const cm = el(S, "left:72px;top:1440px;width:936px;font:700 36px/1.7 var(--jp);color:var(--ink);text-shadow:0 0 12px #fff", "");
+  const cm = el(S, "left:72px;top:1306px;width:936px;font:700 34px/1.5 var(--jp);color:var(--ink);text-shadow:0 0 12px #fff", "");
   typeText(cm, s.comment, t0 + 1700, 30);
   return t0 + dur;
 }
