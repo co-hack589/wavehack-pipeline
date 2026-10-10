@@ -12,13 +12,14 @@ MIN_INTERVAL = 22.0  # 秒。無料枠の1分あたり上限に当たらない�
 _last_call = [0.0]
 
 def call(model: str, body: dict) -> dict:
+    # キーは strip する（Secrets にコピペした際の末尾改行でヘッダーが不正になるため）
     if "tts" in model:
         wait = _last_call[0] + MIN_INTERVAL - time.monotonic()
         if wait > 0:
             time.sleep(wait)
         _last_call[0] = time.monotonic()
     req = urllib.request.Request(f"{API}/{model}:generateContent", data=json.dumps(body).encode(),
-                                 headers={"content-type": "application/json", "x-goog-api-key": os.environ["GEMINI_API_KEY"]})
+                                 headers={"content-type": "application/json", "x-goog-api-key": os.environ["GEMINI_API_KEY"].strip()})
     for attempt in range(2):  # 503/429 は一時的なので1回だけ待って再試行
         try:
             with urllib.request.urlopen(req, timeout=120) as r:
