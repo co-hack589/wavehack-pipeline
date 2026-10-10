@@ -86,6 +86,9 @@ jobs:
             --data "$WORK/reel_data.json" --voice-dir "$WORK/voice" --out-dir "$WORK/videos" $POINTS
           ls -la "$WORK/videos"
 
+      - name: Render covers
+        run: uv run --with playwright python reel/render_cover.py --data "$WORK/reel_data.json" --out-dir "$WORK/covers" $POINTS
+
       - name: Captions (dry run)
         run: python3 reel/publish_reels.py --data "$WORK/reel_data.json" --video-dir "$WORK/videos" --dry-run $POINTS
 
@@ -95,6 +98,7 @@ jobs:
           path: |
             work/reel_data.json
             work/videos/
+            work/covers/
           retention-days: 14
 
       - name: Wait until 19:00 JST (Thursday of this weekend)
@@ -131,5 +135,5 @@ jobs:
           IG_API_VERSION: v26.0
         run: |
           python3 reel/publish_reels.py --data "$WORK/reel_data.json" --video-dir "$WORK/videos" \
-            --interval-min 15 --log "$WORK/published.jsonl" $POINTS
+            --cover-dir "$WORK/covers" --interval-min 15 --log "$WORK/published.jsonl" $POINTS
           cat "$WORK/published.jsonl"

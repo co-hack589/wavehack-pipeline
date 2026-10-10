@@ -30,7 +30,8 @@ def lines(P: dict) -> list[str]:
     size = size_words(s["h"])
     both = abs(o["h"] - s["h"]) < 0.3
     return [
-        f"今週末の{area}エリアは、{len(P['members'])}地点中{good}地点がおすすめ。",
+        (f"今週末の{area}エリアは、{len(P['members'])}地点中{good}地点がおすすめ。" if good
+         else f"今週末の{area}エリアは、全体的に穏やかなコンディション。"),  # 「0地点がおすすめ」と言わない
         f"{P['name']}は{'土日とも' if both else DAYJ[key] + 'が'}{size}のサイズ。ベストは{DAYJ[key]}の{jtime(s['t'])}です。",
         f"うねりは{s['swell']}から、周期{round(s['per'])}秒。風は{s['wms']:.0f}メートルの{s['wind']}です。",
     ]
@@ -69,7 +70,8 @@ def generate(points: list[dict], out_dir: str, cta_dir: str, names: list[str] | 
             # 1本のリール内で声が混ざらないよう、このポイントは誘導も含め全部 Kyoko で作り直す
             print(P["name"], "Gemini TTS 失敗 → macOS Kyoko で代替:", str(e)[:120], flush=True)
             gemini_ok = False
-            if not shutil.which("say"):  # クラウド(Linux)には代替音声が無い → このポイントは動画化しない
+            # クラウド(Linux)には代替音声が無い／REEL_NO_FALLBACK=1 なら声を混ぜない → このポイントは動画化しない
+            if not shutil.which("say") or os.environ.get("REEL_NO_FALLBACK") == "1":
                 if os.path.exists(prev):
                     os.remove(prev)
                 print(P["name"], "代替音声なしのためスキップ", flush=True)

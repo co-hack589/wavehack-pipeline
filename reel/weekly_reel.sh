@@ -38,6 +38,8 @@ python3 reel/narration_scenes.py --data "$WORK/reel_data.json" --out-dir "$WORK/
 uv run --with playwright --with imageio-ffmpeg python reel/render_reel.py \
   --data "$WORK/reel_data.json" --voice-dir "$WORK/voice" --out-dir "$WORK/videos"
 ls -la "$WORK/videos"
+# 4b. カバー画像（プロフィールのグリッド・再生前に表示される）
+uv run --with playwright python reel/render_cover.py --data "$WORK/reel_data.json" --out-dir "$WORK/covers"
 # 5. 投稿（19:00 から 15 分おき）
 if [ -z "$DRY" ] && [ -z "${IG_ACCESS_TOKEN:-}" ]; then
   echo "ERROR: /Users/takeda.toi/secret/wavehack/instagram.env が無いので投稿できません（動画は $WORK/videos に生成済み）"
@@ -47,6 +49,6 @@ if [ "$NOW" = 0 ] && [ -z "$DRY" ]; then
   target=$(date -j -f "%Y-%m-%d %H:%M" "$WEEK 19:00" +%s); now=$(date +%s)
   [ "$now" -lt "$target" ] && { echo "waiting until 19:00"; sleep $((target - now)); }
 fi
-python3 reel/publish_reels.py --data "$WORK/reel_data.json" --video-dir "$WORK/videos" --interval-min 15 \
+python3 reel/publish_reels.py --data "$WORK/reel_data.json" --video-dir "$WORK/videos" --cover-dir "$WORK/covers" --interval-min 15 \
   --log "$WORK/published.jsonl" $DRY
 echo "=== $(date '+%F %T') done"
