@@ -54,8 +54,9 @@ def caption(data: dict, P: dict) -> str:
 
 class IG:
     def __init__(self) -> None:
-        self.user = os.environ["IG_USER_ID"]
-        self.token = os.environ["IG_ACCESS_TOKEN"]
+        # Secrets にコピペした値の末尾改行でヘッダーが不正にならないよう strip する
+        self.user = os.environ["IG_USER_ID"].strip()
+        self.token = os.environ["IG_ACCESS_TOKEN"].strip()
         self.v = os.environ.get("IG_API_VERSION", "v26.0")
 
     def _req(self, method: str, url: str, data: bytes | None = None, headers: dict | None = None) -> dict:
@@ -66,6 +67,10 @@ class IG:
                 return json.load(r)
         except urllib.error.HTTPError as e:  # エラー本文にトークンは含まれない
             raise SystemExit(f"{method} {url.split('?')[0]} -> {e.code}: {e.read().decode(errors='replace')[:500]}") from e
+
+    def recent_captions(self, limit: int = 50) -> list[str]:
+        d = self._req("GET", f"https://graph.facebook.com/{self.v}/{self.user}/media?fields=caption&limit={limit}")
+        return [m.get("caption") or "" for m in d.get("data", [])]
 
     def publish_reel(self, video: Path, text: str, wait_sec: int = 600) -> str:
         base = f"https://graph.facebook.com/{self.v}"
@@ -100,6 +105,13 @@ def main() -> int:
     data = json.loads(a.data.read_text(encoding="utf-8"))
     targets = [P for P in data["points"] if (not a.names or P["name"] in a.names) and (a.video_dir / f"{P['name']}.mp4").exists()]
     ig = None if a.dry_run else IG()
+    if ig:
+        # 再実行・予備スケジュールで同じ週の同じポイントを二重投稿しない（キャプション1行目で判定）
+        posted = {c.split("\n", 1)[0] for c in ig.recent_captions()}
+        skipped = [P["name"] for P in targets if caption(data, P).split("\n", 1)[0] in posted]
+        if skipped:
+            print("今週分は投稿済みのためスキップ:", " ".join(skipped), flush=True)
+        targets = [P for P in targets if P["name"] not in skipped]
     for i, P in enumerate(targets):
         if i and not a.dry_run:
             time.sleep(a.interval_min * 60)

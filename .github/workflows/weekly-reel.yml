@@ -18,7 +18,11 @@ name: weekly-reel
 
 on:
   schedule:
+    # GitHub の定期実行は混雑時に大きく遅れる（2026-10-08 は7時間遅延）ため予備を2本置く。
+    # 投稿済みのポイントは publish_reels.py がスキップするので二重投稿にはならない。
     - cron: '40 8 * * 4'   # 木曜 UTC 08:40 = JST 17:40
+    - cron: '10 9 * * 4'   # 予備 JST 18:10
+    - cron: '50 9 * * 4'   # 予備 JST 18:50
   workflow_dispatch:
     inputs:
       dry_run:
@@ -93,21 +97,34 @@ jobs:
             work/videos/
           retention-days: 14
 
-      - name: Wait until 19:00 JST
-        if: ${{ !inputs.dry_run && !inputs.silent && !inputs.post_now }}
+      - name: Wait until 19:00 JST (Thursday of this weekend)
+        id: wait
+        if: ${{ !inputs.dry_run && !inputs.silent }}
         run: |
           python3 - <<'EOF'
-          import datetime, time
+          # 基準は「対象の土曜の2日前（木曜）19:00」。実行が遅れて過ぎていれば待たずに投稿、
+          # 土曜 9:00 を過ぎていれば週末の予報としては遅すぎるので投稿しない。
+          import datetime, json, os, time
           jst = datetime.timezone(datetime.timedelta(hours=9))
+          sat = datetime.date.fromisoformat(json.load(open(os.environ["WORK"] + "/reel_data.json"))["saturday"])
+          start = datetime.datetime.combine(sat - datetime.timedelta(days=2), datetime.time(19, 0), jst)
+          deadline = datetime.datetime.combine(sat, datetime.time(9, 0), jst)
           now = datetime.datetime.now(jst)
-          target = now.replace(hour=19, minute=0, second=0, microsecond=0)
-          if now < target:
-              print(f"sleep {(target - now).seconds}s until {target}")
-              time.sleep((target - now).total_seconds())
+          post_now = os.environ.get("POST_NOW") == "true"
+          ok = "true"
+          if now >= deadline:
+              print(f"{now:%m/%d %H:%M} は投稿期限 {deadline:%m/%d %H:%M} を過ぎているので投稿しない"); ok = "false"
+          elif now < start and not post_now:
+              print(f"{start:%m/%d %H:%M} まで {(start - now).total_seconds():.0f} 秒待つ"); time.sleep((start - now).total_seconds())
+          else:
+              print("待たずに投稿する")
+          open(os.environ["GITHUB_OUTPUT"], "a").write(f"publish={ok}\n")
           EOF
+        env:
+          POST_NOW: ${{ inputs.post_now }}
 
       - name: Publish reels (19:00〜 15分おき)
-        if: ${{ !inputs.dry_run && !inputs.silent }}
+        if: ${{ !inputs.dry_run && !inputs.silent && steps.wait.outputs.publish == 'true' }}
         env:
           IG_USER_ID: ${{ secrets.IG_USER_ID }}
           IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
