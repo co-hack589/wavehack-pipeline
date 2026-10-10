@@ -42,7 +42,8 @@ def caption(data: dict, P: dict) -> str:
         "",
         f"ベスト: {DAYJ[key]}曜 {s['t']}〜／{size_words(s['h']).replace('くらい', '')}（{s['h']:.1f}m）／SCORE {s['score']}",
         f"うねり: {s['swell']}から 周期{round(s['per'])}秒　風: {s['wind']} {s['wms']:.0f}m/s",
-        f"{P['group']}エリアは{len(P['members'])}地点中{good}地点がおすすめ（{DAYJ[key]}曜・日中平均SCORE55以上）",
+        (f"{P['group']}エリアは{len(P['members'])}地点中{good}地点がおすすめ（{DAYJ[key]}曜・日中平均SCORE55以上）" if good
+         else f"{P['group']}エリアは全体的に穏やかなコンディション（日中平均SCORE55以上の地点なし）"),
         "",
         "直前の最新予報・潮回り・7日間予報はプロフィールのリンク（wavehack.surf）から。",
         "※ NOAA GFS / 気象庁データをもとにした自動生成の予報です。",

@@ -30,7 +30,8 @@ def lines(P: dict) -> list[str]:
     size = size_words(s["h"])
     both = abs(o["h"] - s["h"]) < 0.3
     return [
-        f"今週末の{area}エリアは、{len(P['members'])}地点中{good}地点がおすすめ。",
+        (f"今週末の{area}エリアは、{len(P['members'])}地点中{good}地点がおすすめ。" if good
+         else f"今週末の{area}エリアは、全体的に穏やかなコンディション。"),  # 「0地点がおすすめ」と言わない
         f"{P['name']}は{'土日とも' if both else DAYJ[key] + 'が'}{size}のサイズ。ベストは{DAYJ[key]}の{jtime(s['t'])}です。",
         f"うねりは{s['swell']}から、周期{round(s['per'])}秒。風は{s['wms']:.0f}メートルの{s['wind']}です。",
     ]
