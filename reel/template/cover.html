@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>Wave Hack Reel Cover</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@700;800;900&family=Zen+Kaku+Gothic+New:wght@700;900&display=swap" rel="stylesheet">
+<style>
+/* リールのカバー（1080x1920）。プロフィールのグリッドでは中央 1080x1440（y=240〜1680）に切り抜かれ、
+   再生画面では上下に Instagram の UI が重なるので、文字はすべて y=470〜1480 に収めて中央寄せにする。
+   色はデザインレギュレーション v1 準拠。 */
+:root{
+  --ink:#071a3a; --azure:#0877f9; --muted:#52627a; --faint:#718096; --hl:#eef6ff;
+  --jp:"Zen Kaku Gothic New",sans-serif; --num:"Inter Tight",sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{width:1080px;height:1920px;overflow:hidden;font-family:var(--jp);color:var(--ink)}
+.stage{position:relative;width:1080px;height:1920px;overflow:hidden;background:linear-gradient(180deg,#cfe8ff 0%,#eef7ff 50%,#ffffff 100%)}
+.bg{position:absolute;inset:0 0 auto 0;width:1080px;height:1920px;object-fit:cover}
+.fade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.10) 0%,rgba(255,255,255,0) 22%,rgba(242,249,255,.62) 50%,#f2f9ff 78%,#ffffff 100%)}
+.content{position:absolute;left:0;top:470px;width:1080px;height:1130px;display:flex;flex-direction:column;align-items:center;text-align:center}
+.brand{font:800 30px/1 var(--num);letter-spacing:8px;color:var(--azure)}
+.kicker{margin-top:28px;font:900 64px/1.15 var(--jp);letter-spacing:-1px;text-shadow:0 0 22px rgba(255,255,255,.9)}
+.period{margin-top:18px;height:70px;padding:0 34px;border-radius:999px;background:var(--ink);color:#fff;font:800 36px/70px var(--num)}
+.card{margin-top:46px;width:900px;border-radius:44px;background:rgba(255,255,255,.94);box-shadow:0 24px 48px rgba(7,28,59,.14);padding:48px 56px 52px}
+.area{font:700 38px/1 var(--jp);color:var(--muted)}
+.name{margin-top:18px;font:900 148px/1.05 var(--jp);letter-spacing:-4px;white-space:nowrap}
+.row{margin-top:40px;display:flex;align-items:center;justify-content:center;gap:40px}
+.best{text-align:left}
+.best small{display:block;font:800 26px/1 var(--num);letter-spacing:5px;color:var(--azure)}
+.best b{display:block;margin-top:12px;font:900 58px/1.1 var(--jp)}
+.best span{display:block;margin-top:10px;font:700 34px/1.2 var(--jp);color:var(--muted)}
+.score{width:230px;height:230px;border-radius:50%;background:var(--azure);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;flex:none}
+.score.low{background:#8a9bb3}
+.score b{font:900 112px/1 var(--num)}
+.score small{margin-top:6px;font:800 22px/1 var(--num);letter-spacing:5px}
+</style>
+</head>
+<body>
+<div class="stage" id="stage"></div>
+<script>
+// window.__COVER__ = {point, period, bg?}（render_cover.py が注入）
+const C = window.__COVER__;
+const P = C.point;
+const DAYJ = {sat: "土", sun: "日"};
+// アプリの waveSizeLabel と同じ閾値
+const sizeLabel = m => m < .5 ? "スネ・ヒザ" : m < .8 ? "モモ・コシ" : m < 1.2 ? "ハラ・ムネ" : m < 1.8 ? "カタ・アタマ" : "オーバーヘッド";
+const [key, s] = ["sat", "sun"].flatMap(k => P.days[k].map(x => [k, x])).reduce((a, b) => (b[1].score > a[1].score ? b : a));
+const h = parseInt(s.t, 10);
+const stage = document.getElementById("stage");
+stage.innerHTML = `
+  ${C.bg ? `<img class="bg" src="${C.bg}">` : ""}
+  <div class="fade"></div>
+  <div class="content">
+    <div class="brand">WAVE HACK</div>
+    <div class="kicker">今週末の波予想</div>
+    <div class="period">${C.period}</div>
+    <div class="card">
+      <div class="area">${P.group}エリア</div>
+      <div class="name">${P.name}</div>
+      <div class="row">
+        <div class="best">
+          <small>BEST</small>
+          <b>${DAYJ[key]}曜 ${h}時〜</b>
+          <span>${sizeLabel(s.h)}（${s.h.toFixed(1)}m）</span>
+        </div>
+        <div class="score ${s.score >= 55 ? "" : "low"}"><b>${s.score}</b><small>SCORE</small></div>
+      </div>
+    </div>
+  </div>`;
+// 長い地点名はカード幅に収まるよう縮める
+const name = stage.querySelector(".name");
+const maxW = 788;
+if (name.scrollWidth > maxW) name.style.fontSize = `${Math.floor(148 * maxW / name.scrollWidth)}px`;
+window.__coverReady = true;
+</script>
+</body>
+</html>

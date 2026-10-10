@@ -17,6 +17,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import subprocess
 import sys
 import time
 import urllib.error
@@ -72,10 +73,12 @@ class IG:
         d = self._req("GET", f"https://graph.facebook.com/{self.v}/{self.user}/media?fields=caption&limit={limit}")
         return [m.get("caption") or "" for m in d.get("data", [])]
 
-    def publish_reel(self, video: Path, text: str, wait_sec: int = 600) -> str:
+    def publish_reel(self, video: Path, text: str, cover_url: str | None = None, wait_sec: int = 600) -> str:
         base = f"https://graph.facebook.com/{self.v}"
-        body = urllib.parse.urlencode({"media_type": "REELS", "upload_type": "resumable", "caption": text,
-                                       "share_to_feed": "true"}).encode()
+        params = {"media_type": "REELS", "upload_type": "resumable", "caption": text, "share_to_feed": "true"}
+        if cover_url:
+            params["cover_url"] = cover_url  # Meta が取りに来るので公開 URL が必要
+        body = urllib.parse.urlencode(params).encode()
         container = self._req("POST", f"{base}/{self.user}/media", body)["id"]
         size = video.stat().st_size
         self._req("POST", f"https://rupload.facebook.com/ig-api-upload/{self.v}/{container}", video.read_bytes(),
@@ -93,12 +96,26 @@ class IG:
         return media["id"]
 
 
+COVER_BASE_URL = "https://wavehack.surf/api/social"  # wavehack-front の /api/social/[file] が R2 social/*.jpg を公開配信
+
+
+def upload_cover(cover: Path, saturday: str, index: int) -> str:
+    """カバー画像を R2 (wavehack-data/social/) に置き、公開 URL を返す。
+    ファイル名は /api/social の許可パターン（英小文字・数字・ハイフン）に合わせる。"""
+    key = f"cover-{saturday}-{index}.jpg"
+    subprocess.run(["npx", "-y", "wrangler@4", "r2", "object", "put", f"wavehack-data/social/{key}",
+                    "--file", str(cover), "--content-type", "image/jpeg", "--remote"],
+                   check=True, capture_output=True)
+    return f"{COVER_BASE_URL}/{key}"
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--data", type=Path, required=True)
     ap.add_argument("--video-dir", type=Path, required=True)
     ap.add_argument("--interval-min", type=float, default=15, help="投稿間隔（分）。フィードが埋まらないようにずらす")
     ap.add_argument("--log", type=Path, help="投稿結果を追記する JSONL")
+    ap.add_argument("--cover-dir", type=Path, help="render_cover.py の出力。あれば各リールのカバーに設定する")
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("names", nargs="*")
     a = ap.parse_args()
@@ -119,7 +136,14 @@ def main() -> int:
         if a.dry_run:
             print(f"--- {P['name']} ({len(text)}字)\n{text}\n", flush=True)
             continue
-        media_id = ig.publish_reel(a.video_dir / f"{P['name']}.mp4", text)
+        cover = a.cover_dir / f"{P['name']}.jpg" if a.cover_dir else None
+        cover_url = None
+        if cover and cover.exists():
+            try:
+                cover_url = upload_cover(cover, data["saturday"], data["points"].index(P))
+            except subprocess.CalledProcessError as e:  # カバーが無くても投稿自体は続ける
+                print(P["name"], "カバーのアップロード失敗:", (e.stderr or b"").decode(errors="replace")[-200:], flush=True)
+        media_id = ig.publish_reel(a.video_dir / f"{P['name']}.mp4", text, cover_url)
         print(P["name"], "published", media_id, time.strftime("%H:%M"), flush=True)
         if a.log:
             with a.log.open("a", encoding="utf-8") as f:
