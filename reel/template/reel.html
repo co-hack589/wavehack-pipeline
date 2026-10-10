@@ -235,7 +235,10 @@ function sceneMap(stage, P, t0, dur = 6200) {
       if (sc) { sc.style.color = me ? "#e56f2f" : v >= HI ? "var(--azure)" : "#8a9bb3"; countUp(sc, v, 0, 600); }
     });
     const good = M.filter(m => (m[key] ?? 0) >= HI).length;
-    cnt.innerHTML = `${DAYJ[key]}曜は <span style="position:static;color:var(--azure);font-weight:900">${M.length}地点中 ${good}地点</span> がおすすめ`;
+    // 「0地点がおすすめ」とは書かない（ナレーション・キャプションと揃える）
+    cnt.innerHTML = good
+      ? `${DAYJ[key]}曜は <span style="position:static;color:var(--azure);font-weight:900">${M.length}地点中 ${good}地点</span> がおすすめ`
+      : `${DAYJ[key]}曜は全体的に穏やかなコンディション`;
     fadeUp(cnt, 200, 400, 16);
   });
   show("sat", t0 + 700);

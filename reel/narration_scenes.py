@@ -70,7 +70,8 @@ def generate(points: list[dict], out_dir: str, cta_dir: str, names: list[str] | 
             # 1本のリール内で声が混ざらないよう、このポイントは誘導も含め全部 Kyoko で作り直す
             print(P["name"], "Gemini TTS 失敗 → macOS Kyoko で代替:", str(e)[:120], flush=True)
             gemini_ok = False
-            if not shutil.which("say"):  # クラウド(Linux)には代替音声が無い → このポイントは動画化しない
+            # クラウド(Linux)には代替音声が無い／REEL_NO_FALLBACK=1 なら声を混ぜない → このポイントは動画化しない
+            if not shutil.which("say") or os.environ.get("REEL_NO_FALLBACK") == "1":
                 if os.path.exists(prev):
                     os.remove(prev)
                 print(P["name"], "代替音声なしのためスキップ", flush=True)
