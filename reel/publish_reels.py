@@ -11,6 +11,7 @@
 
 使い方:
   python reel/publish_reels.py --data reel_data.json --video-dir videos/ [--interval-min 15] [--dry-run] [ポイント名 ...]
+  python reel/publish_reels.py --data reel_data.json --pending   # 今週まだ投稿していないポイント名を空白区切りで出力
 """
 from __future__ import annotations
 
@@ -113,14 +114,23 @@ def upload_cover(cover: Path, saturday: str, index: int) -> str:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--data", type=Path, required=True)
-    ap.add_argument("--video-dir", type=Path, required=True)
+    ap.add_argument("--video-dir", type=Path, help="投稿時は必須")
     ap.add_argument("--interval-min", type=float, default=15, help="投稿間隔（分）。フィードが埋まらないようにずらす")
     ap.add_argument("--log", type=Path, help="投稿結果を追記する JSONL")
     ap.add_argument("--cover-dir", type=Path, help="render_cover.py の出力。あれば各リールのカバーに設定する")
     ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--pending", action="store_true", help="今週まだ投稿していないポイント名を出力して終わる（動画は不要）")
+    ap.add_argument("--retries", type=int, default=3, help="1本あたりの投稿試行回数。失敗しても次のポイントへ進む")
     ap.add_argument("names", nargs="*")
     a = ap.parse_args()
     data = json.loads(a.data.read_text(encoding="utf-8"))
+    if a.pending:
+        posted = {c.split("\n", 1)[0] for c in IG().recent_captions()}
+        print(" ".join(P["name"] for P in data["points"]
+                       if (not a.names or P["name"] in a.names) and caption(data, P).split("\n", 1)[0] not in posted))
+        return 0
+    if not a.video_dir:
+        ap.error("--video-dir が必要です")
     targets = [P for P in data["points"] if (not a.names or P["name"] in a.names) and (a.video_dir / f"{P['name']}.mp4").exists()]
     ig = None if a.dry_run else IG()
     if ig:
@@ -130,6 +140,7 @@ def main() -> int:
         if skipped:
             print("今週分は投稿済みのためスキップ:", " ".join(skipped), flush=True)
         targets = [P for P in targets if P["name"] not in skipped]
+    failed = []
     for i, P in enumerate(targets):
         if i and not a.dry_run:
             time.sleep(a.interval_min * 60)
@@ -144,12 +155,30 @@ def main() -> int:
                 cover_url = upload_cover(cover, data["saturday"], data["points"].index(P))
             except subprocess.CalledProcessError as e:  # カバーが無くても投稿自体は続ける
                 print(P["name"], "カバーのアップロード失敗:", (e.stderr or b"").decode(errors="replace")[-200:], flush=True)
-        media_id = ig.publish_reel(a.video_dir / f"{P['name']}.mp4", text, cover_url)
+        media_id = None
+        for attempt in range(1, a.retries + 1):
+            try:
+                media_id = ig.publish_reel(a.video_dir / f"{P['name']}.mp4", text, cover_url)
+                break
+            except SystemExit as e:
+                # 2026-10-15 は rupload が一時的に 400 ProcessingFailedError を返し、以降の地点が全部止まった
+                print(P["name"], f"投稿失敗 ({attempt}/{a.retries}):", str(e)[:300], flush=True)
+                if attempt < a.retries:
+                    time.sleep(120)
+                    if text.split("\n", 1)[0] in {c.split("\n", 1)[0] for c in ig.recent_captions(10)}:
+                        media_id = "posted"  # 応答だけ失敗して実は公開済みなら二重投稿しない
+                        break
+        if not media_id:
+            failed.append(P["name"])
+            continue
         print(P["name"], "published", media_id, time.strftime("%H:%M"), flush=True)
         if a.log:
             with a.log.open("a", encoding="utf-8") as f:
                 f.write(json.dumps({"name": P["name"], "media_id": media_id, "saturday": data["saturday"],
                                     "at": time.strftime("%Y-%m-%dT%H:%M:%S%z")}, ensure_ascii=False) + "\n")
+    if failed:
+        print("投稿できなかったポイント:", " ".join(failed), flush=True)
+        return 1
     return 0
 
 

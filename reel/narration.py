@@ -1,5 +1,9 @@
-"""ポイントごとの週末予報から、Gemini Flash でナレーション原稿を作り、Gemini TTS (Aoede) で音声化する。
-キーは環境変数 GEMINI_API_KEY から読む（出力しない）。"""
+"""ポイントごとの週末予報から、Gemini Flash でナレーション原稿を作り、Aoede の声で音声化する。
+音声化は Google Cloud Text-to-Speech（Chirp 3 HD、月100万文字まで無料）が既定。認証情報が無ければ Gemini TTS。
+キー・トークンは環境変数から読む（出力しない）:
+  GOOGLE_TTS_API_KEY   — Cloud TTS 用 API キー（Text-to-Speech API のみに制限したもの）
+  GOOGLE_ACCESS_TOKEN  — キーの代わりに OAuth アクセストークン（GitHub Actions の Workload Identity 等）
+  GEMINI_API_KEY       — Gemini TTS（TTS_BACKEND=gemini のとき、または Cloud TTS の認証情報が無いとき）"""
 import base64, json, os, sys, time, urllib.error, urllib.request, wave
 
 API = "https://generativelanguage.googleapis.com/v1beta/models"
@@ -57,7 +61,47 @@ def write_script(P: dict) -> str:
         text = f"今週末の{f['エリア']}エリア、波予想です！{f['ポイント']}のベストは{f['ベスト']}。{f['うねり'].split('、')[0]}のうねりで、スコアは{f['スコア']}！詳しくはウェーブハックで！"
     return text
 
+CLOUD_TTS = "https://texttospeech.googleapis.com/v1/text:synthesize"
+CLOUD_VOICE = f"ja-JP-Chirp3-HD-{VOICE}"
+
+def backend() -> str:
+    """"gcloud"（Cloud TTS）か "gemini"。TTS_BACKEND で明示しなければ、Cloud TTS の認証情報があればそちらを使う。"""
+    b = os.environ.get("TTS_BACKEND", "").strip()
+    if b:
+        return b
+    return "gcloud" if (os.environ.get("GOOGLE_TTS_API_KEY") or os.environ.get("GOOGLE_ACCESS_TOKEN")) else "gemini"
+
+def speak_cloud(text: str, out: str) -> float:
+    body = {"input": {"text": text}, "voice": {"languageCode": "ja-JP", "name": CLOUD_VOICE},
+            "audioConfig": {"audioEncoding": "LINEAR16", "sampleRateHertz": 24000}}
+    headers = {"content-type": "application/json"}
+    if os.environ.get("GOOGLE_TTS_API_KEY"):
+        headers["x-goog-api-key"] = os.environ["GOOGLE_TTS_API_KEY"].strip()
+    else:
+        headers["authorization"] = "Bearer " + os.environ["GOOGLE_ACCESS_TOKEN"].strip()
+        if os.environ.get("GOOGLE_CLOUD_PROJECT"):  # ユーザー認証(ADC)のときは課金・割り当て先のプロジェクトが必要
+            headers["x-goog-user-project"] = os.environ["GOOGLE_CLOUD_PROJECT"].strip()
+    req = urllib.request.Request(CLOUD_TTS, data=json.dumps(body).encode(), headers=headers)
+    for attempt in range(3):  # 429/5xx は一時的なので待って再試行
+        try:
+            with urllib.request.urlopen(req, timeout=120) as r:
+                data = base64.b64decode(json.load(r)["audioContent"])
+            break
+        except urllib.error.HTTPError as e:
+            if e.code not in (429, 500, 503) or attempt == 2:
+                raise SystemExit(f"Cloud TTS: HTTP {e.code} {e.read().decode(errors='replace')[:300]}")
+            time.sleep(20)
+    if data[:4] == b"RIFF":  # LINEAR16 は WAV ヘッダー付きで返る
+        open(out, "wb").write(data)
+    else:
+        with wave.open(out, "wb") as w:
+            w.setnchannels(1); w.setsampwidth(2); w.setframerate(24000); w.writeframes(data)
+    with wave.open(out) as w:
+        return w.getnframes() / w.getframerate()
+
 def speak(text: str, out: str) -> float:
+    if backend() == "gcloud":
+        return speak_cloud(text, out)
     body = {"contents": [{"parts": [{"text": text}]}],  # 演技指示を混ぜると読み上げられるため原稿のみ
                            "generationConfig": {"responseModalities": ["AUDIO"],
                                                 "speechConfig": {"voiceConfig": {"prebuiltVoiceConfig": {"voiceName": VOICE}}}}}

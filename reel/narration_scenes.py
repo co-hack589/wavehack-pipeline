@@ -1,10 +1,11 @@
-"""リールの4シーンそれぞれに合わせたナレーションを、予報データから定型で組み立てて Gemini TTS (Aoede) で音声化する。
-シーンごとに別ファイルにすることで、各シーンの頭で再生でき、映像とズレない。キーは環境変数 GEMINI_API_KEY から読む。"""
+"""リールの4シーンそれぞれに合わせたナレーションを、予報データから定型で組み立てて Aoede の声で音声化する。
+シーンごとに別ファイルにすることで、各シーンの頭で再生でき、映像とズレない。
+音声化の方式（Cloud TTS / Gemini TTS）と認証は narration.py を参照。"""
 from __future__ import annotations
 
 import json, os, shutil, sys
 sys.path.insert(0, os.path.dirname(__file__))
-from narration import speak, speak_local  # noqa: E402
+from narration import backend, speak, speak_local  # noqa: E402
 
 DAYJ = {"sat": "土曜", "sun": "日曜"}
 
@@ -42,33 +43,36 @@ CTA_FILE = "common_cta.wav"
 
 def generate(points: list[dict], out_dir: str, cta_dir: str, names: list[str] | None = None) -> None:
     """シーン1〜3はポイントごとに音声化、4（誘導）は cta_dir の共通音声を使い回す。"""
-    cta_path, cta_meta = f"{cta_dir}/{CTA_FILE}", f"{cta_dir}/common_cta.json"
+    engine = backend()  # 1本のリール内で声の方式が混ざらないよう、誘導も同じ方式の音声を使う
+    cta_path, cta_meta = f"{cta_dir}/common_cta_{engine}.wav", f"{cta_dir}/common_cta_{engine}.json"
+    if engine == "gemini":  # 既存の Gemini 版はファイル名を変えずに使う
+        cta_path, cta_meta = f"{cta_dir}/{CTA_FILE}", f"{cta_dir}/common_cta.json"
     if not (os.path.exists(cta_path) and os.path.exists(cta_meta) and json.load(open(cta_meta))["text"] == CTA_TEXT):
         json.dump({"text": CTA_TEXT, "seconds": round(speak(CTA_TEXT, cta_path), 2)}, open(cta_meta, "w"), ensure_ascii=False)
     cta = json.load(open(cta_meta))
-    gemini_ok = True
+    gemini_ok = True  # 音声化サービスが使えるか（名前は従来どおり。Cloud TTS のときも同じ意味）
     for P in points:
         if names and P["name"] not in names:
             continue
         prev = f"{out_dir}/{P['name']}_scenes.json"
         done = json.load(open(prev)) if os.path.exists(prev) else []
         texts = lines(P)
-        meta, voice = [], "gemini"
+        meta, voice = [], engine
         try:
             if not gemini_ok:
-                raise SystemExit("Gemini TTS は今回の実行では使用不可")
+                raise SystemExit(f"{engine} TTS は今回の実行では使用不可")
             for i, text in enumerate(texts, 1):
                 out = f"{out_dir}/{P['name']}_s{i}.wav"
-                if os.path.exists(out) and len(done) >= i and done[i - 1]["text"] == text and done[i - 1].get("voice", "gemini") == "gemini":
+                if os.path.exists(out) and len(done) >= i and done[i - 1]["text"] == text and done[i - 1].get("voice", "gemini") == engine:
                     sec = done[i - 1]["seconds"]  # 同じ原稿の音声は作り直さない（再実行時）
                 else:
                     sec = speak(text, out)
-                meta.append({"text": text, "seconds": round(sec, 2), "file": out, "voice": "gemini"})
+                meta.append({"text": text, "seconds": round(sec, 2), "file": out, "voice": engine})
                 json.dump(meta, open(prev, "w"), ensure_ascii=False, indent=1)  # 途中経過も保存
-            last = {"text": cta["text"], "seconds": cta["seconds"], "file": cta_path, "voice": "gemini"}
+            last = {"text": cta["text"], "seconds": cta["seconds"], "file": cta_path, "voice": engine}
         except SystemExit as e:
             # 1本のリール内で声が混ざらないよう、このポイントは誘導も含め全部 Kyoko で作り直す
-            print(P["name"], "Gemini TTS 失敗 → macOS Kyoko で代替:", str(e)[:120], flush=True)
+            print(P["name"], f"{engine} TTS 失敗 → macOS Kyoko で代替:", str(e)[:120], flush=True)
             gemini_ok = False
             # クラウド(Linux)には代替音声が無い／REEL_NO_FALLBACK=1 なら声を混ぜない → このポイントは動画化しない
             if not shutil.which("say") or os.environ.get("REEL_NO_FALLBACK") == "1":

@@ -12,17 +12,23 @@ name: weekly-reel
 # 任意の Variables:
 #   WEEKLY_REEL_ENABLED — 'true' のときだけ schedule 実行で投稿（停止スイッチ）
 #
-# 17:40 JST 開始の理由: Gemini 無料枠の日次上限は太平洋時間 0 時（JST 16:00）にリセット、
-# daily-update（16:00 JST 開始、60〜90分）の結果があれば使えるため。
+# ジョブ構成: build（動画生成）→ hold（19:00 まで待つ前半）→ publish（残りを待って 19:00 から投稿）。
+#   GitHub の定期実行は数時間遅れることがあるため（10/8 は7時間、10/15 は5時間）、朝から何度も起動して
+#   早めに動画を作っておく。1ジョブは最長6時間なので、19:00 までの待ちを hold と publish に分けている。
+#   最初の実行が 19:00 まで待っている間、後続の起動は concurrency で待機し、順番が来たら
+#   publish_reels.py --pending で「今週の未投稿ポイント」だけを対象にする（全部投稿済みなら何もせず終わる）。
+#   このため途中で失敗しても、次の起動が残りだけを作り直して投稿する（Gemini の枠も残りの分しか使わない）。
 # ---------------------------------------------------------------------------
 
 on:
   schedule:
-    # GitHub の定期実行は混雑時に大きく遅れる（2026-10-08 は7時間遅延）ため予備を2本置く。
-    # 投稿済みのポイントは publish_reels.py がスキップするので二重投稿にはならない。
-    - cron: '40 8 * * 4'   # 木曜 UTC 08:40 = JST 17:40
-    - cron: '10 9 * * 4'   # 予備 JST 18:10
-    - cron: '50 9 * * 4'   # 予備 JST 18:50
+    # 木曜 JST 09:17 / 11:17 / 13:17 / 15:17 / 17:47。毎時0分は混雑して遅れやすいのでずらす。
+    # 17:47 の回は Gemini 無料枠のリセット（JST 16:00）後なので、それまでの回で枠を使い切っても音声を作れる。
+    - cron: '17 0 * * 4'
+    - cron: '17 2 * * 4'
+    - cron: '17 4 * * 4'
+    - cron: '17 6 * * 4'
+    - cron: '47 8 * * 4'
   workflow_dispatch:
     inputs:
       dry_run:
@@ -49,24 +55,30 @@ concurrency:
 permissions:
   contents: read
 
+env:
+  # 手動実行で dry_run / silent のときは投稿しない（schedule では inputs が空なので投稿する）
+  PUBLISH: ${{ !inputs.dry_run && !inputs.silent }}
+
 jobs:
-  reel:
+  build:
     runs-on: ubuntu-latest
-    timeout-minutes: 300
+    timeout-minutes: 120
     if: github.event_name == 'workflow_dispatch' || vars.WEEKLY_REEL_ENABLED == 'true'
+    outputs:
+      pending: ${{ steps.pending.outputs.names }}
+      saturday: ${{ steps.pending.outputs.saturday }}
     env:
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      IG_USER_ID: ${{ secrets.IG_USER_ID }}
+      IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+      IG_API_VERSION: v26.0
       WORK: ${{ github.workspace }}/work
-      POINTS: ${{ inputs.points }}
     steps:
       - uses: actions/checkout@v4
 
       - uses: astral-sh/setup-uv@v5
-
-      - name: Japanese fonts (web font fallback)
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq fonts-noto-cjk >/dev/null
 
       - name: Fetch production dashboard.json from R2
         run: |
@@ -76,23 +88,48 @@ jobs:
       - name: Build weekend data
         run: uv run --extra social python reel/build_reel_data.py --dashboard "$WORK/dashboard.json" --out "$WORK/reel_data.json"
 
+      - name: Pick points not yet posted this week
+        id: pending
+        env:
+          POINTS: ${{ inputs.points }}
+        run: |
+          if [ "$PUBLISH" = "true" ]; then
+            names=$(python3 reel/publish_reels.py --data "$WORK/reel_data.json" --pending $POINTS)
+          elif [ -n "$POINTS" ]; then
+            names="$POINTS"
+          else
+            names=$(python3 -c 'import json,sys; print(" ".join(p["name"] for p in json.load(open(sys.argv[1]))["points"]))' "$WORK/reel_data.json")
+          fi
+          echo "対象: ${names:-なし（今週分は投稿済み）}"
+          echo "names=$names" >> "$GITHUB_OUTPUT"
+          echo "saturday=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["saturday"])' "$WORK/reel_data.json")" >> "$GITHUB_OUTPUT"
+
+      - name: Japanese fonts (web font fallback)
+        if: steps.pending.outputs.names != ''
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq fonts-noto-cjk >/dev/null
+
       - name: Narration (Gemini TTS)
-        # 失敗したポイントは動画化されずスキップ（Linux には macOS Kyoko の代替が無い）
-        run: python3 reel/narration_scenes.py --data "$WORK/reel_data.json" --out-dir "$WORK/voice" ${{ inputs.silent && '--silent' || '' }} $POINTS || true
+        # 失敗したポイントは動画化されずスキップ（Linux には macOS Kyoko の代替が無い）。次の起動で作り直す
+        if: steps.pending.outputs.names != ''
+        run: python3 reel/narration_scenes.py --data "$WORK/reel_data.json" --out-dir "$WORK/voice" ${{ inputs.silent && '--silent' || '' }} ${{ steps.pending.outputs.names }} || true
 
       - name: Render videos
+        if: steps.pending.outputs.names != ''
         run: |
           uv run --with playwright --with imageio-ffmpeg python reel/render_reel.py \
-            --data "$WORK/reel_data.json" --voice-dir "$WORK/voice" --out-dir "$WORK/videos" $POINTS
+            --data "$WORK/reel_data.json" --voice-dir "$WORK/voice" --out-dir "$WORK/videos" ${{ steps.pending.outputs.names }}
           ls -la "$WORK/videos"
 
       - name: Render covers
-        run: uv run --with playwright python reel/render_cover.py --data "$WORK/reel_data.json" --out-dir "$WORK/covers" $POINTS
+        if: steps.pending.outputs.names != ''
+        run: uv run --with playwright python reel/render_cover.py --data "$WORK/reel_data.json" --out-dir "$WORK/covers" ${{ steps.pending.outputs.names }}
 
       - name: Captions (dry run)
-        run: python3 reel/publish_reels.py --data "$WORK/reel_data.json" --video-dir "$WORK/videos" --dry-run $POINTS
+        if: steps.pending.outputs.names != ''
+        run: python3 reel/publish_reels.py --data "$WORK/reel_data.json" --video-dir "$WORK/videos" --dry-run ${{ steps.pending.outputs.names }}
 
       - uses: actions/upload-artifact@v4
+        if: steps.pending.outputs.names != ''
         with:
           name: weekly-reel-${{ github.run_id }}
           path: |
@@ -101,39 +138,44 @@ jobs:
             work/covers/
           retention-days: 14
 
+  hold:
+    # 朝に起動した場合、19:00 まで最大 5時間40分 ここで待つ（残りは publish ジョブで待つ）
+    needs: build
+    if: needs.build.outputs.pending != '' && !inputs.dry_run && !inputs.silent
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+      - name: Wait (first half)
+        run: python3 reel/wait_until_post.py --saturday ${{ needs.build.outputs.saturday }} --cap 20400 ${{ inputs.post_now && '--now' || '' }}
+
+  publish:
+    needs: [build, hold]
+    if: needs.build.outputs.pending != '' && !inputs.dry_run && !inputs.silent
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    env:
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      IG_USER_ID: ${{ secrets.IG_USER_ID }}
+      IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+      IG_API_VERSION: v26.0
+      WORK: ${{ github.workspace }}/work
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: weekly-reel-${{ github.run_id }}
+          path: work
+
       - name: Wait until 19:00 JST (Thursday of this weekend)
         id: wait
-        if: ${{ !inputs.dry_run && !inputs.silent }}
-        run: |
-          python3 - <<'EOF'
-          # 基準は「対象の土曜の2日前（木曜）19:00」。実行が遅れて過ぎていれば待たずに投稿、
-          # 土曜 9:00 を過ぎていれば週末の予報としては遅すぎるので投稿しない。
-          import datetime, json, os, time
-          jst = datetime.timezone(datetime.timedelta(hours=9))
-          sat = datetime.date.fromisoformat(json.load(open(os.environ["WORK"] + "/reel_data.json"))["saturday"])
-          start = datetime.datetime.combine(sat - datetime.timedelta(days=2), datetime.time(19, 0), jst)
-          deadline = datetime.datetime.combine(sat, datetime.time(9, 0), jst)
-          now = datetime.datetime.now(jst)
-          post_now = os.environ.get("POST_NOW") == "true"
-          ok = "true"
-          if now >= deadline:
-              print(f"{now:%m/%d %H:%M} は投稿期限 {deadline:%m/%d %H:%M} を過ぎているので投稿しない"); ok = "false"
-          elif now < start and not post_now:
-              print(f"{start:%m/%d %H:%M} まで {(start - now).total_seconds():.0f} 秒待つ"); time.sleep((start - now).total_seconds())
-          else:
-              print("待たずに投稿する")
-          open(os.environ["GITHUB_OUTPUT"], "a").write(f"publish={ok}\n")
-          EOF
-        env:
-          POST_NOW: ${{ inputs.post_now }}
+        run: python3 reel/wait_until_post.py --saturday ${{ needs.build.outputs.saturday }} ${{ inputs.post_now && '--now' || '' }}
 
       - name: Publish reels (19:00〜 15分おき)
-        if: ${{ !inputs.dry_run && !inputs.silent && steps.wait.outputs.publish == 'true' }}
-        env:
-          IG_USER_ID: ${{ secrets.IG_USER_ID }}
-          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
-          IG_API_VERSION: v26.0
+        if: steps.wait.outputs.publish == 'true'
         run: |
           python3 reel/publish_reels.py --data "$WORK/reel_data.json" --video-dir "$WORK/videos" \
-            --cover-dir "$WORK/covers" --interval-min 15 --log "$WORK/published.jsonl" $POINTS
+            --cover-dir "$WORK/covers" --interval-min 15 --log "$WORK/published.jsonl" ${{ needs.build.outputs.pending }}
           cat "$WORK/published.jsonl"
