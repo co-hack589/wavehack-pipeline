@@ -70,6 +70,8 @@ class IG:
                 return json.load(r)
         except urllib.error.HTTPError as e:  # エラー本文にトークンは含まれない
             raise SystemExit(f"{method} {url.split('?')[0]} -> {e.code}: {e.read().decode(errors='replace')[:500]}") from e
+        except (urllib.error.URLError, TimeoutError) as e:  # 通信断（DNS 失敗など）も再試行の対象にする
+            raise SystemExit(f"{method} {url.split('?')[0]} -> {e}") from e
 
     def recent_captions(self, limit: int = 50) -> list[str]:
         d = self._req("GET", f"https://graph.facebook.com/{self.v}/{self.user}/media?fields=caption&limit={limit}")
