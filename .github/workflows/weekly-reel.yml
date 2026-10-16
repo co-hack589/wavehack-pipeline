@@ -2,13 +2,14 @@ name: weekly-reel
 
 # ---------------------------------------------------------------------------
 # 毎週木曜「週末の波予想」リール（主要9地点）を生成し、19:00 JST から15分おきに Instagram へ投稿する。
-#   R2 dashboard.json → reel/build_reel_data.py → reel/narration_scenes.py（Gemini TTS Aoede）
+#   R2 dashboard.json → reel/build_reel_data.py → reel/narration_scenes.py（Gemini TTS Aoede、枠切れ時は Cloud TTS Autonoe）
 #   → reel/render_reel.py（Chrome でコマ撮り + ffmpeg）→ reel/publish_reels.py（resumable upload）
 #
 # 必要な Secrets:
 #   CLOUDFLARE_ACCOUNT_ID / CLOUDFLARE_API_TOKEN — daily-update と共通（R2 読み取り）
 #   GEMINI_API_KEY                               — ナレーション（Gemini TTS）
 #   IG_USER_ID / IG_ACCESS_TOKEN                 — Instagram ビジネスアカウント ID / Facebook ページトークン
+# Gemini 無料枠（1日約21回）が尽きた地点は Cloud TTS（Chirp 3 HD Autonoe）で作る。Workload Identity 連携でキーなし認証（GCP wavehack-501114 / SA reel-tts、このリポジトリからのみ利用可）。
 # 任意の Variables:
 #   WEEKLY_REEL_ENABLED — 'true' のときだけ schedule 実行で投稿（停止スイッチ）
 #
@@ -54,6 +55,7 @@ concurrency:
 
 permissions:
   contents: read
+  id-token: write  # Workload Identity 連携で GCP のアクセストークンを得るため
 
 env:
   # 手動実行で dry_run / silent のときは投稿しない（schedule では inputs が空なので投稿する）
@@ -108,9 +110,22 @@ jobs:
         if: steps.pending.outputs.names != ''
         run: sudo apt-get update -qq && sudo apt-get install -y -qq fonts-noto-cjk >/dev/null
 
-      - name: Narration (Gemini TTS)
+      - name: Authenticate to Google Cloud (Text-to-Speech)
+        id: gcp
+        if: steps.pending.outputs.names != '' && !inputs.silent
+        continue-on-error: true  # 失敗したらトークンが空になり、枠切れ時の代替が無くなるだけ（Gemini では作る）
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/231882021295/locations/global/workloadIdentityPools/github/providers/wavehack-pipeline
+          service_account: reel-tts@wavehack-501114.iam.gserviceaccount.com
+          token_format: access_token
+          create_credentials_file: false
+
+      - name: Narration (Gemini TTS, fallback Cloud TTS Autonoe)
         # 失敗したポイントは動画化されずスキップ（Linux には macOS Kyoko の代替が無い）。次の起動で作り直す
         if: steps.pending.outputs.names != ''
+        env:
+          GOOGLE_ACCESS_TOKEN: ${{ steps.gcp.outputs.access_token }}
         run: python3 reel/narration_scenes.py --data "$WORK/reel_data.json" --out-dir "$WORK/voice" ${{ inputs.silent && '--silent' || '' }} ${{ steps.pending.outputs.names }} || true
 
       - name: Render videos

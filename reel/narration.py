@@ -1,9 +1,11 @@
 """ポイントごとの週末予報から、Gemini Flash でナレーション原稿を作り、Aoede の声で音声化する。
-音声化は Google Cloud Text-to-Speech（Chirp 3 HD、月100万文字まで無料）が既定。認証情報が無ければ Gemini TTS。
+音声化は Gemini TTS（Aoede）が既定。無料枠が尽きたときは Google Cloud Text-to-Speech（Chirp 3 HD Autonoe、
+月100万文字まで無料）で代替する（narration_scenes.py が地点ごとに切り替え、1本の中で声を混ぜない）。
 キー・トークンは環境変数から読む（出力しない）:
   GOOGLE_TTS_API_KEY   — Cloud TTS 用 API キー（Text-to-Speech API のみに制限したもの）
   GOOGLE_ACCESS_TOKEN  — キーの代わりに OAuth アクセストークン（GitHub Actions の Workload Identity 等）
-  GEMINI_API_KEY       — Gemini TTS（TTS_BACKEND=gemini のとき、または Cloud TTS の認証情報が無いとき）"""
+  GEMINI_API_KEY       — Gemini TTS
+  TTS_BACKEND=gcloud   — 最初から Cloud TTS だけで作る（動作確認用）"""
 import base64, json, os, sys, time, urllib.error, urllib.request, wave
 
 API = "https://generativelanguage.googleapis.com/v1beta/models"
@@ -32,6 +34,10 @@ def call(model: str, body: dict) -> dict:
             if e.code not in (429, 500, 503) or attempt == 1:
                 raise SystemExit(f"{model}: HTTP {e.code} {e.read().decode(errors='replace')[:300]}")
             time.sleep(60)
+        except (urllib.error.URLError, TimeoutError) as e:  # 通信断も失敗扱いにして代替へ回す
+            if attempt == 1:
+                raise SystemExit(f"{model}: {e}")
+            time.sleep(20)
 
 def facts(P: dict) -> dict:
     best = max(((k, s) for k in ("sat", "sun") for s in P["days"][k]), key=lambda x: x[1]["score"])
@@ -62,14 +68,15 @@ def write_script(P: dict) -> str:
     return text
 
 CLOUD_TTS = "https://texttospeech.googleapis.com/v1/text:synthesize"
-CLOUD_VOICE = f"ja-JP-Chirp3-HD-{VOICE}"
+CLOUD_VOICE = "ja-JP-Chirp3-HD-Autonoe"  # 2026-10-16 聞き比べで選定（Chirp 3 HD の Aoede は Gemini の Aoede と声が違う）
 
 def backend() -> str:
-    """"gcloud"（Cloud TTS）か "gemini"。TTS_BACKEND で明示しなければ、Cloud TTS の認証情報があればそちらを使う。"""
-    b = os.environ.get("TTS_BACKEND", "").strip()
-    if b:
-        return b
-    return "gcloud" if (os.environ.get("GOOGLE_TTS_API_KEY") or os.environ.get("GOOGLE_ACCESS_TOKEN")) else "gemini"
+    """最初に使う方式。"gemini"（既定）か "gcloud"（TTS_BACKEND=gcloud のとき）。"""
+    return os.environ.get("TTS_BACKEND", "").strip() or "gemini"
+
+def cloud_available() -> bool:
+    """Cloud TTS の認証情報があるか（Gemini の代替に使えるか）。"""
+    return bool(os.environ.get("GOOGLE_TTS_API_KEY", "").strip() or os.environ.get("GOOGLE_ACCESS_TOKEN", "").strip())
 
 def speak_cloud(text: str, out: str) -> float:
     body = {"input": {"text": text}, "voice": {"languageCode": "ja-JP", "name": CLOUD_VOICE},
@@ -90,6 +97,10 @@ def speak_cloud(text: str, out: str) -> float:
         except urllib.error.HTTPError as e:
             if e.code not in (429, 500, 503) or attempt == 2:
                 raise SystemExit(f"Cloud TTS: HTTP {e.code} {e.read().decode(errors='replace')[:300]}")
+            time.sleep(20)
+        except (urllib.error.URLError, TimeoutError) as e:
+            if attempt == 2:
+                raise SystemExit(f"Cloud TTS: {e}")
             time.sleep(20)
     if data[:4] == b"RIFF":  # LINEAR16 は WAV ヘッダー付きで返る
         open(out, "wb").write(data)

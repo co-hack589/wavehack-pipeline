@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import json, os, shutil, sys
 sys.path.insert(0, os.path.dirname(__file__))
-from narration import backend, speak, speak_local  # noqa: E402
+from narration import backend, cloud_available, speak, speak_cloud, speak_local  # noqa: E402
 
 DAYJ = {"sat": "土曜", "sun": "日曜"}
 
@@ -71,10 +71,34 @@ def generate(points: list[dict], out_dir: str, cta_dir: str, names: list[str] | 
                 json.dump(meta, open(prev, "w"), ensure_ascii=False, indent=1)  # 途中経過も保存
             last = {"text": cta["text"], "seconds": cta["seconds"], "file": cta_path, "voice": engine}
         except SystemExit as e:
-            # 1本のリール内で声が混ざらないよう、このポイントは誘導も含め全部 Kyoko で作り直す
-            print(P["name"], f"{engine} TTS 失敗 → macOS Kyoko で代替:", str(e)[:120], flush=True)
             gemini_ok = False
-            # クラウド(Linux)には代替音声が無い／REEL_NO_FALLBACK=1 なら声を混ぜない → このポイントは動画化しない
+            # 1本のリール内で声が混ざらないよう、このポイントは誘導も含め全部代替の声で作り直す。
+            # 代替は Cloud TTS（Autonoe）→ macOS Kyoko の順。Cloud TTS 自体が失敗したら Kyoko へ
+            if engine != "gcloud" and cloud_available():
+                print(P["name"], f"{engine} TTS 失敗 → Cloud TTS (Autonoe) で代替:", str(e)[:120], flush=True)
+                try:
+                    voice, meta = "gcloud", []
+                    for i, text in enumerate(texts, 1):
+                        out = f"{out_dir}/{P['name']}_s{i}.wav"
+                        if os.path.exists(out) and len(done) >= i and done[i - 1]["text"] == text and done[i - 1].get("voice") == "gcloud":
+                            sec = done[i - 1]["seconds"]
+                        else:
+                            sec = speak_cloud(text, out)
+                        meta.append({"text": text, "seconds": round(sec, 2), "file": out, "voice": "gcloud"})
+                    ccta = f"{out_dir}/common_cta_gcloud.wav"
+                    if not os.path.exists(ccta):
+                        speak_cloud(CTA_TEXT, ccta)
+                    import wave
+                    with wave.open(ccta) as w:
+                        last = {"text": CTA_TEXT, "seconds": round(w.getnframes() / w.getframerate(), 2), "file": ccta, "voice": "gcloud"}
+                    for i, m in enumerate(meta, 1):
+                        print(P["name"], i, voice, f"{m['seconds']:.1f}s", m["text"], flush=True)
+                    json.dump(meta + [last], open(prev, "w"), ensure_ascii=False, indent=1)
+                    continue
+                except SystemExit as e2:
+                    print(P["name"], "Cloud TTS も失敗:", str(e2)[:120], flush=True)
+            print(P["name"], "macOS Kyoko で代替を試みる", flush=True)
+            # クラウド(Linux)には Kyoko が無い／REEL_NO_FALLBACK=1 なら声を混ぜない → このポイントは動画化しない
             if not shutil.which("say") or os.environ.get("REEL_NO_FALLBACK") == "1":
                 if os.path.exists(prev):
                     os.remove(prev)
