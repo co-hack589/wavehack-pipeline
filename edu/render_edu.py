@@ -1,7 +1,8 @@
 """教育シリーズ「波予報の読み方」のリールを ep*.json から作る（ナレーション → コマ撮り → MP4）。
 
   uv run --with playwright --with imageio-ffmpeg python edu/render_edu.py edu/episodes/ep01.json [--silent]
-出力: edu/out/ep01.mp4（1080x1920, H.264/AAC）, edu/out/ep01_voice/。--silent は TTS を使わない見た目確認用
+出力: edu/out/ep01.mp4（1080x1920, H.264/AAC）, edu/out/ep01_voice/。--silent は TTS を使わない見た目確認用、
+--template で別テンプレート（同じ注入形式 window.__EDU__ = {ep, narr}）
 声は週次リールと同じ Gemini Aoede。失敗したら全シーン Cloud TTS Autonoe（GOOGLE_ACCESS_TOKEN があれば）。
 """
 from __future__ import annotations
@@ -55,14 +56,14 @@ def narrate(ep: dict, out: Path) -> list[dict]:
     return meta
 
 
-def render(ep: dict, narr: list[dict], out: Path) -> float:
+def render(ep: dict, narr: list[dict], out: Path, template: Path | None = None) -> float:
     with sync_playwright() as p:
         browser = p.chromium.launch(channel="chrome")
         ctx = browser.new_context(viewport={"width": 1080, "height": 1920}, device_scale_factor=1)
         ctx.add_init_script(f"window.__EDU__ = {json.dumps({'ep': ep, 'narr': narr}, ensure_ascii=False)};")
         ctx.add_init_script(CLOCK_JS)
         page = ctx.new_page()
-        page.goto((HERE / "template.html").as_uri() + "?render=1")
+        page.goto((template or HERE / "template.html").as_uri() + "?render=1")
         page.evaluate("document.fonts.ready")
         page.wait_for_timeout(1000)
         page.evaluate("window.startRender()")
@@ -94,11 +95,12 @@ def main() -> None:
     ep = json.loads(src.read_text(encoding="utf-8"))
     (HERE / "out").mkdir(exist_ok=True)
     quiet = "--silent" in sys.argv
+    tpl = Path(sys.argv[sys.argv.index("--template") + 1]).resolve() if "--template" in sys.argv else None
     narr = (silent if quiet else narrate)(ep, HERE / "out" / f"{src.stem}_voice")
     for m in narr:
         print(m["voice"], f"{m['seconds']:.1f}s", m["text"], flush=True)
     out = HERE / "out" / f"{src.stem}{'_silent' if quiet else ''}.mp4"
-    print(out, f"{render(ep, narr, out):.1f}s")
+    print(out, f"{render(ep, narr, out, tpl):.1f}s")
 
 
 if __name__ == "__main__":
