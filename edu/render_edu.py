@@ -41,10 +41,13 @@ def narrate(ep: dict, out: Path) -> list[dict]:
     meta_f = out / "scenes.json"
     old = json.loads(meta_f.read_text()) if meta_f.exists() else []
     texts = [s["say"] for s in ep["scenes"]]
-    if len(old) == len(texts) and all(o["text"] == t for o, t in zip(old, texts)):
-        return old  # 原稿が同じなら作り直さない
+
+    def cached(i: int, t: str) -> dict | None:  # 原稿が同じシーンは作り直さない（変わったシーンだけ TTS）
+        o = old[i - 1] if len(old) >= i else None
+        return o if o and o["text"] == t and o.get("voice") == "gemini" and Path(o["file"]).exists() else None
+
     try:
-        meta = [{"text": t, "file": str(out / f"s{i}.wav"), "seconds": round(speak(t, str(out / f"s{i}.wav")), 2), "voice": "gemini"}
+        meta = [cached(i, t) or {"text": t, "file": str(out / f"s{i}.wav"), "seconds": round(speak(t, str(out / f"s{i}.wav")), 2), "voice": "gemini"}
                 for i, t in enumerate(texts, 1)]
     except SystemExit as e:
         if not cloud_available():
