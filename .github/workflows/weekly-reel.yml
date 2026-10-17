@@ -139,6 +139,10 @@ jobs:
         if: steps.pending.outputs.names != ''
         run: uv run --with playwright python reel/render_cover.py --data "$WORK/reel_data.json" --out-dir "$WORK/covers" ${{ steps.pending.outputs.names }}
 
+      - name: Story image (9 points summary)
+        if: steps.pending.outputs.names != ''
+        run: uv run --with playwright python reel/render_story.py --week "$WORK/reel_data.json" --out "$WORK/story.jpg"
+
       - name: Captions (dry run)
         if: steps.pending.outputs.names != ''
         run: python3 reel/publish_reels.py --data "$WORK/reel_data.json" --video-dir "$WORK/videos" --dry-run ${{ steps.pending.outputs.names }}
@@ -151,6 +155,7 @@ jobs:
             work/reel_data.json
             work/videos/
             work/covers/
+            work/story.jpg
           retention-days: 14
 
   hold:
@@ -187,6 +192,23 @@ jobs:
       - name: Wait until 19:00 JST (Thursday of this weekend)
         id: wait
         run: python3 reel/wait_until_post.py --saturday ${{ needs.build.outputs.saturday }} ${{ inputs.post_now && '--now' || '' }}
+
+      - name: Publish story (first run of the week only)
+        # 未投稿が全地点＝この週の最初の投稿のときだけ。失敗してもリール投稿は続ける
+        if: steps.wait.outputs.publish == 'true'
+        continue-on-error: true
+        env:
+          PENDING: ${{ needs.build.outputs.pending }}
+        run: |
+          python3 - <<'EOF'
+          import json, os, sys
+          sys.path.insert(0, "reel")
+          from publish_reels import publish_story
+          data = json.load(open(os.environ["WORK"] + "/reel_data.json"))
+          if len(os.environ["PENDING"].split()) < len(data["points"]):
+              print("今週はすでに投稿を始めているのでストーリーズは出さない"); raise SystemExit(0)
+          print("story", publish_story(__import__("pathlib").Path(os.environ["WORK"] + "/story.jpg"), f"story-week-{data['saturday']}.jpg"))
+          EOF
 
       - name: Publish reels (19:00〜 15分おき)
         if: steps.wait.outputs.publish == 'true'

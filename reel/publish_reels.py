@@ -99,18 +99,50 @@ class IG:
         media = self._req("POST", f"{base}/{self.user}/media_publish", urllib.parse.urlencode({"creation_id": container}).encode())
         return media["id"]
 
+    def publish_story_image(self, image_url: str, wait_sec: int = 300) -> str:
+        """画像1枚をストーリーズに投稿する（Meta が image_url を取りに来るので公開 URL が必要）。"""
+        base = f"https://graph.facebook.com/{self.v}"
+        body = urllib.parse.urlencode({"media_type": "STORIES", "image_url": image_url}).encode()
+        container = self._req("POST", f"{base}/{self.user}/media", body)["id"]
+        deadline = time.monotonic() + wait_sec
+        while True:
+            st = self._req("GET", f"{base}/{container}?fields=status_code,status")
+            if st.get("status_code") == "FINISHED":
+                break
+            if st.get("status_code") in ("ERROR", "EXPIRED") or time.monotonic() > deadline:
+                raise SystemExit(f"story container {container}: {st}")
+            time.sleep(5)
+        return self._req("POST", f"{base}/{self.user}/media_publish", urllib.parse.urlencode({"creation_id": container}).encode())["id"]
+
 
 COVER_BASE_URL = "https://wavehack.surf/api/social"  # wavehack-front の /api/social/[file] が R2 social/*.jpg を公開配信
 
 
-def upload_cover(cover: Path, saturday: str, index: int) -> str:
-    """カバー画像を R2 (wavehack-data/social/) に置き、公開 URL を返す。
-    ファイル名は /api/social の許可パターン（英小文字・数字・ハイフン）に合わせる。"""
-    key = f"cover-{saturday}-{index}.jpg"
+def upload_social(image: Path, key: str) -> str:
+    """JPEG を R2 (wavehack-data/social/) に置き、公開 URL を返す。
+    key は /api/social の許可パターン（英小文字・数字・ハイフン、.jpg）に合わせる。"""
     subprocess.run(["npx", "-y", "wrangler@4", "r2", "object", "put", f"wavehack-data/social/{key}",
-                    "--file", str(cover), "--content-type", "image/jpeg", "--remote"],
+                    "--file", str(image), "--content-type", "image/jpeg", "--remote"],
                    check=True, capture_output=True)
     return f"{COVER_BASE_URL}/{key}"
+
+
+def upload_cover(cover: Path, saturday: str, index: int) -> str:
+    return upload_social(cover, f"cover-{saturday}-{index}.jpg")
+
+
+def publish_story(image: Path, key: str) -> str:
+    """ストーリーズ画像を公開 URL に置いて投稿する。2回まで再試行。"""
+    url, ig = upload_social(image, key), IG()
+    for attempt in (1, 2, 3):
+        try:
+            return ig.publish_story_image(url)
+        except SystemExit as e:
+            print("ストーリーズ投稿失敗", f"({attempt}/3):", str(e)[:200], flush=True)
+            if attempt == 3:
+                raise
+            time.sleep(60)
+    raise SystemExit("unreachable")
 
 
 def main() -> int:

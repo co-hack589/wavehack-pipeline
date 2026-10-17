@@ -4,9 +4,10 @@ name: edu-series
 # 教育シリーズ「波予報の読み方」（edu/episodes/ep01〜10.json）を、木曜以外の毎日 18:00 JST に1本ずつリールで投稿する。
 #   publish_edu.py --pick で「まだ投稿していない一番若い回」を選ぶ（今日すでに投稿済みなら何もしない）
 #   → render_edu.py（Gemini TTS Aoede、失敗時は Cloud TTS Autonoe → Chrome でコマ撮り）→ 18:00 まで待って投稿
+#   → 続けてその回の要点をストーリーズに1枚（reel/render_story.py --edu、画像は R2 social/ 経由で公開）
 # 木曜は週末の波予想リール（weekly-reel.yml）の日なので休み。全10回を投稿し終えたら毎日何もせず終わる。
 #
-# Secrets: GEMINI_API_KEY / IG_USER_ID / IG_ACCESS_TOKEN（weekly-reel と共通）
+# Secrets: GEMINI_API_KEY / IG_USER_ID / IG_ACCESS_TOKEN / CLOUDFLARE_ACCOUNT_ID / CLOUDFLARE_API_TOKEN（weekly-reel と共通）
 # Variables: EDU_SERIES_ENABLED — 'true' のときだけ schedule 実行で投稿（停止スイッチ）
 # GitHub の定期実行は数時間遅れることがあるため 13:17 から3回起動し、最初の1回が 18:00 まで待つ。
 # ---------------------------------------------------------------------------
@@ -50,6 +51,8 @@ jobs:
       IG_USER_ID: ${{ secrets.IG_USER_ID }}
       IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
       IG_API_VERSION: v26.0
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
     steps:
       - uses: actions/checkout@v4
 
@@ -84,17 +87,21 @@ jobs:
         if: steps.pick.outputs.ep != ''
         env:
           GOOGLE_ACCESS_TOKEN: ${{ steps.gcp.outputs.access_token }}
-        run: uv run --with playwright --with imageio-ffmpeg python edu/render_edu.py "${{ steps.pick.outputs.ep }}"
+        run: |
+          uv run --with playwright --with imageio-ffmpeg python edu/render_edu.py "${{ steps.pick.outputs.ep }}"
+          uv run --with playwright python reel/render_story.py --edu "${{ steps.pick.outputs.ep }}" --out edu/out/story.jpg
 
       - name: Caption (dry run)
         if: steps.pick.outputs.ep != ''
-        run: python3 edu/publish_edu.py --ep "${{ steps.pick.outputs.ep }}" --video "edu/out/${{ steps.pick.outputs.name }}.mp4" --dry-run
+        run: python3 edu/publish_edu.py --ep "${{ steps.pick.outputs.ep }}" --video "edu/out/${{ steps.pick.outputs.name }}.mp4" --story edu/out/story.jpg --dry-run
 
       - uses: actions/upload-artifact@v4
         if: steps.pick.outputs.ep != ''
         with:
           name: edu-${{ steps.pick.outputs.name }}-${{ github.run_id }}
-          path: edu/out/${{ steps.pick.outputs.name }}.mp4
+          path: |
+            edu/out/${{ steps.pick.outputs.name }}.mp4
+            edu/out/story.jpg
           retention-days: 14
 
       - name: Wait until 18:00 JST

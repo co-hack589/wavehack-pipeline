@@ -17,7 +17,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent / "reel"))
-from publish_reels import IG  # noqa: E402
+from publish_reels import IG, publish_story  # noqa: E402
 
 JST = datetime.timezone(datetime.timedelta(hours=9))
 TAGS = "#波予報の読み方 #波情報 #波予報 #サーフィン #サーフィン初心者 #サーフィン上達 #surfjapan #wavehack"
@@ -79,6 +79,7 @@ def main() -> int:
     ap.add_argument("--video", type=Path)
     ap.add_argument("--ep", type=Path)
     ap.add_argument("--thumb-ms", type=int, default=2500, help="カバーに使うコマ（問いかけの画面）")
+    ap.add_argument("--story", type=Path, help="リール投稿後にストーリーズへ出す画像（render_story.py --edu の出力）")
     ap.add_argument("--dry-run", action="store_true")
     a = ap.parse_args()
     if a.pick:
@@ -94,6 +95,12 @@ def main() -> int:
         print("投稿済みのためスキップ:", text.split("\n", 1)[0])
         return 0
     print("published", publish(ig, a.video, text, a.thumb_ms), time.strftime("%H:%M"), flush=True)
+    if a.story:
+        try:  # ストーリーズの失敗でリール投稿を失敗扱いにしない
+            print("story", publish_story(a.story, f"story-edu-{ep['no']:02d}.jpg"), flush=True)
+        except Exception as e:  # noqa: BLE001
+            print("ストーリーズは投稿できず:", str(e)[:200], flush=True)
+            return 1
     return 0
 
 
