@@ -1,0 +1,65 @@
+name: promo-posts
+
+# 紹介リール（promo/schedule.json）を指定日の 12:00 JST に投稿する。動画は R2 wavehack-data/promo-src/。
+# 18:00 の教育シリーズと重ならないよう 17:00 を過ぎたらその日は見送る。全件投稿後は毎日何もせず終わる。
+
+on:
+  schedule:
+    - cron: '17 0 * * *'   # JST 09:17
+    - cron: '17 1 * * *'   # 予備 10:17
+    - cron: '17 2 * * *'   # 予備 11:17
+  workflow_dispatch:
+
+concurrency:
+  group: promo-posts
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    env:
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      IG_USER_ID: ${{ secrets.IG_USER_ID }}
+      IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+      IG_API_VERSION: v26.0
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Pick today's post
+        id: pick
+        run: |
+          v=$(python3 promo/post_promo.py --pick)
+          echo "対象: ${v:-なし}"
+          echo "video=$v" >> "$GITHUB_OUTPUT"
+
+      - name: Fetch video from R2
+        if: steps.pick.outputs.video != ''
+        run: |
+          mkdir -p work
+          npx -y wrangler@4 r2 object get "wavehack-data/promo-src/${{ steps.pick.outputs.video }}" --remote --file "work/${{ steps.pick.outputs.video }}"
+
+      - name: Wait until 12:00 JST
+        id: wait
+        if: steps.pick.outputs.video != ''
+        run: |
+          python3 - <<'PY'
+          import datetime, os, time
+          jst = datetime.timezone(datetime.timedelta(hours=9))
+          now = datetime.datetime.now(jst)
+          start, last = now.replace(hour=12, minute=0, second=0, microsecond=0), now.replace(hour=17, minute=0, second=0, microsecond=0)
+          ok = "true"
+          if now >= last:
+              print(f"{now:%H:%M} は 17:00 を過ぎているので見送る"); ok = "false"
+          elif now < start:
+              print(f"12:00 まで {(start - now).total_seconds():.0f} 秒待つ", flush=True); time.sleep((start - now).total_seconds())
+          open(os.environ["GITHUB_OUTPUT"], "a").write(f"publish={ok}\n")
+          PY
+
+      - name: Publish
+        if: steps.wait.outputs.publish == 'true'
+        run: python3 promo/post_promo.py --video "${{ steps.pick.outputs.video }}" --file "work/${{ steps.pick.outputs.video }}"
