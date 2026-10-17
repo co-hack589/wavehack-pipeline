@@ -1,0 +1,122 @@
+name: edu-series
+
+# ---------------------------------------------------------------------------
+# 教育シリーズ「波予報の読み方」（edu/episodes/ep01〜10.json）を、木曜以外の毎日 18:00 JST に1本ずつリールで投稿する。
+#   publish_edu.py --pick で「まだ投稿していない一番若い回」を選ぶ（今日すでに投稿済みなら何もしない）
+#   → render_edu.py（Gemini TTS Aoede、失敗時は Cloud TTS Autonoe → Chrome でコマ撮り）→ 18:00 まで待って投稿
+# 木曜は週末の波予想リール（weekly-reel.yml）の日なので休み。全10回を投稿し終えたら毎日何もせず終わる。
+#
+# Secrets: GEMINI_API_KEY / IG_USER_ID / IG_ACCESS_TOKEN（weekly-reel と共通）
+# Variables: EDU_SERIES_ENABLED — 'true' のときだけ schedule 実行で投稿（停止スイッチ）
+# GitHub の定期実行は数時間遅れることがあるため 13:17 から3回起動し、最初の1回が 18:00 まで待つ。
+# ---------------------------------------------------------------------------
+
+on:
+  schedule:
+    # JST 13:17 / 15:17 / 16:47（日〜水・金・土）。UTC でも同じ曜日
+    - cron: '17 4 * * 0,1,2,3,5,6'
+    - cron: '17 6 * * 0,1,2,3,5,6'
+    - cron: '47 7 * * 0,1,2,3,5,6'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: '投稿せず動画とキャプションだけ作る（artifact で確認）'
+        type: boolean
+        default: true
+      post_now:
+        description: '18:00 を待たずにすぐ投稿する'
+        type: boolean
+        default: false
+      episode:
+        description: '回を指定（例: edu/episodes/ep03.json）。空なら次の未投稿回'
+        type: string
+        default: ''
+
+concurrency:
+  group: edu-series
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write  # Workload Identity 連携で Cloud TTS（Gemini 失敗時の代替）を使うため
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    if: github.event_name == 'workflow_dispatch' || vars.EDU_SERIES_ENABLED == 'true'
+    env:
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      IG_USER_ID: ${{ secrets.IG_USER_ID }}
+      IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+      IG_API_VERSION: v26.0
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+
+      - name: Pick episode
+        id: pick
+        env:
+          EPISODE: ${{ inputs.episode }}
+        run: |
+          ep="${EPISODE:-$(python3 edu/publish_edu.py --pick)}"
+          echo "対象: ${ep:-なし（今日は投稿済み、または全話投稿済み）}"
+          echo "ep=$ep" >> "$GITHUB_OUTPUT"
+          [ -z "$ep" ] || echo "name=$(basename "$ep" .json)" >> "$GITHUB_OUTPUT"
+
+      - name: Japanese fonts (web font fallback)
+        if: steps.pick.outputs.ep != ''
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq fonts-noto-cjk >/dev/null
+
+      - name: Authenticate to Google Cloud (Text-to-Speech fallback)
+        id: gcp
+        if: steps.pick.outputs.ep != ''
+        continue-on-error: true
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/231882021295/locations/global/workloadIdentityPools/github/providers/wavehack-pipeline
+          service_account: reel-tts@wavehack-501114.iam.gserviceaccount.com
+          token_format: access_token
+          create_credentials_file: false
+
+      - name: Narration and video
+        if: steps.pick.outputs.ep != ''
+        env:
+          GOOGLE_ACCESS_TOKEN: ${{ steps.gcp.outputs.access_token }}
+        run: uv run --with playwright --with imageio-ffmpeg python edu/render_edu.py "${{ steps.pick.outputs.ep }}"
+
+      - name: Caption (dry run)
+        if: steps.pick.outputs.ep != ''
+        run: python3 edu/publish_edu.py --ep "${{ steps.pick.outputs.ep }}" --video "edu/out/${{ steps.pick.outputs.name }}.mp4" --dry-run
+
+      - uses: actions/upload-artifact@v4
+        if: steps.pick.outputs.ep != ''
+        with:
+          name: edu-${{ steps.pick.outputs.name }}-${{ github.run_id }}
+          path: edu/out/${{ steps.pick.outputs.name }}.mp4
+          retention-days: 14
+
+      - name: Wait until 18:00 JST
+        id: wait
+        if: steps.pick.outputs.ep != '' && !inputs.dry_run
+        env:
+          POST_NOW: ${{ inputs.post_now }}
+        run: |
+          python3 - <<'EOF'
+          # 18:00 前なら待つ。23:00 を過ぎていたら今日は投稿しない（翌日に同じ回を出す）
+          import datetime, os, time
+          jst = datetime.timezone(datetime.timedelta(hours=9))
+          now = datetime.datetime.now(jst)
+          start, last = now.replace(hour=18, minute=0, second=0, microsecond=0), now.replace(hour=23, minute=0, second=0, microsecond=0)
+          ok = "true"
+          if now >= last:
+              print(f"{now:%H:%M} は遅すぎるので今日は投稿しない"); ok = "false"
+          elif now < start and os.environ.get("POST_NOW") != "true":
+              print(f"18:00 まで {(start - now).total_seconds():.0f} 秒待つ", flush=True); time.sleep((start - now).total_seconds())
+          open(os.environ["GITHUB_OUTPUT"], "a").write(f"publish={ok}\n")
+          EOF
+
+      - name: Publish
+        if: steps.wait.outputs.publish == 'true'
+        run: python3 edu/publish_edu.py --ep "${{ steps.pick.outputs.ep }}" --video "edu/out/${{ steps.pick.outputs.name }}.mp4"
