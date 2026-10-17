@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>Wave Hack Edu Reel</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@700;800;900&family=Zen+Kaku+Gothic+New:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+/* 教育シリーズ「波予報の読み方」のリール（1080x1920）。Instagram の UI と重ならないよう、文字は y=270〜1480 に収める。
+   色はデザインレギュレーション v1 準拠（ink / azure / muted）。 */
+:root{--ink:#071a3a;--azure:#0877f9;--muted:#52627a;--faint:#718096;--line:#dce5ef;--hl:#eef6ff;--low:#b9c6d6;
+  --jp:"Zen Kaku Gothic New",sans-serif;--num:"Inter Tight",sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{width:1080px;height:1920px;overflow:hidden;font-family:var(--jp);color:var(--ink);
+  background:linear-gradient(180deg,#cfe8ff 0%,#eef7ff 45%,#ffffff 100%)}
+.badge{position:absolute;left:90px;top:290px;display:flex;align-items:center;gap:20px}
+.badge .no{height:76px;padding:0 26px;border-radius:999px;background:var(--ink);color:#fff;font:900 40px/76px var(--num)}
+.badge .ttl{font:900 40px/1.2 var(--jp)}
+.badge .ttl small{display:block;font:700 26px/1 var(--jp);color:var(--azure);letter-spacing:2px;margin-bottom:6px}
+.foot{position:absolute;left:90px;right:90px;top:1420px;display:flex;justify-content:space-between;font:700 24px/1 var(--jp);color:var(--faint)}
+.foot b{font:800 24px/1 var(--num);letter-spacing:5px;color:var(--azure)}
+.scene{position:absolute;left:90px;right:90px;top:430px;height:960px}
+.q{margin-top:150px;font:900 100px/1.3 var(--jp);letter-spacing:-3px}
+.q b{color:var(--azure)}
+.big{position:absolute;right:0;top:600px;font:900 240px/1 var(--num);white-space:nowrap;color:var(--azure);opacity:.14;letter-spacing:-10px}
+h2{font:900 70px/1.25 var(--jp);letter-spacing:-2px}
+h2 b,.sub b,.pt b{color:var(--azure)}
+.sub{margin-top:22px;font:700 44px/1.4 var(--jp);color:var(--muted)}
+.chart{position:absolute;left:0;right:0;top:300px;height:560px;border-radius:44px;background:#fff;border:1px solid var(--line);box-shadow:0 20px 44px rgba(7,28,59,.10)}
+.bar{position:absolute;bottom:70px;width:44px;border-radius:12px 12px 4px 4px;background:var(--low)}
+.bar.top{background:var(--azure)}
+.avg{position:absolute;left:40px;right:40px;border-top:6px dashed var(--ink);opacity:0}
+.avg span{position:absolute;right:0;top:-62px;padding:8px 18px;border-radius:999px;background:var(--ink);color:#fff;font:900 30px/1 var(--jp)}
+.base{position:absolute;left:40px;right:40px;bottom:68px;border-top:3px solid var(--line)}
+.mx{position:absolute;bottom:0;width:230px;display:flex;flex-direction:column;align-items:center}
+.mx .col{width:150px;border-radius:22px 22px 6px 6px;background:var(--azure)}
+.mx .v{font:900 52px/1 var(--num);margin-bottom:16px;white-space:nowrap}
+.mx .v span{font:700 30px var(--jp);color:var(--muted)}
+.mx .l{margin-top:18px;font:700 34px/1.2 var(--jp);color:var(--muted);white-space:nowrap}
+.pt{margin-top:40px;display:flex;align-items:center;gap:26px;padding:38px 40px;border-radius:36px;background:#fff;border:1px solid var(--line);box-shadow:0 14px 34px rgba(7,28,59,.08);font:900 50px/1.3 var(--jp);opacity:0}
+.pt i{flex:none;width:72px;height:72px;border-radius:50%;background:var(--azure);color:#fff;font:900 40px/72px var(--num);text-align:center;font-style:normal}
+.list{margin-top:36px;display:grid;grid-template-columns:1fr 1fr;gap:16px 22px}
+.li{display:flex;align-items:center;gap:16px;padding:22px 24px;border-radius:24px;background:#fff;border:1px solid var(--line);font:700 36px/1.2 var(--jp);color:var(--muted);opacity:0}
+.li b{font:900 32px/1 var(--num);color:var(--faint)}
+.li.done{color:var(--ink)}.li.done b{color:var(--azure)}
+.li.next{border:4px solid var(--azure);color:var(--ink)}
+.li.next b{color:var(--azure)}
+.follow{margin-top:44px;padding:40px 44px;border-radius:40px;background:var(--ink);color:#fff;font:900 54px/1.35 var(--jp);opacity:0}
+.follow span{display:block;margin-top:12px;font:700 34px/1.4 var(--jp);color:#b9c9de}
+
+.cards{position:absolute;left:0;right:0;top:260px;display:grid;gap:24px}
+.cd{border-radius:40px;background:#fff;border:1px solid var(--line);box-shadow:0 18px 40px rgba(7,28,59,.10);padding:44px 36px;opacity:0}
+.cd.hl{border:5px solid var(--azure)}
+.cd small{display:block;font:700 36px/1.2 var(--jp);color:var(--muted)}
+.cd b{display:block;margin-top:18px;font:900 60px/1.15 var(--jp);letter-spacing:-2px;white-space:nowrap}
+.cd.hl b{color:var(--azure)}
+.cd p{margin-top:22px;font:700 36px/1.5 var(--jp);color:var(--muted)}
+.cards.c3 .cd{padding:36px 28px}.cards.c3 .cd b{font-size:42px}.cards.c3 .cd p{font-size:30px}.cards.c3 .cd small{font-size:30px}
+.wv{position:absolute;left:0;right:0;height:250px;border-radius:36px;background:#fff;border:1px solid var(--line);overflow:hidden}
+.wv canvas{position:absolute;left:0;top:0}
+.wv .lb{position:absolute;left:30px;top:24px;font:900 40px/1 var(--jp)}
+.wv .nt{position:absolute;right:30px;top:28px;font:700 30px/1 var(--jp);color:var(--muted)}
+.dg{position:absolute;left:0;right:0;top:250px;height:700px;border-radius:44px;overflow:hidden;border:1px solid var(--line)}
+.dg .sea{position:absolute;left:0;right:0;top:0;height:470px;background:linear-gradient(180deg,#9fd0ff,#cfe8ff)}
+.dg .land{position:absolute;left:0;right:0;bottom:0;height:230px;background:#f3e3c3}
+.dg .tag{position:absolute;font:900 34px/1 var(--jp);color:var(--ink);opacity:.55}
+.dg svg{position:absolute;inset:0}
+.dg .al{font:900 38px var(--jp)}
+.sc{margin-top:40px;display:flex;align-items:center;gap:24px;padding:28px 32px;border-radius:30px;background:#fff;border:1px solid var(--line);opacity:0}
+.sc .r{width:230px;flex:none;font:900 46px/1 var(--num)}
+.sc .t{font:900 40px/1.2 var(--jp)}.sc .t small{display:block;margin-top:8px;font:700 30px/1.4 var(--jp);color:var(--muted)}
+.sc .lv{margin-left:auto;flex:none;width:28px;height:90px;border-radius:14px}
+.box{position:absolute;left:0;right:0;top:260px;height:640px;border-radius:44px;background:#fff;border:1px solid var(--line);box-shadow:0 20px 44px rgba(7,28,59,.10);overflow:hidden}
+.box svg{position:absolute;inset:0}
+.steps{margin-top:30px;display:grid;gap:14px}
+.st{display:flex;align-items:center;gap:22px;padding:22px 30px;border-radius:26px;background:#fff;border:1px solid var(--line);font:900 44px/1.2 var(--jp);opacity:0}
+.st i{flex:none;width:62px;height:62px;border-radius:50%;background:var(--azure);color:#fff;font:900 34px/62px var(--num);text-align:center;font-style:normal}
+</style>
+</head>
+<body>
+<div class="badge" id="badge"></div>
+<div id="stage"></div>
+<div class="foot"><span id="src"></span><b>WAVE HACK</b></div>
+<script>
+const R = window.__EDU__;           // {ep, narr:[{seconds}]}（録画スクリプトが注入）
+const EP = R.ep, S = EP.scenes, stage = document.getElementById("stage");
+const pad = n => String(n).padStart(2, "0");
+document.getElementById("badge").innerHTML = `<div class="no">#${pad(EP.no)}</div><div class="ttl"><small>${EP.series}</small>${EP.title}</div>`;
+document.getElementById("src").textContent = EP.source;
+const at = (d, fn) => setTimeout(fn, d);
+const el = (html) => { const t = document.createElement("template"); t.innerHTML = html.trim(); return t.content.firstChild; };
+// 画面に置いてからアニメーションを付ける（未挿入の要素に付けると途中の状態で止まる）
+const mount = (html) => { const n = el(html); stage.replaceChildren(n); return n; };
+const fadeIn = (e, d = 0, dy = 30) => e.animate([{opacity: 0, transform: `translateY(${dy}px)`}, {opacity: 1, transform: "none"}],
+  {duration: 450, delay: d, easing: "cubic-bezier(.2,.8,.2,1)", fill: "both"});
+
+const SCENES = {
+  hook(s) {
+    const n = mount(`<div class="scene"><div class="q">${s.q}</div><div class="big">${s.big || "1.0m"}</div></div>`);
+    fadeIn(n.querySelector(".q")); fadeIn(n.querySelector(".big"), 400, 0);
+    return n;
+  },
+  sig(s, dur) {
+    const n = mount(`<div class="scene"><h2>${s.h}</h2><div class="sub">${s.sub}</div><div class="chart"><div class="base"></div><div class="avg"><span>有義波高 1.0m</span></div></div></div>`);
+    fadeIn(n.querySelector("h2")); fadeIn(n.querySelector(".sub"), 200);
+    const chart = n.querySelector(".chart");
+    // 15波。高さは見た目の例（上位5本の平均が 1.0 になるよう調整）
+    const hs = [0.55, 1.08, 0.42, 0.78, 0.95, 0.35, 1.22, 0.62, 0.88, 0.5, 0.97, 0.7, 0.3, 0.83, 0.66];
+    const H = 380, k = H / 1.3, W = 900, gap = (W - 60 - hs.length * 44) / (hs.length - 1);
+    const sorted = [...hs].sort((a, b) => b - a), top = sorted.slice(0, 5), avg = top.reduce((a, b) => a + b) / 5;
+    const bars = hs.map((h, i) => { const b = el(`<div class="bar"></div>`); b.style.height = `${h * k}px`; b.style.left = `${30 + i * (44 + gap)}px`; chart.appendChild(b); return b; });
+    bars.forEach((b, i) => b.animate([{transform: "scaleY(0)", transformOrigin: "bottom"}, {transform: "scaleY(1)", transformOrigin: "bottom"}], {duration: 380, delay: 300 + i * 50, fill: "both", easing: "ease-out"}));
+    const tSort = Math.min(2600, dur * 0.3), tTop = tSort + 900, tAvg = tTop + 700;
+    // 並べ替え: 高い順の位置へ移動
+    at(tSort, () => hs.forEach((h, i) => {
+      const j = sorted.indexOf(h), dx = (j - i) * (44 + gap);
+      bars[i].animate([{transform: "translateX(0)"}, {transform: `translateX(${dx}px)`}], {duration: 700, fill: "forwards", easing: "cubic-bezier(.5,0,.2,1)"});
+    }));
+    at(tTop, () => hs.forEach((h, i) => { if (top.includes(h)) bars[i].classList.add("top"); else bars[i].animate([{opacity: 1}, {opacity: .45}], {duration: 300, fill: "forwards"}); }));
+    const line = chart.querySelector(".avg");
+    line.style.bottom = `${70 + avg * k}px`;
+    at(tAvg, () => line.animate([{opacity: 0, transform: "scaleX(0)", transformOrigin: "left"}, {opacity: .9, transform: "scaleX(1)", transformOrigin: "left"}], {duration: 600, fill: "forwards"}));
+    return n;
+  },
+  max(s) {
+    const n = mount(`<div class="scene"><h2>${s.h}</h2><div class="chart" style="top:200px;height:700px"></div></div>`);
+    fadeIn(n.querySelector("h2"));
+    const chart = n.querySelector(".chart"), k = 230;
+    s.bars.forEach(([v, l], i) => {
+      const m = el(`<div class="mx" style="left:${55 + i * 270}px;bottom:40px"><div class="v">${v === 1.9 ? "約2" : v.toFixed(1)}<span>倍</span></div><div class="col" style="height:${v * k}px"></div><div class="l">${l}</div></div>`);
+      chart.appendChild(m);
+      fadeIn(m.querySelector(".v"), 500 + i * 1500, 10);
+      m.querySelector(".col").animate([{transform: "scaleY(0)", transformOrigin: "bottom"}, {transform: "scaleY(1)", transformOrigin: "bottom"}], {duration: 700, delay: 300 + i * 1500, fill: "both", easing: "cubic-bezier(.2,.8,.2,1)"});
+      fadeIn(m.querySelector(".l"), 400 + i * 1500, 10);
+      if (i) m.querySelector(".col").style.background = i === 1 ? "#3d97fb" : "#071a3a";
+    });
+    return n;
+  },
+
+  cmp(s) {
+    const n = mount(`<div class="scene"><h2>${s.h}</h2><div class="cards" style="grid-template-columns:repeat(${s.cards.length},1fr)"></div></div>`);
+    fadeIn(n.querySelector("h2"));
+    const box = n.querySelector(".cards");
+    if (s.cards.length > 2) box.classList.add("c3");
+    s.cards.forEach((c, i) => { const e = el(`<div class="cd${c.hl ? " hl" : ""}"><small>${c.label}</small><b>${c.value}</b><p>${c.note || ""}</p></div>`); box.appendChild(e); fadeIn(e, 500 + i * 1100); });
+    return n;
+  },
+  waves(s) {
+    const n = mount(`<div class="scene"><h2>${s.h}</h2><div class="sub">${s.sub || ""}</div></div>`);
+    fadeIn(n.querySelector("h2")); fadeIn(n.querySelector(".sub"), 200);
+    s.rows.forEach((r, i) => {
+      const w = el(`<div class="wv" style="top:${300 + i * 300}px"><canvas width="900" height="250"></canvas><div class="lb">${r.label}</div><div class="nt">${r.note || ""}</div></div>`);
+      n.appendChild(w); fadeIn(w, 300 + i * 400);
+      const cv = w.querySelector("canvas"), g = cv.getContext("2d"), L = 22 * r.T * r.T / 6, v = 26 * r.T, A = r.amp || 46, t0 = performance.now();
+      const draw = () => {
+        if (!w.isConnected) return;
+        const t = (performance.now() - t0) / 1000;
+        g.clearRect(0, 0, 900, 250);
+        g.beginPath(); g.moveTo(0, 250);
+        for (let x = 0; x <= 900; x += 4) g.lineTo(x, 160 - A * Math.sin(2 * Math.PI * (x + v * t) / L));
+        g.lineTo(900, 250); g.closePath(); g.fillStyle = i ? "#0877f9" : "#7fb6f5"; g.fill();
+        requestAnimationFrame(draw);
+      };
+      requestAnimationFrame(draw);
+    });
+    return n;
+  },
+  arrows(s) {
+    // 上が海・下が陸。deg: 0=海から陸へ（正面）, 90=海岸と平行, 180=陸から海へ
+    const n = mount(`<div class="scene"><h2>${s.h}</h2><div class="dg"><div class="sea"></div><div class="land"></div><div class="tag" style="left:30px;top:24px">海</div><div class="tag" style="left:30px;bottom:24px">${s.landLabel || "陸（海岸）"}</div><svg viewBox="0 0 900 700"></svg></div></div>`);
+    fadeIn(n.querySelector("h2"));
+    const svg = n.querySelector("svg"), N = s.items.length, len = N > 1 ? 230 : 330;
+    const col = g => g === true ? "#0877f9" : g === false ? "#e56f2f" : "#071a3a";
+    s.items.forEach((it, i) => {
+      const a = it.deg * Math.PI / 180, cx = 900 * (i + 0.5) / N, cy = it.deg >= 180 ? 400 : 300;
+      const vx = Math.sin(a) * len, vy = Math.cos(a) * len;
+      const x1 = cx - vx / 2, y1 = cy - vy / 2, x2 = cx + vx / 2, y2 = cy + vy / 2, c = col(it.good);
+      const ty = it.deg >= 180 ? 640 : it.deg >= 80 ? cy - 50 : Math.min(y1, y2) - 30;
+      const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      g.innerHTML = `<defs><marker id="m${i}" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="${c}"/></marker></defs>
+        <line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${c}" stroke-width="16" stroke-linecap="round" marker-end="url(#m${i})"/>
+        <text class="al" x="${cx}" y="${ty}" text-anchor="middle" fill="${c}">${it.label}</text>`;
+      svg.appendChild(g);
+      g.animate([{opacity: 0}, {opacity: 1}], {duration: 500, delay: 400 + i * 1300, fill: "both"});
+    });
+    return n;
+  },
+  scale(s) {
+    const n = mount(`<div class="scene"><h2>${s.h}</h2>${s.rows.map(r => `<div class="sc"><div class="r">${r[0]}</div><div class="t">${r[1]}<small>${r[2]}</small></div><div class="lv" style="background:${["#9fd0ff", "#4ea3fb", "#0877f9", "#071a3a"][r[3]]}"></div></div>`).join("")}${s.note ? `<div class="sub" style="font-size:32px;margin-top:30px">${s.note}</div>` : ""}</div>`);
+    fadeIn(n.querySelector("h2"));
+    n.querySelectorAll(".sc").forEach((e, i) => fadeIn(e, 400 + i * 700));
+    if (s.note) fadeIn(n.querySelector(".sub"), 400 + s.rows.length * 700);
+    return n;
+  },
+  curve(s) {
+    const n = mount(`<div class="scene"><h2>${s.h}</h2><div class="box"><svg viewBox="0 0 900 640"></svg></div></div>`);
+    fadeIn(n.querySelector("h2"));
+    const svg = n.querySelector("svg"), mid = 300, X = h => 60 + h / 24 * 780;
+    let html = `<line x1="60" y1="560" x2="840" y2="560" stroke="#dce5ef" stroke-width="3"/>` + [0, 6, 12, 18, 24].map(h => `<text x="${X(h) - 20}" y="610" font-family="Inter Tight" font-weight="800" font-size="30" fill="#718096">${h}時</text>`).join("");
+    s.curves.forEach((c, i) => {
+      const pts = []; for (let h = 0; h <= 24; h += 0.25) pts.push(`${X(h)},${mid - c.amp * 200 * Math.cos(2 * Math.PI * (h - 3) / 12.42)}`);
+      html += `<polyline class="cv" points="${pts.join(" ")}" fill="none" stroke="${i ? "#9fb5cf" : "#0877f9"}" stroke-width="12" stroke-linecap="round" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1"/>`;
+      if (s.curves.length > 1) html += `<text class="cl" x="${X(i ? 6.3 : 0.4)}" y="${mid - c.amp * 200 - 30 + (i ? 0 : 0)}" font-family="Zen Kaku Gothic New" font-weight="900" font-size="38" fill="${i ? "#52627a" : "#0877f9"}" opacity="0">${c.label}</text>`;
+    });
+    (s.marks || []).forEach(m => { html += `<text class="mk" x="${X(m[0]) - 50}" y="${m[1] === "満潮" ? 70 : 545}" font-family="Zen Kaku Gothic New" font-weight="900" font-size="38" fill="#071a3a" opacity="0">${m[1]}</text>`; });
+    svg.innerHTML = html;
+    svg.querySelectorAll(".cv").forEach((p, i) => p.animate([{strokeDashoffset: 1}, {strokeDashoffset: 0}], {duration: 1800, delay: 300 + i * 1500, fill: "both", easing: "ease-in-out"}));
+    svg.querySelectorAll(".cl").forEach((p, i) => p.animate([{opacity: 0}, {opacity: 1}], {duration: 400, delay: 1500 + i * 1500, fill: "both"}));
+    svg.querySelectorAll(".mk").forEach((p, i) => p.animate([{opacity: 0}, {opacity: 1}], {duration: 400, delay: 1800 + i * 300, fill: "both"}));
+    return n;
+  },
+  isobar(s) {
+    const n = mount(`<div class="scene"><h2>${s.h}</h2><div class="cards" style="grid-template-columns:1fr 1fr"></div></div>`);
+    fadeIn(n.querySelector("h2"));
+    const box = n.querySelector(".cards");
+    s.panels.forEach((p, i) => {
+      const rings = [1, 2, 3, 4, 5, 6].map(k => `<circle cx="190" cy="190" r="${k * p.gap}" fill="none" stroke="#071a3a" stroke-width="4" opacity="${1 - k * 0.12}"/>`).join("");
+      const e = el(`<div class="cd${p.hl ? " hl" : ""}" style="padding:30px"><svg viewBox="0 0 380 380" width="100%"><circle cx="190" cy="190" r="16" fill="#e56f2f"/>${rings}<text x="168" y="200" font-family="Zen Kaku Gothic New" font-weight="900" font-size="30" fill="#fff">低</text></svg><b style="font-size:52px">${p.label}</b><p>${p.note}</p></div>`);
+      box.appendChild(e); fadeIn(e, 500 + i * 1300);
+    });
+    return n;
+  },
+  travel(s) {
+    const n = mount(`<div class="scene"><h2>${s.h}</h2><div class="box"><svg viewBox="0 0 900 640"></svg></div></div>`);
+    fadeIn(n.querySelector("h2"));
+    const svg = n.querySelector("svg");
+    svg.innerHTML = `<rect x="0" y="0" width="900" height="640" fill="#cfe8ff"/><path d="M0,0 L170,0 L210,140 L150,300 L200,470 L130,640 L0,640z" fill="#f3e3c3"/>
+      <text x="30" y="330" font-family="Zen Kaku Gothic New" font-weight="900" font-size="40" fill="#071a3a">${s.coast}</text>
+      <circle cx="760" cy="420" r="70" fill="#071a3a"/><text x="712" y="436" font-family="Zen Kaku Gothic New" font-weight="900" font-size="40" fill="#fff">${s.storm}</text>
+      ${[0, 1, 2, 3].map(k => `<path class="arc" d="M${640 - k * 110},${170 - k * 10} Q${560 - k * 110},${420} ${640 - k * 110},${670 + k * 10}" fill="none" stroke="#0877f9" stroke-width="12" stroke-linecap="round" opacity="0"/>`).join("")}
+      <text class="lab" x="300" y="80" font-family="Zen Kaku Gothic New" font-weight="900" font-size="44" fill="#0877f9" opacity="0">${s.label}</text>`;
+    svg.querySelectorAll(".arc").forEach((a, k) => a.animate([{opacity: 0}, {opacity: 1, offset: .3}, {opacity: .25}], {duration: 2400, delay: 400 + k * 600, iterations: 3, fill: "both"}));
+    svg.querySelector(".lab").animate([{opacity: 0}, {opacity: 1}], {duration: 500, delay: 2600, fill: "both"});
+    return n;
+  },
+  bars(s) {
+    const n = mount(`<div class="scene"><h2>${s.h}</h2><div class="chart" style="top:${s.top || 260}px;height:${s.height || 640}px"></div></div>`);
+    fadeIn(n.querySelector("h2"));
+    const chart = n.querySelector(".chart"), mx = Math.max(...s.bars.map(b => b[0])), k = ((s.height || 640) - 260) / mx, w = 820 / s.bars.length;
+    s.bars.forEach(([v, l, t], i) => {
+      const m = el(`<div class="mx" style="left:${40 + i * w + (w - 230) / 2}px;bottom:40px"><div class="v">${t}</div><div class="col" style="height:${v * k}px;background:${s.colors ? s.colors[i] : "#0877f9"}"></div><div class="l">${l}</div></div>`);
+      chart.appendChild(m);
+      fadeIn(m.querySelector(".v"), 500 + i * 1200, 10);
+      m.querySelector(".col").animate([{transform: "scaleY(0)", transformOrigin: "bottom"}, {transform: "scaleY(1)", transformOrigin: "bottom"}], {duration: 700, delay: 300 + i * 1200, fill: "both", easing: "cubic-bezier(.2,.8,.2,1)"});
+      fadeIn(m.querySelector(".l"), 400 + i * 1200, 10);
+    });
+    return n;
+  },
+  check(s) {
+    const n = mount(`<div class="scene" style="top:400px"><h2>${s.h}</h2><div class="steps">${s.items.map((t, i) => `<div class="st"><i>${i + 1}</i><span>${t}</span></div>`).join("")}</div></div>`);
+    fadeIn(n.querySelector("h2"));
+    n.querySelectorAll(".st").forEach((e, i) => fadeIn(e, 400 + i * 600, 16));
+    return n;
+  },
+  sum(s) {
+    const n = mount(`<div class="scene"><h2>${s.h}</h2>${s.points.map((p, i) => `<div class="pt"><i>${i + 1}</i><span>${p}</span></div>`).join("")}</div>`);
+    fadeIn(n.querySelector("h2"));
+    n.querySelectorAll(".pt").forEach((p, i) => fadeIn(p, 400 + i * 900));
+    return n;
+  },
+  next(s) {
+    const items = s.list.map((t, i) => `<div class="li${i + 1 < EP.no + 1 ? " done" : i === EP.no ? " next" : ""}"><b>${pad(i + 1)}</b>${t}</div>`).join("");
+    const head = EP.next ? `次回は<b>「${EP.next}」</b>` : `シリーズ<b>完結</b>`;
+    const tail = EP.next ? `フォローして続きをチェック<span>シリーズ「${EP.series}」全10回</span>` : `保存して、次の海選びに<span>シリーズ「${EP.series}」全10回</span>`;
+    const n = mount(`<div class="scene" style="top:410px"><h2>${head}</h2><div class="list">${items}</div><div class="follow">${tail}</div></div>`);
+    fadeIn(n.querySelector("h2"));
+    n.querySelectorAll(".li").forEach((x, i) => fadeIn(x, 200 + i * 70, 16));
+    fadeIn(n.querySelector(".follow"), 1400);
+    return n;
+  },
+};
+
+function play() {
+  const durs = S.map((s, i) => Math.max(2500, Math.round((R.narr[i]?.seconds || 3) * 1000) + 900));
+  let t = 0; const starts = [];
+  S.forEach((s, i) => {
+    starts.push(t);
+    const d = durs[i];
+    at(t, () => {
+      const old = stage.firstChild;
+      if (old) old.animate([{opacity: 1}, {opacity: 0}], {duration: 250, fill: "forwards"});
+      at(250, () => SCENES[s.kind](s, d));
+    });
+    t += d;
+  });
+  window.__render = {starts: starts.map(x => x + 250), end: t + 600};
+}
+window.startRender = play;
+if (!new URLSearchParams(location.search).has("render")) document.fonts.ready.then(play);
+</script>
+</body>
+</html>
