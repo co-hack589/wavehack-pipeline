@@ -9,12 +9,16 @@ name: edu-series
 #
 # Secrets: GEMINI_API_KEY / IG_USER_ID / IG_ACCESS_TOKEN / CLOUDFLARE_ACCOUNT_ID / CLOUDFLARE_API_TOKEN（weekly-reel と共通）
 # Variables: EDU_SERIES_ENABLED — 'true' のときだけ schedule 実行で投稿（停止スイッチ）
-# GitHub の定期実行は数時間遅れることがあるため 13:17 から3回起動し、最初の1回が 18:00 まで待つ。
+# GitHub の定期実行は数時間遅れることがあるため（10/18 は約4時間）、朝 9:17 から起動して早めに動画を作っておく。
+#   ジョブ構成: build（動画生成）→ hold（18:00 まで待つ前半）→ publish（残りを待って投稿）。1ジョブは最長6時間のため分割。
+#   後続の起動は concurrency で待機し、順番が来た時点で今日投稿済みなら何もせず終わる。
 # ---------------------------------------------------------------------------
 
 on:
   schedule:
-    # JST 13:17 / 15:17 / 16:47（日〜水・金・土）。UTC でも同じ曜日
+    # JST 09:17 / 11:17 / 13:17 / 15:17 / 16:47（日〜水・金・土）。UTC でも同じ曜日
+    - cron: '17 0 * * 0,1,2,3,5,6'
+    - cron: '17 2 * * 0,1,2,3,5,6'
     - cron: '17 4 * * 0,1,2,3,5,6'
     - cron: '17 6 * * 0,1,2,3,5,6'
     - cron: '47 7 * * 0,1,2,3,5,6'
@@ -42,17 +46,19 @@ permissions:
   id-token: write  # Workload Identity 連携で Cloud TTS（Gemini 失敗時の代替）を使うため
 
 jobs:
-  post:
+  build:
     runs-on: ubuntu-latest
-    timeout-minutes: 340
+    timeout-minutes: 90
     if: github.event_name == 'workflow_dispatch' || vars.EDU_SERIES_ENABLED == 'true'
+    outputs:
+      ep: ${{ steps.pick.outputs.ep }}
+      name: ${{ steps.pick.outputs.name }}
+      date: ${{ steps.pick.outputs.date }}
     env:
       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
       IG_USER_ID: ${{ secrets.IG_USER_ID }}
       IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
       IG_API_VERSION: v26.0
-      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
     steps:
       - uses: actions/checkout@v4
 
@@ -63,9 +69,12 @@ jobs:
         env:
           EPISODE: ${{ inputs.episode }}
         run: |
+          # 遅れた起動が木曜（週末の波予想の日）にずれ込んだら休む
+          if [ -z "$EPISODE" ] && [ "$(TZ=Asia/Tokyo date +%u)" = 4 ]; then echo "木曜は休み"; exit 0; fi
           ep="${EPISODE:-$(python3 edu/publish_edu.py --pick)}"
           echo "対象: ${ep:-なし（今日は投稿済み、または全話投稿済み）}"
           echo "ep=$ep" >> "$GITHUB_OUTPUT"
+          echo "date=$(TZ=Asia/Tokyo date +%F)" >> "$GITHUB_OUTPUT"
           [ -z "$ep" ] || echo "name=$(basename "$ep" .json)" >> "$GITHUB_OUTPUT"
 
       - name: Japanese fonts (web font fallback)
@@ -98,32 +107,47 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: steps.pick.outputs.ep != ''
         with:
-          name: edu-${{ steps.pick.outputs.name }}-${{ github.run_id }}
+          name: edu-${{ github.run_id }}
           path: |
             edu/out/${{ steps.pick.outputs.name }}.mp4
             edu/out/story.jpg
           retention-days: 14
 
+  hold:
+    # 朝に起動した場合、18:00 まで最大 5時間40分 ここで待つ（残りは publish ジョブで待つ）
+    needs: build
+    if: needs.build.outputs.ep != '' && !inputs.dry_run
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+      - name: Wait (first half)
+        run: python3 reel/wait_slot.py --date ${{ needs.build.outputs.date }} --at 18:00 --last 23:00 --cap 20400 ${{ inputs.post_now && '--now' || '' }}
+
+  publish:
+    needs: [build, hold]
+    if: needs.build.outputs.ep != '' && !inputs.dry_run
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    env:
+      IG_USER_ID: ${{ secrets.IG_USER_ID }}
+      IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+      IG_API_VERSION: v26.0
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: edu-${{ github.run_id }}
+          path: edu/out
+
       - name: Wait until 18:00 JST
         id: wait
-        if: steps.pick.outputs.ep != '' && !inputs.dry_run
-        env:
-          POST_NOW: ${{ inputs.post_now }}
-        run: |
-          python3 - <<'EOF'
-          # 18:00 前なら待つ。23:00 を過ぎていたら今日は投稿しない（翌日に同じ回を出す）
-          import datetime, os, time
-          jst = datetime.timezone(datetime.timedelta(hours=9))
-          now = datetime.datetime.now(jst)
-          start, last = now.replace(hour=18, minute=0, second=0, microsecond=0), now.replace(hour=23, minute=0, second=0, microsecond=0)
-          ok = "true"
-          if now >= last:
-              print(f"{now:%H:%M} は遅すぎるので今日は投稿しない"); ok = "false"
-          elif now < start and os.environ.get("POST_NOW") != "true":
-              print(f"18:00 まで {(start - now).total_seconds():.0f} 秒待つ", flush=True); time.sleep((start - now).total_seconds())
-          open(os.environ["GITHUB_OUTPUT"], "a").write(f"publish={ok}\n")
-          EOF
+        # 23:00 を過ぎていたら今日は投稿しない（翌日に同じ回を出す）
+        run: python3 reel/wait_slot.py --date ${{ needs.build.outputs.date }} --at 18:00 --last 23:00 ${{ inputs.post_now && '--now' || '' }}
 
-      - name: Publish
+      - name: Publish (reel + story)
         if: steps.wait.outputs.publish == 'true'
-        run: python3 edu/publish_edu.py --ep "${{ steps.pick.outputs.ep }}" --video "edu/out/${{ steps.pick.outputs.name }}.mp4"
+        run: python3 edu/publish_edu.py --ep "${{ needs.build.outputs.ep }}" --video "edu/out/${{ needs.build.outputs.name }}.mp4" --story edu/out/story.jpg

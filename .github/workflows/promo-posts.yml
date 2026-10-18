@@ -5,8 +5,9 @@ name: promo-posts
 
 on:
   schedule:
-    - cron: '17 0 * * *'   # JST 09:17
-    - cron: '17 1 * * *'   # 予備 10:17
+    # GitHub の定期実行は数時間遅れる（10/18 は 09:17 の起動が 13:34）ので早朝から起動して 12:00 まで待つ
+    - cron: '17 22 * * *'  # JST 07:17
+    - cron: '17 0 * * *'   # 予備 09:17
     - cron: '17 2 * * *'   # 予備 11:17
   workflow_dispatch:
 
@@ -20,7 +21,7 @@ permissions:
 jobs:
   post:
     runs-on: ubuntu-latest
-    timeout-minutes: 300
+    timeout-minutes: 350
     env:
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -46,19 +47,7 @@ jobs:
       - name: Wait until 12:00 JST
         id: wait
         if: steps.pick.outputs.video != ''
-        run: |
-          python3 - <<'PY'
-          import datetime, os, time
-          jst = datetime.timezone(datetime.timedelta(hours=9))
-          now = datetime.datetime.now(jst)
-          start, last = now.replace(hour=12, minute=0, second=0, microsecond=0), now.replace(hour=17, minute=0, second=0, microsecond=0)
-          ok = "true"
-          if now >= last:
-              print(f"{now:%H:%M} は 17:00 を過ぎているので見送る"); ok = "false"
-          elif now < start:
-              print(f"12:00 まで {(start - now).total_seconds():.0f} 秒待つ", flush=True); time.sleep((start - now).total_seconds())
-          open(os.environ["GITHUB_OUTPUT"], "a").write(f"publish={ok}\n")
-          PY
+        run: python3 reel/wait_slot.py --date "$(TZ=Asia/Tokyo date +%F)" --at 12:00 --last 17:00
 
       - name: Publish
         if: steps.wait.outputs.publish == 'true'
