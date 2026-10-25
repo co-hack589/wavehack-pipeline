@@ -52,3 +52,15 @@ jobs:
       - name: Publish
         if: steps.wait.outputs.publish == 'true'
         run: python3 promo/post_promo.py --video "${{ steps.pick.outputs.video }}" --file "work/${{ steps.pick.outputs.video }}"
+
+  notify-failure:
+    needs: [post]
+    if: failure()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/slack-alert
+        with:
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          text: "Instagram プロモ投稿 (promo-posts) が失敗しました"
