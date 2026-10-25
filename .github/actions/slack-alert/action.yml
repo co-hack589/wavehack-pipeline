@@ -1,0 +1,44 @@
+name: slack-alert
+description: >
+  #wave-hack-error に竹田さんメンション付きで障害通知を投稿する。
+  token 未設定なら警告だけ出して何もしない（通知の失敗で workflow を落とさない）。
+
+inputs:
+  token:
+    description: Slack Bot Token (secrets.SLACK_BOT_TOKEN)
+    required: false
+  text:
+    description: 通知本文（先頭にメンションと実行URLを自動付与）
+    required: true
+  channel:
+    description: 投稿先チャンネルID（既定 = #wave-hack-error）
+    required: false
+    default: C0CBY3WH91Q
+  mention:
+    description: メンションする Slack ユーザーID
+    required: false
+    default: U0BF56SAFQV
+
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        SLACK_TOKEN: ${{ inputs.token }}
+        ALERT_TEXT: ${{ inputs.text }}
+        ALERT_CHANNEL: ${{ inputs.channel }}
+        ALERT_MENTION: ${{ inputs.mention }}
+        RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      run: |
+        if [ -z "$SLACK_TOKEN" ]; then
+          echo "::warning::SLACK_BOT_TOKEN 未設定のため Slack 通知をスキップ"
+          exit 0
+        fi
+        BODY=$(python3 -c 'import json,os
+        text = "<@%s> :rotating_light: %s\n%s" % (os.environ["ALERT_MENTION"], os.environ["ALERT_TEXT"], os.environ["RUN_URL"])
+        print(json.dumps({"channel": os.environ["ALERT_CHANNEL"], "text": text}))')
+        RES=$(curl -sS -m 20 -X POST https://slack.com/api/chat.postMessage \
+          -H "authorization: Bearer $SLACK_TOKEN" \
+          -H "content-type: application/json; charset=utf-8" \
+          -d "$BODY" || echo '{"ok":false,"error":"curl_failed"}')
+        echo "$RES" | python3 -c 'import json,sys; r=json.load(sys.stdin); print("slack ok" if r.get("ok") else "::warning::slack post failed: %s" % r.get("error"))'

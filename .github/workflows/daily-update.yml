@@ -128,3 +128,15 @@ jobs:
             sleep 30
           done
           echo "::warning::Render 反映を20分待っても確認できず。R2の予報は更新済み"
+
+  notify-failure:
+    needs: [update]
+    if: failure()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/slack-alert
+        with:
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          text: "予報更新パイプライン (daily-update) が失敗しました。予報が古いまま配信されている可能性があります"

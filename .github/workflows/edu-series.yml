@@ -151,3 +151,15 @@ jobs:
       - name: Publish (reel + story)
         if: steps.wait.outputs.publish == 'true'
         run: python3 edu/publish_edu.py --ep "${{ needs.build.outputs.ep }}" --video "edu/out/${{ needs.build.outputs.name }}.mp4" --story edu/out/story.jpg
+
+  notify-failure:
+    needs: [build, hold, publish]
+    if: failure()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/slack-alert
+        with:
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          text: "Instagram 教育シリーズ投稿 (edu-series) が失敗しました"

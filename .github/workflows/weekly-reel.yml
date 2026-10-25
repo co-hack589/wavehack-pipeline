@@ -216,3 +216,15 @@ jobs:
           python3 reel/publish_reels.py --data "$WORK/reel_data.json" --video-dir "$WORK/videos" \
             --cover-dir "$WORK/covers" --interval-min 15 --log "$WORK/published.jsonl" ${{ needs.build.outputs.pending }}
           cat "$WORK/published.jsonl"
+
+  notify-failure:
+    needs: [build, hold, publish]
+    if: failure()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/slack-alert
+        with:
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          text: "Instagram 週次リール (weekly-reel) が失敗しました"
