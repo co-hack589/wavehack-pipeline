@@ -78,7 +78,27 @@ def cloud_available() -> bool:
     """Cloud TTS の認証情報があるか（Gemini の代替に使えるか）。"""
     return bool(os.environ.get("GOOGLE_TTS_API_KEY", "").strip() or os.environ.get("GOOGLE_ACCESS_TOKEN", "").strip())
 
+# TTS が誤読しやすい地名・用語の読み（音声化の直前に置き換える。画面表示・キャプションは漢字のまま）
+READINGS = {
+    "鵠沼": "くげぬま", "東浪見": "とらみ", "夷隅": "いすみ", "部原": "へばら", "御宿": "おんじゅく",
+    "白渚": "しらすか", "平砂浦": "へいさうら", "由比ガ浜": "ゆいがはま", "七里ガ浜": "しちりがはま",
+    "多々戸浜": "たたどはま", "入田浜": "いりたはま", "百々": "どど", "国府ノ浜": "こうのはま",
+    "市後浜": "いちごはま", "生見": "ぬくみ", "内妻": "うちづま", "宍喰": "ししくい", "一ツ葉": "ひとつば",
+    "お倉ヶ浜": "おくらがはま", "伊比井": "いびい", "大堂津": "おおどうつ", "三苫": "みとま", "芥屋": "けや",
+    "五十嵐浜": "いからしはま", "郷津": "ごうづ", "難波江": "なばえ", "白兎": "はくと", "小沢見": "おざみ",
+    "羽伏浦": "はぶしうら", "毘砂別": "びしゃべつ", "河原子": "かわらご", "剃金": "そりがね",
+    "椎名内": "しいなうち", "鉄浜": "かねはま", "西高東低": "せいこうとうてい",
+}
+
+
+def to_speech(text: str) -> str:
+    for k in sorted(READINGS, key=len, reverse=True):
+        text = text.replace(k, READINGS[k])
+    return text
+
+
 def speak_cloud(text: str, out: str) -> float:
+    text = to_speech(text)
     body = {"input": {"text": text}, "voice": {"languageCode": "ja-JP", "name": CLOUD_VOICE},
             "audioConfig": {"audioEncoding": "LINEAR16", "sampleRateHertz": 24000}}
     headers = {"content-type": "application/json"}
@@ -111,6 +131,7 @@ def speak_cloud(text: str, out: str) -> float:
         return w.getnframes() / w.getframerate()
 
 def speak(text: str, out: str) -> float:
+    text = to_speech(text)
     if backend() == "gcloud":
         return speak_cloud(text, out)
     body = {"contents": [{"parts": [{"text": text}]}],  # 演技指示を混ぜると読み上げられるため原稿のみ
@@ -145,6 +166,7 @@ if __name__ == "__main__":
 
 
 def speak_local(text: str, out: str, voice: str = "Kyoko") -> float:
+    text = to_speech(text)
     """Gemini TTS が使えないとき用の macOS 標準音声（Kyoko）。24kHz/mono/16bit WAV で出力。"""
     import subprocess, tempfile
     with tempfile.TemporaryDirectory() as d:
