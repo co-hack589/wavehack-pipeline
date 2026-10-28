@@ -1,6 +1,6 @@
 name: slack-alert
 description: >
-  #wave-hack-error に竹田さんメンション付きで障害通知を投稿する。
+  #wave-hack-error に竹田さんメンション付きで障害通知を投稿する（［再実行］ボタン付き）。
   token 未設定なら警告だけ出して何もしない（通知の失敗で workflow を落とさない）。
 
 inputs:
@@ -28,15 +28,20 @@ runs:
         ALERT_TEXT: ${{ inputs.text }}
         ALERT_CHANNEL: ${{ inputs.channel }}
         ALERT_MENTION: ${{ inputs.mention }}
+        RUN_ID: ${{ github.run_id }}
         RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
       run: |
         if [ -z "$SLACK_TOKEN" ]; then
           echo "::warning::SLACK_BOT_TOKEN 未設定のため Slack 通知をスキップ"
           exit 0
         fi
+        # ［再実行］ボタン → wavehack-api /slack/interactions が失敗 job を rerun する
         BODY=$(python3 -c 'import json,os
         text = "<@%s> :rotating_light: %s\n%s" % (os.environ["ALERT_MENTION"], os.environ["ALERT_TEXT"], os.environ["RUN_URL"])
-        print(json.dumps({"channel": os.environ["ALERT_CHANNEL"], "text": text}))')
+        blocks = [{"type": "section", "text": {"type": "mrkdwn", "text": text}},
+                  {"type": "actions", "elements": [{"type": "button", "style": "primary", "action_id": "gh_rerun",
+                   "value": os.environ["RUN_ID"], "text": {"type": "plain_text", "text": "再実行"}}]}]
+        print(json.dumps({"channel": os.environ["ALERT_CHANNEL"], "text": text, "blocks": blocks}))')
         RES=$(curl -sS -m 20 -X POST https://slack.com/api/chat.postMessage \
           -H "authorization: Bearer $SLACK_TOKEN" \
           -H "content-type: application/json; charset=utf-8" \
