@@ -42,6 +42,7 @@ class ScoreBreakdown:
     effective_htsgw_m: float | None = None  # size_attenuation 適用後の実効サイズ
     wind_hard_cut: bool = False        # max_wind_ms ハードカットが発動したか
     surf_gate: float = 1.0             # v0.4: サーファビリティゲート（乗算係数）
+    wind_gate: float = 1.0             # v0.7: 風コンディション係数（乗算）
 
 
 # ============================================================
@@ -463,6 +464,36 @@ def surfability_gate(
     return max(0.0, min(1.0, gate * factor))
 
 
+def wind_gate_factor(*, wind: float, rules: ScoringRules) -> float:
+    """風スコアを composite 全体に掛ける係数へ変換する (v0.7)。
+
+    加重平均だけだと風の重みは 30% しかなく、オンショアでも他が揃えば
+    80 点台が出てしまう。風面が悪い日は全体を下げるため乗算でも効かせる。
+    yaml `scoring.wind_gate.min_factor` 未定義なら 1.0（無効）。
+    """
+    cfg = rules.scoring.get("wind_gate")
+    if not cfg:
+        return 1.0
+    lo = float(cfg.get("min_factor", 1.0))
+    return max(0.0, min(1.0, lo + (1.0 - lo) * wind))
+
+
+def apply_score_ceiling(score: float, rules: ScoringRules) -> float:
+    """高得点帯を圧縮して満点付近を出にくくする (v0.7)。
+
+    knee 以下はそのまま、knee 超は slope 倍で伸びる。
+    knee=0.80 / slope=0.5 なら全条件満点でも 0.90 止まり。
+    """
+    cfg = rules.scoring.get("score_ceiling")
+    if not cfg:
+        return score
+    knee = float(cfg.get("knee", 1.0))
+    slope = float(cfg.get("slope", 1.0))
+    if score <= knee:
+        return score
+    return knee + (score - knee) * slope
+
+
 def composite(
     *,
     swell: float,
@@ -480,6 +511,9 @@ def composite(
     score += seasonality_adj
     # サイズ・周期ゲートは季節補正まで含めた全体に乗算（フラットな日は救済しない）
     score *= surf_gate
+    wg = wind_gate_factor(wind=wind, rules=rules)
+    score *= wg
+    score = apply_score_ceiling(max(0.0, min(1.0, score)), rules)
     if wind_hard_cut:
         score = 0.0
     score = max(0.0, min(1.0, score))
@@ -503,6 +537,7 @@ def composite(
         effective_htsgw_m=effective_htsgw_m,
         wind_hard_cut=wind_hard_cut,
         surf_gate=surf_gate,
+        wind_gate=wg,
     )
 
 
