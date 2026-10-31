@@ -97,7 +97,12 @@ jobs:
             echo "データ変化なし、以降スキップ"
           else
             git commit -m "Update forecast data ($(date -u +%Y-%m-%dT%H:%MZ))"
-            git push
+            # 実行中に wavehack-api へ別の push があると rejected になるため、取り込んで再試行する
+            for i in 1 2 3; do
+              git push && break
+              [ "$i" = 3 ] && exit 1
+              git pull --rebase -X theirs origin main
+            done
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
