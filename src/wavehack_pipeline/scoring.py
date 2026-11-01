@@ -481,17 +481,19 @@ def wind_gate_factor(*, wind: float, rules: ScoringRules) -> float:
 def apply_score_ceiling(score: float, rules: ScoringRules) -> float:
     """高得点帯を圧縮して満点付近を出にくくする (v0.7)。
 
-    knee 以下はそのまま、knee 超は slope 倍で伸びる。
-    knee=0.80 / slope=0.5 なら全条件満点でも 0.90 止まり。
+    knee 以下はそのまま、knee 超は power 乗のカーブで伸びる。
+    100 点は残すが、全条件がほぼ完璧なときにしか届かない。
+    knee=0.80 / power=3 → 素点 0.90→81, 0.95→88, 0.98→95, 1.00→100
     """
     cfg = rules.scoring.get("score_ceiling")
     if not cfg:
         return score
     knee = float(cfg.get("knee", 1.0))
-    slope = float(cfg.get("slope", 1.0))
-    if score <= knee:
+    power = float(cfg.get("power", 1.0))
+    if score <= knee or knee >= 1.0:
         return score
-    return knee + (score - knee) * slope
+    t = (score - knee) / (1.0 - knee)
+    return knee + (1.0 - knee) * t**power
 
 
 def composite(
