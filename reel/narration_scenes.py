@@ -16,10 +16,10 @@ def jtime(t: str) -> str:
 # アプリの waveSizeLabel (src/app/_shared/wave-size.ts) と同じ閾値。読み上げ用の言い回し
 def size_words(m: float) -> str:
     cm = m * 100
-    if cm < 50: return "すねからひざくらい"
-    if cm < 80: return "ももから腰くらい"
-    if cm < 120: return "腹から胸くらい"
-    if cm < 180: return "肩から頭くらい"
+    if cm < 60: return "すねからひざくらい"
+    if cm < 100: return "ももから腰くらい"
+    if cm < 140: return "腹から胸くらい"
+    if cm < 200: return "肩から頭くらい"
     return "頭オーバー"
 
 def lines(P: dict) -> list[str]:

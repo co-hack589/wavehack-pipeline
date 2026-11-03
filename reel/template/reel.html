@@ -89,7 +89,7 @@ function areaBg(parent, P, t0, dur) {
   fadeIn(wrap, t0, 500);
 }
 // アプリの waveSizeLabel と同じ閾値
-const sizeLabel = m => m < .5 ? "スネ・ヒザ" : m < .8 ? "モモ・コシ" : m < 1.2 ? "ハラ・ムネ" : m < 1.8 ? "カタ・アタマ" : "オーバーヘッド";
+const sizeLabel = m => m < .6 ? "スネ・ヒザ" : m < 1.0 ? "モモ・コシ" : m < 1.4 ? "ハラ・ムネ" : m < 2.0 ? "カタ・アタマ" : "オーバーヘッド";
 const DAYJ = {sat: "土", sun: "日"};
 const DAYLABEL = window.__REEL__.dayLabel;
 const HI = 55;

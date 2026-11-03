@@ -510,7 +510,12 @@ def composite(
 ) -> ScoreBreakdown:
     w = rules.scoring["weights"]
     score = swell * w["swell"] + wind * w["wind"] + tide * w["tide"] + size * w["size"]
-    score += seasonality_adj
+    if seasonality_adj > 0:
+        # 季節加点は上限 cap まで（元々 cap 超なら据え置き）。季節だけで満点にしない
+        cap = float(_defaults(rules).get("seasonality_bonus_cap", 1.0))
+        score = min(score + seasonality_adj, max(score, cap))
+    else:
+        score += seasonality_adj
     # サイズ・周期ゲートは季節補正まで含めた全体に乗算（フラットな日は救済しない）
     score *= surf_gate
     wg = wind_gate_factor(wind=wind, rules=rules)

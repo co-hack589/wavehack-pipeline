@@ -45,7 +45,7 @@ const C = window.__COVER__;
 const P = C.point;
 const DAYJ = {sat: "土", sun: "日"};
 // アプリの waveSizeLabel と同じ閾値
-const sizeLabel = m => m < .5 ? "スネ・ヒザ" : m < .8 ? "モモ・コシ" : m < 1.2 ? "ハラ・ムネ" : m < 1.8 ? "カタ・アタマ" : "オーバーヘッド";
+const sizeLabel = m => m < .6 ? "スネ・ヒザ" : m < 1.0 ? "モモ・コシ" : m < 1.4 ? "ハラ・ムネ" : m < 2.0 ? "カタ・アタマ" : "オーバーヘッド";
 const [key, s] = ["sat", "sun"].flatMap(k => P.days[k].map(x => [k, x])).reduce((a, b) => (b[1].score > a[1].score ? b : a));
 const h = parseInt(s.t, 10);
 const stage = document.getElementById("stage");
