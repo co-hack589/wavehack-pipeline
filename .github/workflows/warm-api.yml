@@ -14,7 +14,9 @@ name: warm-api
 
 on:
   schedule:
-    - cron: '*/5 * * * *'
+    # JST 1:00〜5:00 (UTC 16〜19時) は叩かない。無料枠 月750時間を 31 日の月でも使い切らないため
+    # （wavehack-warmer も同じ時間帯は休む）
+    - cron: '*/5 0-15,20-23 * * *'
   workflow_dispatch: {}
 
 concurrency:
