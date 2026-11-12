@@ -3,7 +3,7 @@
 音声化の方式（Cloud TTS / Gemini TTS）と認証は narration.py を参照。"""
 from __future__ import annotations
 
-import json, os, shutil, sys
+import json, math, os, shutil, sys
 sys.path.insert(0, os.path.dirname(__file__))
 from narration import backend, cloud_available, speak, speak_cloud, speak_local  # noqa: E402
 
@@ -13,13 +13,27 @@ def jtime(t: str) -> str:
     h = int(t[:2])
     return "正午" if h == 12 else f"午後{h - 12}時" if h > 12 else f"午前{h}時"
 
-# アプリの waveSizeLabel (src/app/_shared/wave-size.ts) と同じ閾値。読み上げ用の言い回し
-def size_words(m: float) -> str:
-    cm = m * 100
-    if cm < 60: return "すねからひざくらい"
-    if cm < 100: return "ももから腰くらい"
-    if cm < 140: return "腹から胸くらい"
-    if cm < 200: return "肩から頭くらい"
+# アプリの waveSizeLabel (src/app/_shared/wave-size.ts) と同じ式・閾値。
+# 予報のうねり(m)×周期の倍率 = 割れる波の大きさの目安で区分する。
+_PF = [(6, 0.8), (8, 1.05), (10, 1.5), (12, 1.65), (14, 1.8)]
+
+def surf_m(m: float, per: float | None = None) -> float:
+    if not per or per <= 0:
+        return m
+    if per <= _PF[0][0]:
+        return m * _PF[0][1]
+    for (t0, f0), (t1, f1) in zip(_PF, _PF[1:]):
+        if per <= t1:
+            return m * (f0 + (f1 - f0) * (per - t0) / (t1 - t0))
+    return m * _PF[-1][1]
+
+# 読み上げ用の言い回し
+def size_words(m: float, per: float | None = None) -> str:
+    cm = math.floor(surf_m(m, per) * 10 + 0.5) * 10  # JS の Math.round と同じ丸め。 表示する小数1桁の値で区分（数字と区分を揃える）
+    if cm < 50: return "すねからひざくらい"
+    if cm < 90: return "ももから腰くらい"
+    if cm < 130: return "腹から胸くらい"
+    if cm < 170: return "肩から頭くらい"
     return "頭オーバー"
 
 def lines(P: dict) -> list[str]:
@@ -28,7 +42,7 @@ def lines(P: dict) -> list[str]:
     o = max(P["days"][other], key=lambda x: x["score"])
     good = sum(1 for m in P["members"] if (m[key] or 0) >= 55)
     area = P["group"].replace("・", "")
-    size = size_words(s["h"])
+    size = size_words(s["h"], s.get("per"))
     both = abs(o["h"] - s["h"]) < 0.3
     return [
         (f"今週末の{area}エリアは、{len(P['members'])}地点中{good}地点がおすすめ。" if good

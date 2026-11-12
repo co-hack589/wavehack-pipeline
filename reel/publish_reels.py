@@ -27,7 +27,7 @@ import urllib.request
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from narration_scenes import size_words  # noqa: E402
+from narration_scenes import size_words, surf_m  # noqa: E402
 
 DAYJ = {"sat": "土", "sun": "日"}
 AREA_TAGS = {"千葉北": "千葉サーフィン", "湘南": "湘南サーフィン", "伊豆・伊東": "伊豆サーフィン", "静岡・浜松": "静岡サーフィン",
@@ -41,7 +41,7 @@ def caption(data: dict, P: dict) -> str:
     lines = [
         f"🌊 今週末の{P['group']}エリア｜{P['name']}（{data['period']}）",
         "",
-        f"ベスト: {DAYJ[key]}曜 {s['t']}〜／{size_words(s['h']).replace('くらい', '')}（{s['h']:.1f}m）／SCORE {s['score']}",
+        f"ベスト: {DAYJ[key]}曜 {s['t']}〜／{size_words(s['h'], s.get('per')).replace('くらい', '')}（約{surf_m(s['h'], s.get('per')):.1f}m）／SCORE {s['score']}",
         f"うねり: {s['swell']}から 周期{round(s['per'])}秒　風: {s['wind']} {s['wms']:.0f}m/s",
         (f"{P['group']}エリアは{len(P['members'])}地点中{good}地点がおすすめ（{DAYJ[key]}曜・日中平均SCORE55以上）" if good
          else f"{P['group']}エリアは全体的に穏やかなコンディション（日中平均SCORE55以上の地点なし）"),

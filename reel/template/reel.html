@@ -89,7 +89,16 @@ function areaBg(parent, P, t0, dur) {
   fadeIn(wrap, t0, 500);
 }
 // アプリの waveSizeLabel と同じ閾値
-const sizeLabel = m => m < .6 ? "スネ・ヒザ" : m < 1.0 ? "モモ・コシ" : m < 1.4 ? "ハラ・ムネ" : m < 2.0 ? "カタ・アタマ" : "オーバーヘッド";
+// 予報のうねり（m）×周期の倍率 = 割れる波の大きさの目安。front の src/app/_shared/wave-size.ts と同じ式・閾値
+const PF = [[6, .8], [8, 1.05], [10, 1.5], [12, 1.65], [14, 1.8]];
+const surfM = (m, p) => {
+  if (!(p > 0)) return m;
+  if (p <= PF[0][0]) return m * PF[0][1];
+  for (let i = 0; i < PF.length - 1; i++) if (p <= PF[i + 1][0]) return m * (PF[i][1] + (PF[i + 1][1] - PF[i][1]) * (p - PF[i][0]) / (PF[i + 1][0] - PF[i][0]));
+  return m * PF[PF.length - 1][1];
+};
+const sizeLabel = (m, p) => { const c = Math.round(surfM(m, p) * 10) * 10; // 表示する小数1桁の値で区分（数字と区分を揃える） return c < 50 ? "スネ・ヒザ" : c < 90 ? "モモ・コシ" : c < 130 ? "ハラ・ムネ" : c < 170 ? "カタ・アタマ" : "オーバーヘッド"; };
+const surfText = (m, p) => `約${surfM(m, p).toFixed(1)}m`;
 const DAYJ = {sat: "土", sun: "日"};
 const DAYLABEL = window.__REEL__.dayLabel;
 const HI = 55;
@@ -295,7 +304,7 @@ function sceneHours(stage, P, t0, dur = 7300) {
       }
     });
     el(layer, `left:40px;top:${base + 20}px;font:700 22px var(--jp);color:var(--faint)`, "時");
-    const sm = el(layer, "left:40px;top:868px;width:888px;font:700 34px var(--jp);color:var(--ink)", `${DAYJ[key]}曜のベスト <span style="position:static;color:var(--azure);font-weight:900">${best.t}</span>　${sizeLabel(best.h)}（${best.h.toFixed(1)}m）`);
+    const sm = el(layer, "left:40px;top:868px;width:888px;font:700 34px var(--jp);color:var(--ink)", `${DAYJ[key]}曜のベスト <span style="position:static;color:var(--azure);font-weight:900">${best.t}</span>　${sizeLabel(best.h, best.per)}（${surfText(best.h, best.per)}）`);
     fadeUp(sm, 1300, 500, 20);
   });
   pop(pill, t0 + 200);
@@ -353,7 +362,7 @@ function sceneCompass(stage, P, t0, dur = 6200) {
   anim(sw, [{transform: `rotate(${s.swdeg}deg) translateY(-180px)`, opacity: 0}, {transform: `rotate(${s.swdeg}deg)`, opacity: 1}], t0 + 600, 800);
   anim(wd, [{transform: `rotate(${s.wdeg}deg) translateY(-160px)`, opacity: 0}, {transform: `rotate(${s.wdeg}deg)`, opacity: 1}], t0 + 1000, 800);
   const info = el(S, "left:56px;top:1086px;width:968px;height:204px;border-radius:28px;background:#fff;box-shadow:0 18px 34px rgba(7,28,59,.08)");
-  el(info, "left:40px;top:24px", `<div style="position:relative;font:800 24px var(--num);letter-spacing:4px;color:var(--azure)">● SWELL</div><div style="position:relative;font:900 42px/1.5 var(--jp);white-space:nowrap">${sizeLabel(s.h)}</div><div style="position:relative;font:700 28px var(--jp);color:var(--muted)">${s.h.toFixed(1)}m・${s.swell}から・${Math.round(s.per)}秒</div>`);
+  el(info, "left:40px;top:24px", `<div style="position:relative;font:800 24px var(--num);letter-spacing:4px;color:var(--azure)">● SWELL</div><div style="position:relative;font:900 42px/1.5 var(--jp);white-space:nowrap">${sizeLabel(s.h, s.per)} ${surfText(s.h, s.per)}</div><div style="position:relative;font:700 28px var(--jp);color:var(--muted)">うねり ${s.h.toFixed(1)}m・${s.swell}から・${Math.round(s.per)}秒</div>`);
   el(info, "left:380px;top:24px", `<div style="position:relative;font:800 24px var(--num);letter-spacing:4px;color:#e56f2f">● WIND</div><div style="position:relative;font:900 56px/1.3 var(--jp)">${s.wind}</div><div style="position:relative;font:700 28px var(--num);color:var(--muted)">${s.wms}m/s</div>`);
   const scB = el(info, `right:36px;top:17px;width:170px;height:170px;border-radius:50%;background:${s.score >= HI ? "var(--azure)" : "#8a9bb3"};color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center`);
   const scN = el(scB, "position:relative;font:900 78px/1 var(--num)", "0");

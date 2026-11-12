@@ -45,7 +45,16 @@ const C = window.__COVER__;
 const P = C.point;
 const DAYJ = {sat: "土", sun: "日"};
 // アプリの waveSizeLabel と同じ閾値
-const sizeLabel = m => m < .6 ? "スネ・ヒザ" : m < 1.0 ? "モモ・コシ" : m < 1.4 ? "ハラ・ムネ" : m < 2.0 ? "カタ・アタマ" : "オーバーヘッド";
+// 予報のうねり（m）×周期の倍率 = 割れる波の大きさの目安。front の src/app/_shared/wave-size.ts と同じ式・閾値
+const PF = [[6, .8], [8, 1.05], [10, 1.5], [12, 1.65], [14, 1.8]];
+const surfM = (m, p) => {
+  if (!(p > 0)) return m;
+  if (p <= PF[0][0]) return m * PF[0][1];
+  for (let i = 0; i < PF.length - 1; i++) if (p <= PF[i + 1][0]) return m * (PF[i][1] + (PF[i + 1][1] - PF[i][1]) * (p - PF[i][0]) / (PF[i + 1][0] - PF[i][0]));
+  return m * PF[PF.length - 1][1];
+};
+const sizeLabel = (m, p) => { const c = Math.round(surfM(m, p) * 10) * 10; // 表示する小数1桁の値で区分（数字と区分を揃える） return c < 50 ? "スネ・ヒザ" : c < 90 ? "モモ・コシ" : c < 130 ? "ハラ・ムネ" : c < 170 ? "カタ・アタマ" : "オーバーヘッド"; };
+const surfText = (m, p) => `約${surfM(m, p).toFixed(1)}m`;
 const [key, s] = ["sat", "sun"].flatMap(k => P.days[k].map(x => [k, x])).reduce((a, b) => (b[1].score > a[1].score ? b : a));
 const h = parseInt(s.t, 10);
 const stage = document.getElementById("stage");
@@ -63,7 +72,7 @@ stage.innerHTML = `
         <div class="best">
           <small>BEST</small>
           <b>${DAYJ[key]}曜 ${h}時〜</b>
-          <span>${sizeLabel(s.h)}（${s.h.toFixed(1)}m）</span>
+          <span>${sizeLabel(s.h, s.per)}（${surfText(s.h, s.per)}）</span>
         </div>
         <div class="score ${s.score >= 55 ? "" : "low"}"><b>${s.score}</b><small>SCORE</small></div>
       </div>
