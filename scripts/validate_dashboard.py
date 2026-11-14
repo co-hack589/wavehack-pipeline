@@ -54,7 +54,9 @@ def validate_dashboard(dashboard: dict, master: list[dict], now: datetime) -> No
             available.add(stamp.date().isoformat())
         stamps = sorted(datetime.fromisoformat(s["timestamp_jst"]).astimezone(JST) for s in point.get("slots", []))
         start = datetime.combine(today, datetime.min.time(), JST)
-        end = start + timedelta(days=6, hours=21)
+        # 16 時の回は GitHub cron の遅れで 0 時をまたぐことがあり、そのとき使う 06Z run の
+        # f168 は 7 日目の 15 時 JST まで。21 時を求めると毎回落ちて古い予報が残るため 15 時で可とする
+        end = start + timedelta(days=6, hours=15)
         if not stamps or stamps[0] > now.astimezone(JST) or stamps[-1] < end or any((b-a).total_seconds() > 10800 for a,b in zip(stamps, stamps[1:])):
             raise ValueError(f"{point['name_en']}: missing current/future 7-day coverage")
 

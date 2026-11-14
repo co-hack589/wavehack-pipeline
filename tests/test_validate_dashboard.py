@@ -42,6 +42,12 @@ class CoverageTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 module.validate_dashboard(feed, self.master, self.now)
 
+    def test_06z_run_validated_after_midnight_is_accepted(self):
+        # 06Z run の f168 = 7 日目 15 時 JST で終わる
+        for point in self.dashboard["points"]:
+            point["slots"] = [s for s in point["slots"] if s["timestamp_jst"] <= "2026-09-19T15:00:00+09:00"]
+        module.validate_dashboard(self.dashboard, self.master, self.now)
+
     def test_complete_feed_including_zero_waves(self):
         module.validate_dashboard(self.dashboard, self.master, self.now)
 
