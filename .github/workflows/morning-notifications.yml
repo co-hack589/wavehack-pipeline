@@ -1,12 +1,15 @@
 name: morning-notifications
 
 # ---------------------------------------------------------------------------
-# 毎朝 JST 06:30 に POST /internal/send-morning-notifications を叩き、
-# コンディションアラート設定に合致するユーザーへメール送信する。
+# 1日2回 POST /internal/send-notifications を叩き、通知設定（時間帯・曜日・
+# いつ知らせるか・基準点）に合うユーザーへプッシュ通知・メールを送る。
+#   JST 05:30 … phase=morning（今日の波）
+#   JST 20:00 … phase=evening（明日の波・3日後の見込み）
+# 同じ波を二度送らない判定は API 側（notification_events）。再実行しても重複しない。
 #
 # - 実処理は wavehack-api 側（Bearer = WAVEHACK_CRON_SECRET を検証）。
 # - このワークフローはメール失敗でも exit 0（daily-update と独立に成功扱い）。
-# - daily-update.yml (04:00) の後にデータが揃っている前提で 06:30 に走らせる。
+# - 朝は daily-update.yml (04:00) の後、夜は 16:00 更新の後に走る。
 #
 # 必要な Secrets（同リポジトリの Settings → Secrets and variables → Actions）:
 #   WAVEHACK_CRON_SECRET — Render 側 env と一致させる共有秘密
@@ -15,8 +18,16 @@ name: morning-notifications
 
 on:
   schedule:
-    - cron: '30 21 * * *'   # UTC 21:30 = JST 06:30
-  workflow_dispatch: {}
+    - cron: '30 20 * * *'   # UTC 20:30 = JST 05:30 → morning
+    - cron: '0 11 * * *'    # UTC 11:00 = JST 20:00 → evening
+  workflow_dispatch:
+    inputs:
+      phase:
+        description: "morning（今日の波）/ evening（明日・3日後）"
+        required: true
+        default: evening
+        type: choice
+        options: [morning, evening]
 
 concurrency:
   group: morning-notifications
@@ -36,6 +47,8 @@ jobs:
         env:
           API_URL: ${{ secrets.WAVEHACK_API_URL }}
           CRON_SECRET: ${{ secrets.WAVEHACK_CRON_SECRET }}
+          # 手動実行は入力値、定時実行は cron の時刻で決める
+          PHASE: ${{ github.event.inputs.phase || (github.event.schedule == '30 20 * * *' && 'morning' || 'evening') }}
         run: |
           if [ -z "$API_URL" ] || [ -z "$CRON_SECRET" ]; then
             echo "::warning::WAVEHACK_API_URL / WAVEHACK_CRON_SECRET が未設定です。スキップします。"
@@ -44,10 +57,11 @@ jobs:
           # 失敗しても workflow 全体は成功扱い（メール障害でパイプラインを止めない）。
           set +e
           RESPONSE=$(curl -sS -m 60 -o /tmp/notify.json -w "%{http_code}" \
-            -X POST "$API_URL/internal/send-morning-notifications" \
+            -X POST "$API_URL/internal/send-notifications" \
             -H "authorization: Bearer $CRON_SECRET" \
             -H "content-type: application/json" \
-            -d '{}')
+            -d "{\"phase\":\"$PHASE\"}")
+          echo "phase: $PHASE"
           RC=$?
           echo "HTTP status: $RESPONSE (curl rc=$RC)"
           echo "--- response body ---"
@@ -65,4 +79,4 @@ jobs:
         uses: ./.github/actions/slack-alert
         with:
           token: ${{ secrets.SLACK_BOT_TOKEN }}
-          text: "朝のコンディションメール送信 (morning-notifications) が失敗しました (${{ steps.send.outputs.failed }})"
+          text: "波の通知送信 (morning-notifications) が失敗しました (${{ steps.send.outputs.failed }})"
