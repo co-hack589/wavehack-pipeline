@@ -44,15 +44,20 @@ def gemini(prompt: str, *, search: bool = False, temperature: float = 0.7, model
     global SEARCH_OK
     last = ""
     cands = [x.strip() for x in (models or TEXT_MODELS) if x.strip()]
-    for m in [x for x in cands if x in available_models()] or cands:
-        for _ in range(2):
+    order = [x for x in cands if x in available_models()] or cands
+    # 混雑（503）や応答待ちの打ち切りは一時的なことが多いので、全モデルを一巡したら待ってもう一巡する
+    for rnd, m in enumerate(order * 2):
+        if rnd == len(order):
+            print("[gemini] 全モデルが混雑。3分待ってもう一巡します", flush=True)
+            time.sleep(180)
+        for attempt in range(3):
             body: dict = {"contents": [{"parts": [{"text": prompt}]}], "generationConfig": {"temperature": temperature}}
             if search and SEARCH_OK:
                 body["tools"] = [{"google_search": {}}]
             req = urllib.request.Request(f"{GEMINI}/{m}:generateContent", json.dumps(body).encode(),
                                          {"Content-Type": "application/json", "x-goog-api-key": _key()})
             try:
-                with urllib.request.urlopen(req, timeout=150) as r:
+                with urllib.request.urlopen(req, timeout=300) as r:
                     d = json.load(r)
                 cand = d["candidates"][0]
                 text = "".join(p.get("text", "") for p in cand.get("content", {}).get("parts", []))
@@ -68,10 +73,15 @@ def gemini(prompt: str, *, search: bool = False, temperature: float = 0.7, model
                     continue
                 if e.code in (400, 403, 404, 429):
                     break  # このモデルは使えない・枠切れ → 次のモデル
-                time.sleep(15)  # 5xx（混雑）は少し待って1回だけ再試行
-            except (urllib.error.URLError, TimeoutError, KeyError, IndexError) as e:
+                time.sleep((30, 90, 0)[attempt])  # 5xx（混雑）は待って再試行
+            except (urllib.error.URLError, TimeoutError) as e:
                 last = f"{m} {e}"
-                break  # 応答が遅い・壊れている → 次のモデル
+                if attempt == 0:
+                    continue  # 応答待ちの打ち切り・通信断は同じモデルでもう1回
+                break
+            except (KeyError, IndexError) as e:
+                last = f"{m} {e}"
+                break  # 応答が壊れている → 次のモデル
         print(f"[gemini] {last}", flush=True)
     raise SystemExit(f"Gemini が使えません: {last}")
 
