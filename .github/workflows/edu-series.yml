@@ -1,14 +1,20 @@
 name: edu-series
 
 # ---------------------------------------------------------------------------
-# 教育シリーズ「波予報の読み方」（edu/episodes/ep01〜10.json）を、木曜以外の毎日 18:00 JST に1本ずつリールで投稿する。
-#   publish_edu.py --pick で「まだ投稿していない一番若い回」を選ぶ（今日すでに投稿済みなら何もしない）
-#   → render_edu.py（Gemini TTS Aoede、失敗時は Cloud TTS Autonoe → Chrome でコマ撮り）→ 18:00 まで待って投稿
+# 教育シリーズ「波予報の読み方」を、木曜以外の 18:00 JST に1日1本までリールで投稿する。
+# 第1弾（edu/episodes/ep01〜10.json）は 10/31 に完了。第2弾（#11〜）は運営者が Slack で許可した台本だけを出す:
+#   publish_edu.py --next で wavehack-api の GET /social/ideas/next?kind=edu から次の回を取る（今日すでに投稿済み・
+#   許可済みの台本が無ければ何もしない。前日に予告したまま見送った回があればそちらが先）→ edu/out/epNN.json
+#   → render_edu.py（Gemini TTS Aoede、失敗時は Cloud TTS Autonoe → Chrome でコマ撮り）
+#   → POST /social/ideas/:id/preview（動画の URL と予定時刻。API が Slack に予告を出し、運営者は止められる）
+#   → 18:00 まで待つ → 直前に GET /social/ideas/:id で状態を確かめ、preview のときだけ投稿 → POST /posted（失敗は /failed）
 #   → 続けてその回の要点をストーリーズに1枚（reel/render_story.py --edu、画像は R2 social/ 経由で公開）
-# 木曜は週末の波予想リール（weekly-reel.yml）の日なので休み。全10回を投稿し終えたら毎日何もせず終わる。
+# 木曜は週末の波予想リール（weekly-reel.yml）の日なので休み。
 #
 # Secrets: GEMINI_API_KEY / IG_USER_ID / IG_ACCESS_TOKEN / CLOUDFLARE_ACCOUNT_ID / CLOUDFLARE_API_TOKEN（weekly-reel と共通）
+#          WAVEHACK_API_URL / WAVEHACK_CRON_SECRET（morning-notifications と共通）
 # Variables: EDU_SERIES_ENABLED — 'true' のときだけ schedule 実行で投稿（停止スイッチ）
+#            EDU_PREVIEW_MODE — 予告の動画 URL。run（既定: この実行のページ＝artifact）/ r2（/api/social が mp4 に対応してから）
 # GitHub の定期実行は数時間遅れることがあるため（10/18 は約4時間）、朝 9:17 から起動して早めに動画を作っておく。
 #   ジョブ構成: build（動画生成）→ hold（18:00 まで待つ前半）→ publish（残りを待って投稿）。1ジョブは最長6時間のため分割。
 #   後続の起動は concurrency で待機し、順番が来た時点で今日投稿済みなら何もせず終わる。
@@ -32,8 +38,8 @@ on:
         description: '18:00 を待たずにすぐ投稿する'
         type: boolean
         default: false
-      episode:
-        description: '回を指定（例: edu/episodes/ep03.json）。空なら次の未投稿回'
+      idea_id:
+        description: 'API の idea id を指定（確認用）。空なら許可済みで最も古い回'
         type: string
         default: ''
 
@@ -51,14 +57,18 @@ jobs:
     timeout-minutes: 90
     if: github.event_name == 'workflow_dispatch' || vars.EDU_SERIES_ENABLED == 'true'
     outputs:
+      id: ${{ steps.pick.outputs.id }}
       ep: ${{ steps.pick.outputs.ep }}
       name: ${{ steps.pick.outputs.name }}
       date: ${{ steps.pick.outputs.date }}
+      previewed: ${{ steps.preview.outputs.previewed }}
     env:
       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
       IG_USER_ID: ${{ secrets.IG_USER_ID }}
       IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
       IG_API_VERSION: v26.0
+      WAVEHACK_API_URL: ${{ secrets.WAVEHACK_API_URL }}
+      WAVEHACK_CRON_SECRET: ${{ secrets.WAVEHACK_CRON_SECRET }}
     steps:
       - uses: actions/checkout@v4
 
@@ -67,15 +77,14 @@ jobs:
       - name: Pick episode
         id: pick
         env:
-          EPISODE: ${{ inputs.episode }}
+          IDEA_ID: ${{ inputs.idea_id }}
+          DRY: ${{ inputs.dry_run && '--dry-run' || '' }}
         run: |
           # 遅れた起動が木曜（週末の波予想の日）にずれ込んだら休む
-          if [ -z "$EPISODE" ] && [ "$(TZ=Asia/Tokyo date +%u)" = 4 ]; then echo "木曜は休み"; exit 0; fi
-          ep="${EPISODE:-$(python3 edu/publish_edu.py --pick)}"
-          echo "対象: ${ep:-なし（今日は投稿済み、または全話投稿済み）}"
-          echo "ep=$ep" >> "$GITHUB_OUTPUT"
+          if [ -z "$IDEA_ID" ] && [ "$(TZ=Asia/Tokyo date +%u)" = 4 ]; then echo "木曜は休み"; exit 0; fi
           echo "date=$(TZ=Asia/Tokyo date +%F)" >> "$GITHUB_OUTPUT"
-          [ -z "$ep" ] || echo "name=$(basename "$ep" .json)" >> "$GITHUB_OUTPUT"
+          # 次の回を API から取り edu/out/epNN.json を書く（id / ep / name を GITHUB_OUTPUT へ）。無ければ ep は空
+          python3 edu/publish_edu.py --next ${IDEA_ID:+--idea-id "$IDEA_ID"} $DRY
 
       - name: Japanese fonts (web font fallback)
         if: steps.pick.outputs.ep != ''
@@ -102,7 +111,7 @@ jobs:
 
       - name: Caption (dry run)
         if: steps.pick.outputs.ep != ''
-        run: python3 edu/publish_edu.py --ep "${{ steps.pick.outputs.ep }}" --video "edu/out/${{ steps.pick.outputs.name }}.mp4" --story edu/out/story.jpg --dry-run
+        run: python3 edu/publish_edu.py --ep "${{ steps.pick.outputs.ep }}" --dry-run
 
       - uses: actions/upload-artifact@v4
         if: steps.pick.outputs.ep != ''
@@ -110,13 +119,26 @@ jobs:
           name: edu-${{ github.run_id }}
           path: |
             edu/out/${{ steps.pick.outputs.name }}.mp4
+            edu/out/${{ steps.pick.outputs.name }}.json
             edu/out/story.jpg
           retention-days: 14
+
+      - name: Preview (API が Slack に予告を出す)
+        id: preview
+        if: steps.pick.outputs.ep != '' && !inputs.dry_run
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          EDU_PREVIEW_MODE: ${{ vars.EDU_PREVIEW_MODE || 'run' }}
+        # 予定時刻は当日 18:00 JST（post_now なら今）。止められていれば previewed=false で hold・publish を飛ばす
+        run: >-
+          python3 edu/publish_edu.py --preview --id "${{ steps.pick.outputs.id }}" --ep "${{ steps.pick.outputs.ep }}"
+          --video "edu/out/${{ steps.pick.outputs.name }}.mp4" --date "${{ steps.pick.outputs.date }}" ${{ inputs.post_now && '--now' || '' }}
 
   hold:
     # 朝に起動した場合、18:00 まで最大 5時間40分 ここで待つ（残りは publish ジョブで待つ）
     needs: build
-    if: needs.build.outputs.ep != '' && !inputs.dry_run
+    if: needs.build.outputs.previewed == 'true' && !inputs.dry_run
     runs-on: ubuntu-latest
     timeout-minutes: 350
     steps:
@@ -126,10 +148,12 @@ jobs:
 
   publish:
     needs: [build, hold]
-    if: needs.build.outputs.ep != '' && !inputs.dry_run
+    if: needs.build.outputs.previewed == 'true' && !inputs.dry_run
     runs-on: ubuntu-latest
     timeout-minutes: 350
     env:
+      WAVEHACK_API_URL: ${{ secrets.WAVEHACK_API_URL }}
+      WAVEHACK_CRON_SECRET: ${{ secrets.WAVEHACK_CRON_SECRET }}
       IG_USER_ID: ${{ secrets.IG_USER_ID }}
       IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
       IG_API_VERSION: v26.0
@@ -145,12 +169,15 @@ jobs:
 
       - name: Wait until 18:00 JST
         id: wait
-        # 23:00 を過ぎていたら今日は投稿しない（翌日に同じ回を出す）
+        # 23:00 を過ぎていたら今日は投稿しない（status=preview のまま残り、翌日の build が同じ回を先に出す）
         run: python3 reel/wait_slot.py --date ${{ needs.build.outputs.date }} --at 18:00 --last 23:00 ${{ inputs.post_now && '--now' || '' }}
 
       - name: Publish (reel + story)
         if: steps.wait.outputs.publish == 'true'
-        run: python3 edu/publish_edu.py --ep "${{ needs.build.outputs.ep }}" --video "edu/out/${{ needs.build.outputs.name }}.mp4" --story edu/out/story.jpg
+        # 直前に API の状態を確かめ、preview のときだけ投稿する（運営者が止めていれば何もせず正常終了）
+        run: >-
+          python3 edu/publish_edu.py --id "${{ needs.build.outputs.id }}" --ep "edu/out/${{ needs.build.outputs.name }}.json"
+          --video "edu/out/${{ needs.build.outputs.name }}.mp4" --story edu/out/story.jpg
 
   notify-failure:
     needs: [build, hold, publish]

@@ -94,9 +94,10 @@ const fadeIn = (e, d = 0, dy = 30) => e.animate([{opacity: 0, transform: `transl
   {duration: 450, delay: d, easing: "cubic-bezier(.2,.8,.2,1)", fill: "both"});
 
 const SCENES = {
-  hook(s) {
+  hook(s, dur, first) {
     const n = mount(`<div class="scene"><div class="q">${s.q}</div><div class="big">${s.big || "1.0m"}</div></div>`);
-    fadeIn(n.querySelector(".q")); fadeIn(n.querySelector(".big"), 400, 0);
+    // 1場面目は0秒目のコマから問いかけを見せる（登場アニメで冒頭を空にしない）
+    if (!first) fadeIn(n.querySelector(".q")); fadeIn(n.querySelector(".big"), 400, 0);
     return n;
   },
   sig(s, dur) {
@@ -258,6 +259,15 @@ const SCENES = {
     return n;
   },
   next(s) {
+    if (!s.list) {
+      // 第2弾（#11〜）: 回の一覧は出さず、この回のまとめと保存・フォローの呼びかけ
+      const sum = S.find(x => x.kind === "sum");
+      const n = mount(`<div class="scene" style="top:410px"><h2>保存して<b>次の海選び</b>に</h2>${(sum ? sum.points : []).map((p, i) => `<div class="pt"><i>${i + 1}</i><span>${p}</span></div>`).join("")}<div class="follow">フォローして続きをチェック<span>シリーズ「${EP.series}」</span></div></div>`);
+      fadeIn(n.querySelector("h2"));
+      n.querySelectorAll(".pt").forEach((p, i) => fadeIn(p, 200 + i * 150));
+      fadeIn(n.querySelector(".follow"), 900);
+      return n;
+    }
     const items = s.list.map((t, i) => `<div class="li${i + 1 < EP.no + 1 ? " done" : i === EP.no ? " next" : ""}"><b>${pad(i + 1)}</b>${t}</div>`).join("");
     const head = EP.next ? `次回は<b>「${EP.next}」</b>` : `シリーズ<b>完結</b>`;
     const tail = EP.next ? `フォローして続きをチェック<span>シリーズ「${EP.series}」全10回</span>` : `保存して、次の海選びに<span>シリーズ「${EP.series}」全10回</span>`;
@@ -275,6 +285,7 @@ function play() {
   S.forEach((s, i) => {
     starts.push(t);
     const d = durs[i];
+    if (i === 0) { SCENES[s.kind](s, d, true); t += d; return; }  // 1場面目はすぐ置く（0秒目から見える）
     at(t, () => {
       const old = stage.firstChild;
       if (old) old.animate([{opacity: 1}, {opacity: 0}], {duration: 250, fill: "forwards"});

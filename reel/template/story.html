@@ -47,7 +47,7 @@ if (S.mode === "edu") {
   wrap.innerHTML = `<div class="brand">WAVE HACK</div><div class="pill">新しいリールを公開</div>
     <h1><small>${E.series} #${pad(E.no)}</small>${E.title}</h1>
     <div class="pts">${sum.points.map((p, i) => `<div class="pt"><i>${i + 1}</i><span>${p}</span></div>`).join("")}</div>
-    <div class="foot">くわしくはプロフィールのリールで${E.next ? `<span>次回 #${pad(E.no + 1)}「${E.next}」｜毎日18時更新（木曜はお休み）</span>` : `<span>シリーズ全10回、保存して見返してね</span>`}</div>`;
+    <div class="foot">くわしくはプロフィールのリールで${E.next ? `<span>次回 #${pad(E.no + 1)}「${E.next}」｜毎日18時更新（木曜はお休み）</span>` : E.no > 10 ? `<span>保存して、次の海選びに</span>` : `<span>シリーズ全10回、保存して見返してね</span>`}</div>`;
 } else {
   const rows = S.points.map(P => {
     const [k, s] = ["sat", "sun"].flatMap(d => P.days[d].map(x => [d, x])).reduce((a, b) => b[1].score > a[1].score ? b : a);

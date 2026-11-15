@@ -1,0 +1,80 @@
+name: social-ideas
+
+# ---------------------------------------------------------------------------
+# 教育リール「波予報の読み方」第2弾のネタと台本を週1回まとめて作り、wavehack-api に送る（social/ideas_agent.py）。
+#   Gemini でネタ案 → 台本 → 機械検査（kind・キー・字数・出典）→ 別の指示のレビュー → 修正2回まで → 合格したものだけ
+#   POST /social/ideas/batch。Slack への投稿と運営者の許可は API 側。許可された台本は edu-series.yml が制作・投稿する。
+#
+# 月曜の朝（JST）までに届くよう、日曜夜〜月曜朝に5回起動する（GitHub の定期実行は5〜7時間遅れることが多い）。
+# 2回目以降は API にその週の batch があれば何もせず終わる（送信が重なっても API が 409 batch_exists を返す）。
+#
+# Secrets: GEMINI_API_KEY / WAVEHACK_API_URL / WAVEHACK_CRON_SECRET / SLACK_BOT_TOKEN（失敗通知）
+# Variables: SOCIAL_IDEAS_ENABLED — 'true' のときだけ schedule で動く（停止スイッチ）。SOCIAL_IDEAS_COUNT — 本数（既定 5）
+# 公開リポジトリなので、ネタ・台本はログに出さない（題と検査結果だけ）。dry-run の結果は短期間の artifact に置く。
+# ---------------------------------------------------------------------------
+
+on:
+  schedule:
+    # JST 日 22:07 / 月 01:07 / 04:07 / 06:07 / 09:07（UTC では日曜 13:07〜月曜 00:07）
+    - cron: '7 13 * * 0'
+    - cron: '7 16 * * 0'
+    - cron: '7 19 * * 0'
+    - cron: '7 21 * * 0'
+    - cron: '7 0 * * 1'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'API に送らず結果を artifact に置くだけ'
+        type: boolean
+        default: true
+      count:
+        description: '作る本数（空なら SOCIAL_IDEAS_COUNT か 5）'
+        type: string
+        default: ''
+
+concurrency:
+  group: social-ideas
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  ideas:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    if: github.event_name == 'workflow_dispatch' || vars.SOCIAL_IDEAS_ENABLED == 'true'
+    env:
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      WAVEHACK_API_URL: ${{ secrets.WAVEHACK_API_URL }}
+      WAVEHACK_CRON_SECRET: ${{ secrets.WAVEHACK_CRON_SECRET }}
+      SOCIAL_IDEAS_COUNT: ${{ inputs.count || vars.SOCIAL_IDEAS_COUNT || '5' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Ideas and scripts
+        run: |
+          if [ "${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}" = "true" ]; then
+            python3 social/ideas_agent.py --dry-run --out social-ideas.json
+          else
+            python3 social/ideas_agent.py
+          fi
+
+      - uses: actions/upload-artifact@v4
+        if: always() && hashFiles('social-ideas.json') != ''
+        with:
+          name: social-ideas-${{ github.run_id }}
+          path: social-ideas.json
+          retention-days: 3
+
+  notify-failure:
+    needs: [ideas]
+    if: failure()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/slack-alert
+        with:
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          text: "教育リールのネタ出し (social-ideas) が失敗しました"
