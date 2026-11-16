@@ -260,12 +260,10 @@ const SCENES = {
   },
   next(s) {
     if (!s.list) {
-      // 第2弾（#11〜）: 回の一覧は出さず、この回のまとめと保存・フォローの呼びかけ
-      const sum = S.find(x => x.kind === "sum");
-      const n = mount(`<div class="scene" style="top:410px"><h2>保存して<b>次の海選び</b>に</h2>${(sum ? sum.points : []).map((p, i) => `<div class="pt"><i>${i + 1}</i><span>${p}</span></div>`).join("")}<div class="follow">フォローして続きをチェック<span>シリーズ「${EP.series}」</span></div></div>`);
+      // 第2弾（#11〜）: まとめは直前の場面で見せているので繰り返さず、保存・フォローの呼びかけだけ
+      const n = mount(`<div class="scene" style="top:560px"><h2>保存して<br><b>次の海選び</b>に</h2><div class="follow">フォローして続きをチェック<span>シリーズ「${EP.series}」</span></div></div>`);
       fadeIn(n.querySelector("h2"));
-      n.querySelectorAll(".pt").forEach((p, i) => fadeIn(p, 200 + i * 150));
-      fadeIn(n.querySelector(".follow"), 900);
+      fadeIn(n.querySelector(".follow"), 700);
       return n;
     }
     const items = s.list.map((t, i) => `<div class="li${i + 1 < EP.no + 1 ? " done" : i === EP.no ? " next" : ""}"><b>${pad(i + 1)}</b>${t}</div>`).join("");
