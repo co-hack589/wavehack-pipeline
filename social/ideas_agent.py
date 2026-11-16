@@ -82,6 +82,17 @@ def norm_title(t: str) -> str:
     return re.sub(r"[\s・、。「」『』！？!?〜ー\-（）()]", "", R.visible(t or "")).lower()
 
 
+# 実在を確認済みの公的資料（2026-11-16 確認）。検索が使えないとき、出典の URL はここからだけ選ばせる
+KNOWN_SOURCES = """- 気象庁「波浪の基礎知識」https://www.data.jma.go.jp/kaiyou/db/wave/comment/elmknwl.html
+- 気象庁「潮汐の知識」https://www.data.jma.go.jp/kaiyou/db/tide/knowledge/index.html
+- 気象庁「潮汐とは」https://www.data.jma.go.jp/kaiyou/db/tide/knowledge/tide/choseki.html
+- 気象庁「風の強さと吹き方」https://www.jma.go.jp/jma/kishou/know/yougo_hp/kazehyo.html
+- 気象庁「予報用語（風）」https://www.jma.go.jp/jma/kishou/know/yougo_hp/kaze.html
+- 気象庁「季節予報の利用と解説」https://www.jma.go.jp/jma/kishou/know/kisetsu_riyou/index.html
+- 気象庁「台風について」https://www.jma.go.jp/jma/kishou/know/typhoon/index.html
+- NOAA NCEP「GFS Products」https://www.nco.ncep.noaa.gov/pmb/products/gfs/"""
+
+
 def facts_library(episodes: list[dict]) -> str:
     """確認済みの事実（運営者が確認して公開した第1弾の caption と出典）。検索が使えないとき、使ってよい事実はこれだけ。"""
     return "\n\n".join(f"■#{e['no']:02d} {e['title']}（{e.get('source', '')}）\n{e.get('caption', '')}" for e in episodes)
@@ -167,7 +178,7 @@ def write_prompt(idea: dict, episodes: list[dict], kinds: dict, d: dt.date, feed
 - 画面の文字で使えるタグは <b> と <br> だけ。
 - 宣伝・リンク・プロフィールへの誘導は書かない（「Wave Hack」「リンク」「プロフィール」「URL」を使わない）。
 - script の形: {{"series": "{R.SERIES}", "title": 12字以内, "next": null, "source": "出典：気象庁「〜」ほか"（公的機関の資料名）, "caption": 動画の内容を補う文章（150字前後、改行可）, "scenes": [...]}}。no は書かない。
-- sources: 台本の事実の根拠にした公的機関のページ（気象庁 jma.go.jp・NOAA noaa.gov など）を title と url（https://〜、元のページの URL）で1〜4件。
+- sources: 台本の事実の根拠にした公的機関のページ（気象庁 jma.go.jp・NOAA noaa.gov など）を title と url（https://〜、元のページの URL）で1〜4件。{'' if llm.SEARCH_OK else '検索が使えないので、URL は次の実在確認済みの一覧からだけ選ぶ（一覧に無い URL を作らない）:' + chr(10) + KNOWN_SOURCES}
 
 第1弾の原稿（形・文体・場面の使い方の手本。内容は繰り返さない）:
 {examples(episodes)}
