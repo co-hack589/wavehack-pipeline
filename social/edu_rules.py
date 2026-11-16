@@ -38,6 +38,95 @@ OFFICIAL_DOMAINS = (".go.jp", ".gov", "wmo.int", "jamstec.go.jp", "nao.ac.jp", "
 BANNED = ("リンク", "プロフィール", "URL", "http", "DM", "Wave Hack", "WAVE HACK", "wavehack", "ウェーブハック")
 
 
+# ---------------------------------------------------------------- フックの禁止事項
+# instagram-agent-skill-ja（MIT）の skills/ig-reel/hookscore.py の DEALBREAKERS と WEAK_OPENERS を元にした（出典は THIRD_PARTY_LICENSES.md）。
+# 点数づけは入れず、当たったら不合格にする。1場面目の say と q（タグを除いた画面の文字）に当てる。
+HOOK_DEALBREAKERS = [
+    (re.compile(r"^\s*(?:ちょっと待って|待って[！!、]|スクロール(?:しないで|を止めて|する手を止めて|やめて)|最後まで見て|見逃さないで)"),
+     "注目のお願い（「ちょっと待って」「最後まで見て」）から入らない"),
+    (re.compile(r"この動画では|今回の動画では|今日の動画では|(?:今日|今回)は[^。！？\n]{0,25}(?:紹介|解説|お話し|話)(?:します|していきます|しようと思います)"),
+     "動画の前置き（「今日は〜を紹介します」）を書かない。答えにつながる問いから入る"),
+    (re.compile(r"^\s*(?:はいどうも|どうも[、,！!]|どうも[^。、]{0,12}です|こんにちは|こんばんは|おはようございます|はじめまして|みなさんこんにちは)"),
+     "あいさつから入らない"),
+    (re.compile(r"(?:^|[\s　])[#＃][^\s#＃]+"), "フックにハッシュタグを入れない"),
+    (re.compile(r"[\U0001F300-\U0001FAFF☀-➿]"), "フックに絵文字を入れない"),
+]
+# 最初の1秒を何も言わずに使ってしまう出だし（元の一覧のまま）。文の頭にあるときだけ不合格
+HOOK_WEAK_OPENERS = ("えー", "えっと", "あの", "あのー", "はい", "どうも", "こんにちは", "こんばんは", "おはよう", "みなさん", "皆さん",
+                     "今日は", "今回は", "本日は", "さて", "ということで", "というわけで", "突然ですが", "早速ですが", "さっそく", "最近",
+                     "ちなみに", "まず", "今日の", "今回の", "これから", "今から", "では")
+
+
+def hook_problems(text: str, where: str) -> list[str]:
+    """フックの1文（say か q）の禁止事項。"[フック] …" の一覧を返す。"""
+    t = visible(text or "").strip()
+    errs = [f"[フック] {where}: {msg}" for pat, msg in HOOK_DEALBREAKERS if pat.search(t)]
+    weak = next((w for w in HOOK_WEAK_OPENERS if t.startswith(w)), None)
+    if weak:
+        errs.append(f"[フック] {where}: 弱い出だし「{weak}」で始めない（肝心の言葉から始める）")
+    return errs
+
+
+# ---------------------------------------------------------------- AI っぽい言い回し（警告だけ。不合格にはしない）
+# 辞書は instagram-agent-skill-ja（MIT）の skills/ig-human/slop.json をそのまま写したもの（data/slop_ja.json、出典は "_source" と THIRD_PARTY_LICENSES.md）。
+# words・phrases は find の文字列、structures は辞書の regex で当てる（日本語版の structures はすべて正規表現だった）。
+SLOP = Path(__file__).resolve().parent / "data" / "slop_ja.json"
+# 使わない項目（id か find）。第1弾 ep01〜10 の say と caption で確かめた結果:
+#   triad: #08 の締め「前日と当日の最新予報、そして現地の海で判断しよう」が当たる（読み上げで自然な並べ方）。
+#          また sum は3点まとめが決まり（テンプレートの形）なので「ポイントは3つ」も誤検出になる
+#   follow-bait: 「保存してね」「フォローしてね」。締めは保存・フォローの呼びかけにする方針（END_SAY）と逆になる
+# words・phrases は第1弾で1件も当たらなかったので除外なし（専門用語との衝突も無かった）。
+STYLE_EXCLUDE = {"triad", "follow-bait"}
+_slop_cache: dict | None = None
+
+
+def _slop() -> dict:
+    global _slop_cache
+    if _slop_cache is None:
+        d = json.loads(SLOP.read_text(encoding="utf-8"))
+        _slop_cache = {
+            "terms": [x for x in d["words"] + d["phrases"] if x["find"] not in STYLE_EXCLUDE],
+            "structures": [(s["id"], re.compile(s["regex"]), s["name"], s.get("fix", "")) for s in d["structures"]
+                           if s["id"] not in STYLE_EXCLUDE and s.get("regex")],
+        }
+    return _slop_cache
+
+
+def lint_style(text: str) -> list[str]:
+    """AI っぽい言い回しのヒット（"「語」（種類）…" の一覧、重複なし）。空なら当たりなし。"""
+    t = visible(text or "")
+    hits: list[str] = []
+    for x in _slop()["terms"]:
+        if x["find"] in t:
+            alt = f"。言い換え例「{x['replace']}」" if x.get("replace") else "。消す"
+            hits.append(f"「{x['find']}」（{x.get('family', '')}{alt}）")
+    for _id, pat, name, fix in _slop()["structures"]:
+        m = pat.search(t)
+        if m:
+            hits.append(f"「{m.group(0).strip()[:30]}」（{name}。{fix}）")
+    return list(dict.fromkeys(hits))
+
+
+def lint_script(script: dict) -> list[str]:
+    """台本の say 全部（固定の締めは除く）とキャプション本文の言い回しの警告。"場所: ヒット" の一覧。"""
+    out: list[str] = []
+    for i, s in enumerate(script.get("scenes") or [], 1):
+        if isinstance(s, dict) and s.get("say") and s.get("say") != END_SAY:
+            out += [f"場面{i}: {h}" for h in lint_style(s["say"])]
+    out += [f"caption: {h}" for h in lint_style(script.get("caption") or "")]
+    return out
+
+
+def style_brief(per_family: int = 6) -> str:
+    """台本担当に渡す「使わない言い回し」の要点。"""
+    fam: dict[str, list[str]] = {}
+    for x in _slop()["terms"]:
+        fam.setdefault(x.get("family", "その他"), []).append(x["find"].rstrip("、"))
+    lines = [f"{k}: {'・'.join(dict.fromkeys(v[:per_family]))} など" for k, v in fam.items()]
+    lines.append("形: " + "／".join(name for _id, _p, name, _f in _slop()["structures"]))
+    return "\n".join(f"  - {l}" for l in lines)
+
+
 def load_episodes() -> list[dict]:
     return [json.loads(f.read_text(encoding="utf-8")) for f in sorted(EPISODES.glob("ep*.json"))]
 
@@ -175,6 +264,8 @@ def validate(script: dict, kinds: dict | None = None) -> list[str]:
                 errs.append("[構成] hook の q は問いかけ（？で終わる）にする")
             if not first.get("big"):
                 errs.append("[構成] hook に big（背景の大きな英数字）を入れる（無いと既定の「1.0m」が出る）")
+        if isinstance(first, dict):
+            errs += hook_problems(first.get("say") or "", "場面1.say") + hook_problems(first.get("q") or "", "場面1.q")
         if last.get("kind") != "next":
             errs.append("[締め] 最後の場面は next（保存・フォローの呼びかけ）")
         elif last.get("say") != END_SAY:

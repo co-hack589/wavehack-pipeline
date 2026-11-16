@@ -92,6 +92,68 @@ class RulesTests(unittest.TestCase):
         self.assertEqual(n["scenes"][-1], {"kind": "next", "say": R.END_SAY})
 
 
+class StyleAndHookTests(unittest.TestCase):
+    """取り込んだ辞書（data/slop_ja.json）とフックの禁止事項（hookscore.py の考え方）。"""
+
+    def test_slop_dictionary_hits(self):
+        self.assertTrue(json.loads(R.SLOP.read_text(encoding="utf-8"))["_source"]["license"] == "MIT")
+        hits = "\n".join(R.lint_style("周期は非常に重要なのは高さではなく周期です。いかがでしたか？この動画では潮を活用して解説します🚀"))
+        for want in ("「非常に」", "「いかがでしたか」", "大切なのは〜ではなく", "動画の前置き", "絵文字"):
+            self.assertIn(want, hits)
+        self.assertEqual(R.lint_style("周期が長いほど、波は遠くまで届く。"), [])
+        # 除外した項目（3つ並べ・保存/フォローのお願い）は当たらない
+        self.assertEqual(R.lint_style("前日と当日の最新予報、そして現地の海で判断しよう。保存してね"), [])
+
+    def test_lint_script_covers_say_and_caption_but_not_fixed_closing(self):
+        s = sample_script()
+        s["scenes"][1]["say"] += "非常に大事。"
+        s["caption"] += "\n参考になれば幸いです。"
+        got = R.lint_script(s)
+        self.assertTrue(any(w.startswith("場面2: 「非常に」") for w in got))
+        self.assertTrue(any(w.startswith("caption: 「参考になれば幸いです」") for w in got))
+        self.assertFalse(any(w.startswith(f"場面{len(s['scenes'])}:") for w in got))
+        self.assertEqual(R.validate(s), [])  # 言い回しは警告だけ（不合格にしない）
+
+    def test_season1_style_hits_are_only_excluded_ones(self):
+        for ep in R.load_episodes():
+            self.assertEqual(R.lint_script(ep), [], f"#{ep['no']:02d}")
+
+    def test_hook_dealbreakers_fail(self):
+        bad = {"q": ["今日は<b>周期</b>を<br>紹介します？", "#波予報 周期って？", "周期って何？🌊", "ちょっと待って<br>周期って？"],
+               "say": ["こんにちは、周期の話です。", "最後まで見てね、周期って何？", "えっと、周期って何？", "さて、周期とは？", "突然ですが、周期って何？",
+                       "この動画では周期を解説します。"]}
+        for key, texts in bad.items():
+            for t in texts:
+                s = sample_script()
+                s["scenes"][0][key] = t
+                errs = [e for e in R.validate(s) if e.startswith("[フック]")]
+                self.assertTrue(errs, f"{key}: {t}")
+                self.assertIn(f"場面1.{key}", errs[0])
+
+    def test_hook_ok_and_season1_hooks_not_newly_failing(self):
+        for t in ("同じ1mでも力が違うのはなぜ？", "予報は何日先まで信じていい？", "南うねり1.5mなら、どう読む？"):
+            self.assertEqual(R.hook_problems(t, "x"), [], t)
+        for ep in R.load_episodes():
+            s = {k: v for k, v in ep.items() if k != "no"}
+            self.assertEqual([e for e in R.validate(s) if e.startswith("[フック]")], [], f"#{ep['no']:02d}")
+        self.assertEqual(R.validate(sample_script()), [])
+
+    def test_hook_types_are_educational_and_spread(self):
+        names = set(A.HOOK_NAMES)
+        self.assertEqual(len(names), 6)
+        for banned in ("損した告白", "中の人の暴露", "他人の結果", "期限", "「一番〜」", "常識の逆", "盗んでいい"):
+            self.assertNotIn(banned, names)
+        self.assertTrue(all(h["trap"] and h["form"] and h["example"] for h in A.HOOK_TYPES))
+        self.assertEqual(A.min_hook_kinds(5), 3)
+        p = A.ideas_prompt(5, R.load_episodes(), [], datetime.date(2026, 11, 15))
+        self.assertIn('"hook_type"', p)
+        self.assertIn("5本で3種類以上", p)
+        cands = [{"title": "a", "hook_type": "統計の数字"}, {"title": "b", "hook_type": "統計の数字"}, {"title": "c", "hook_type": "数＋一押し"}]
+        self.assertEqual([c["title"] for c in A.spread(cands)], ["a", "c", "b"])
+        for h in A.HOOK_TYPES:  # 型の例そのものがフック検査で落ちない
+            self.assertEqual(R.hook_problems(h["example"], "例"), [], h["name"])
+
+
 class BatchDateTests(unittest.TestCase):
     def test_monday_of_week_sunday_counts_as_next_week(self):
         d = datetime.date
@@ -179,6 +241,26 @@ class IdeasAgentTests(unittest.TestCase):
         fake = FakeLLM([], [], [])
         rc, ideas = self.run_agent(fake, dry=False, api=FakeIdeasApi(listed=[{"batch": "2026-11-16", "kind": "edu", "title": "t"}]))
         self.assertEqual((rc, ideas, fake.prompts), (0, [], []))
+
+    def test_hook_type_reaches_write_and_review_and_style_notes(self):
+        good = sample_script()
+        good["caption"] += "\n参考になれば幸いです。"  # 言い回しの警告（不合格にはならない）
+        fake = FakeLLM(ideas=[[{"title": "予報の更新", "pitch": "p", "hook_type": "そのままの質問"}]],
+                       writes=[{"script": good, "sources": SOURCES}], reviews=[PASS])
+        rc, ideas = self.run_agent(fake, count=1)
+        self.assertEqual((rc, len(ideas)), (0, 1))
+        write = next(p for p in fake.prompts if "台本担当" in p)
+        self.assertIn("フックの型「そのままの質問」で書く", write)
+        self.assertIn("1場面1アイデア", write)
+        self.assertIn("1場面目の問いの言葉", write)
+        self.assertIn("使わない言い回し", write)
+        review = next(p for p in fake.prompts if "事実確認担当" in p)
+        self.assertIn("フックの型「そのままの質問」", review)
+        self.assertIn("参考になれば幸いです", review)
+        notes = ideas[0]["review_notes"]
+        self.assertIn("フックの型: そのままの質問", notes)
+        self.assertIn("言い回しの注意: caption: 「参考になれば幸いです」", notes)
+        self.assertEqual(set(ideas[0]), {"kind", "title", "pitch", "script", "sources", "review_notes"})
 
     def test_zero_passed_is_failure(self):
         rej = {"verdict": "reject", "issues": [{"severity": "重大", "where": "場面2", "problem": "出典に無い数字", "fix": "-"}]}
