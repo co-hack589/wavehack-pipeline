@@ -95,14 +95,16 @@ READINGS = {
 }
 
 
-def to_speech(text: str) -> str:
-    for k in sorted(READINGS, key=len, reverse=True):
-        text = text.replace(k, READINGS[k])
+def to_speech(text: str, extra: dict[str, str] | None = None) -> str:
+    """READINGS で読み替える。extra（回ごとの読み）はその呼び出しだけ READINGS に上乗せする（READINGS 自体は変えない）。"""
+    table = {**READINGS, **(extra or {})}
+    for k in sorted(table, key=len, reverse=True):
+        text = text.replace(k, table[k])
     return text
 
 
-def speak_cloud(text: str, out: str) -> float:
-    text = to_speech(text)
+def speak_cloud(text: str, out: str, readings: dict[str, str] | None = None) -> float:
+    text = to_speech(text, readings)
     body = {"input": {"text": text}, "voice": {"languageCode": "ja-JP", "name": CLOUD_VOICE},
             "audioConfig": {"audioEncoding": "LINEAR16", "sampleRateHertz": 24000}}
     headers = {"content-type": "application/json"}
@@ -134,8 +136,8 @@ def speak_cloud(text: str, out: str) -> float:
     with wave.open(out) as w:
         return w.getnframes() / w.getframerate()
 
-def speak(text: str, out: str) -> float:
-    text = to_speech(text)
+def speak(text: str, out: str, readings: dict[str, str] | None = None) -> float:
+    text = to_speech(text, readings)
     if backend() == "gcloud":
         return speak_cloud(text, out)
     body = {"contents": [{"parts": [{"text": text}]}],  # 演技指示を混ぜると読み上げられるため原稿のみ

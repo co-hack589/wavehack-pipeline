@@ -26,7 +26,7 @@ MIN_SAY_CHARS = 100  # これより短いと中身が薄い（第1弾の最短�
 END_SAY = "保存して、次の海選びに使ってね。フォローして、続きもチェックしてね！"
 
 ALLOWED_TAGS = {"b", "br"}  # 第1弾で使っているタグ（テンプレートは innerHTML でそのまま差し込む）
-TOP_KEYS = {"series", "title", "next", "source", "caption", "scenes"}
+TOP_KEYS = {"series", "title", "next", "source", "caption", "scenes", "readings"}  # readings: 音声化だけの読み {語: ひらがな}（任意）
 # 第2弾の締め（next）は回の一覧（list）を出さない。テンプレートは list が無いとき保存・フォローの画面にする
 SEASON2_KEYS = {"next": {"kind", "say"}}
 # 図の見た目が壊れない範囲（テンプレートの描き方から）
@@ -157,6 +157,9 @@ def validate(script: dict, kinds: dict | None = None) -> list[str]:
         errs.append(f"[必須] series は「{SERIES}」にする")
     if script.get("next") is not None:
         errs.append("[締め] next は null にする（次の回は承認順で決まるため台本では書かない）")
+    rd = script.get("readings")
+    if rd is not None and not (isinstance(rd, dict) and all(isinstance(k, str) and k and isinstance(v, str) and v for k, v in rd.items())):
+        errs.append("[形] readings は {語: 読み}（どちらも空でない文字列）にする")
     title = visible(script.get("title") or "")
     if len(title) > 12:
         errs.append(f"[形] title が長い（{len(title)}字、12字以内。画面上部のバッジに出る）")

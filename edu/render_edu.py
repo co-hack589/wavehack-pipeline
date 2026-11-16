@@ -17,7 +17,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent / "reel"))
-from narration import cloud_available, speak, speak_cloud  # noqa: E402
+from narration import cloud_available, speak, speak_cloud, to_speech  # noqa: E402
 from render_reel import CLOCK_JS, FF, FPS, VOICE_DELAY  # noqa: E402
 
 from playwright.sync_api import sync_playwright  # noqa: E402
@@ -41,20 +41,24 @@ def narrate(ep: dict, out: Path) -> list[dict]:
     meta_f = out / "scenes.json"
     old = json.loads(meta_f.read_text()) if meta_f.exists() else []
     texts = [s["say"] for s in ep["scenes"]]
+    readings = ep.get("readings") or {}  # この回だけの読み（{語: 読み}）。narration.READINGS に上乗せして使う
 
-    def cached(i: int, t: str) -> dict | None:  # 原稿が同じシーンは作り直さない（変わったシーンだけ TTS）
+    def cached(i: int, t: str) -> dict | None:  # 原稿と読みが同じシーンは作り直さない（変わったシーンだけ TTS）
         o = old[i - 1] if len(old) >= i else None
-        return o if o and o["text"] == t and o.get("voice") == "gemini" and Path(o["file"]).exists() else None
+        same = o and o["text"] == t and o.get("speech", to_speech(t)) == to_speech(t, readings)
+        return o if same and o.get("voice") == "gemini" and Path(o["file"]).exists() else None
+
+    def made(i: int, t: str, voice: str, fn) -> dict:
+        f = str(out / f"s{i}.wav")
+        return {"text": t, "speech": to_speech(t, readings), "file": f, "seconds": round(fn(t, f, readings=readings), 2), "voice": voice}
 
     try:
-        meta = [cached(i, t) or {"text": t, "file": str(out / f"s{i}.wav"), "seconds": round(speak(t, str(out / f"s{i}.wav")), 2), "voice": "gemini"}
-                for i, t in enumerate(texts, 1)]
+        meta = [cached(i, t) or made(i, t, "gemini", speak) for i, t in enumerate(texts, 1)]
     except SystemExit as e:
         if not cloud_available():
             raise
         print("Gemini TTS 失敗 → Cloud TTS (Autonoe):", str(e)[:120], flush=True)
-        meta = [{"text": t, "file": str(out / f"s{i}.wav"), "seconds": round(speak_cloud(t, str(out / f"s{i}.wav")), 2), "voice": "gcloud"}
-                for i, t in enumerate(texts, 1)]
+        meta = [made(i, t, "gcloud", speak_cloud) for i, t in enumerate(texts, 1)]
     meta_f.write_text(json.dumps(meta, ensure_ascii=False, indent=1))
     return meta
 
