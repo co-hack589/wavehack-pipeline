@@ -444,7 +444,7 @@ class EduFlowTests(unittest.TestCase):
         sleeps = []
         with patch.object(P.time, "sleep", sleeps.append), self.assertRaises(SystemExit):
             P.publish(IGFail(), Path(__file__), "🌊 波予報の読み方 #11｜x\n", 2500)
-        self.assertEqual(sleeps, [120, 300, 900])  # 4回試す（2分・5分・15分あけて）
+        self.assertEqual(sleeps, [120, 300, 900, 180])  # 4回試す（2分・5分・15分あけて）＋最後に3分待って公開を確かめる
 
     def test_season1_caption_unchanged(self):
         ep1 = next(e for e in R.load_episodes() if e["no"] == 1)

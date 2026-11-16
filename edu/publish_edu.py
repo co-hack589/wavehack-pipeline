@@ -90,6 +90,11 @@ def publish(ig: IG, video: Path, text: str, thumb_ms: int, waits: tuple[int, ...
         except SystemExit as e:
             print(f"投稿失敗 ({attempt}/{tries}):", str(e)[:300], flush=True)
             if attempt == tries:
+                # 11/16: エラーで返ってきた試行が、少し遅れて公開されていたことがある。最後にもう一度確かめる
+                time.sleep(180)
+                if head in {first_line(c) for c in ig.recent_captions(10)}:
+                    print("エラーで返ってきたが公開されていた", flush=True)
+                    return "posted"
                 raise
             print(f"{waits[attempt - 1]} 秒待って送り直す", flush=True)
             time.sleep(waits[attempt - 1])
