@@ -47,8 +47,8 @@ def caption(ep: dict) -> str:
         tail = f"次回 #{ep['no'] + 1:02d} は「{ep['next']}」。毎日18時に更新（木曜は週末の波予想）"
     elif ep["no"] <= 10:
         tail = "シリーズ全10回、最後までありがとうございました。"
-    else:  # 第2弾は許可した回から順に出すので、次回の題は書かない
-        tail = "フォローして、続きもチェック。"
+    else:  # 第2弾: 締めの呼びかけは下の「保存して、次の海選びに。」の1回だけ（フォローは動画の締め画面で見せる）
+        tail = ""
     return "\n".join([head, "", body, "", tail, "保存して、次の海選びに。", f"※ {ep['source']}" if ep.get("source") else "", "", TAGS]).replace("\n\n\n", "\n\n")
 
 
@@ -62,6 +62,9 @@ class Held(Exception):
 
 def publish(ig: IG, video: Path, text: str, thumb_ms: int, waits: tuple[int, ...] = RETRY_WAITS,
             still_ok=None) -> str:
+    # 同じファイルは何度送っても ProcessingFailedError になることがあるので、変換し直した版があれば交互に送る
+    alt = video.with_name(video.stem + "-alt.mp4")
+    files = [video, alt] if alt.exists() else [video]
     """still_ok: 公開の直前と送り直しの前に呼び、False なら Held を投げて公開しない。"""
     base = f"https://graph.facebook.com/{ig.v}"
     head = first_line(text)
@@ -70,8 +73,10 @@ def publish(ig: IG, video: Path, text: str, thumb_ms: int, waits: tuple[int, ...
         try:
             params = {"media_type": "REELS", "upload_type": "resumable", "caption": text, "share_to_feed": "true", "thumb_offset": str(thumb_ms)}
             container = ig._req("POST", f"{base}/{ig.user}/media", urllib.parse.urlencode(params).encode())["id"]
-            ig._req("POST", f"https://rupload.facebook.com/ig-api-upload/{ig.v}/{container}", video.read_bytes(),
-                    {"offset": "0", "file_size": str(video.stat().st_size)})
+            f = files[(attempt - 1) % len(files)]
+            print("送る動画:", f.name, flush=True)
+            ig._req("POST", f"https://rupload.facebook.com/ig-api-upload/{ig.v}/{container}", f.read_bytes(),
+                    {"offset": "0", "file_size": str(f.stat().st_size)})
             for _ in range(60):
                 st = ig._req("GET", f"{base}/{container}?fields=status_code,status")
                 if st.get("status_code") == "FINISHED":
@@ -123,7 +128,12 @@ def episode(idea: dict) -> dict:
         script = json.loads(script)
     if not script or not idea.get("episode_no"):
         raise SystemExit(f"idea {idea.get('id')}: script か episode_no がありません")
-    return {"no": int(idea["episode_no"]), **{k: v for k, v in script.items() if k != "no"}}
+    ep = {"no": int(idea["episode_no"]), **{k: v for k, v in script.items() if k != "no"}}
+    sc = ep.get("scenes") or []
+    if ep["no"] > 10 and sc and sc[-1].get("kind") == "next":
+        from edu_rules import END_SAY
+        sc[-1] = {**sc[-1], "say": END_SAY}
+    return ep
 
 
 def choose(api: SocialApi, media: list[dict], idea_id: str | None = None, dry: bool = False) -> dict | None:
@@ -134,7 +144,7 @@ def choose(api: SocialApi, media: list[dict], idea_id: str | None = None, dry: b
     if idea_id:
         return api.get_idea(idea_id)
     # 予告したのに投稿していない回（23時を過ぎて見送った・途中で止まった）を先に出す
-    left = sorted((i for i in api.list_ideas() if i.get("kind") == "edu" and i.get("status") == "preview"),
+    left = sorted((i for i in api.list_ideas() if i.get("kind") == "edu" and i.get("status") in ("preview", "failed")),
                   key=lambda i: (i.get("episode_no") or 0, i.get("seq") or 0))
     for lo in left:
         idea = api.get_idea(lo["id"])

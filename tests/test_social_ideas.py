@@ -374,7 +374,8 @@ class EduFlowTests(unittest.TestCase):
         ep = P.episode(got)
         self.assertEqual((ep["no"], ep["title"]), (11, "予報の当たり外れ"))
         self.assertTrue(P.caption(ep).startswith("🌊 波予報の読み方 #11｜予報の当たり外れ\n"))
-        self.assertIn("フォローして、続きもチェック。", P.caption(ep))
+        self.assertNotIn("フォローして", P.caption(ep))  # 締めの呼びかけは「保存して」の1回だけ
+        self.assertEqual(ep["scenes"][-1]["say"], "保存して、次の海選びに使ってね！")
         self.assertNotIn("全10回", P.caption(ep))
 
     def test_nothing_when_no_approved_or_posted_today(self):

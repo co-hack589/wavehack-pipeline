@@ -108,6 +108,10 @@ jobs:
         run: |
           uv run --with playwright --with imageio-ffmpeg python edu/render_edu.py "${{ steps.pick.outputs.ep }}"
           uv run --with playwright python reel/render_story.py --edu "${{ steps.pick.outputs.ep }}" --out edu/out/story.jpg
+          # Instagram の処理エラー（同じファイルで続けて失敗する）に備え、別の設定で変換し直した版も作る
+          FF=$(uv run --with imageio-ffmpeg python -c "import imageio_ffmpeg;print(imageio_ffmpeg.get_ffmpeg_exe())")
+          "$FF" -v error -y -i "edu/out/${{ steps.pick.outputs.name }}.mp4" -c:v libx264 -profile:v high -level 4.0 -pix_fmt yuv420p \
+            -r 30 -g 60 -crf 23 -c:a aac -b:a 128k -ar 44100 -movflags +faststart "edu/out/${{ steps.pick.outputs.name }}-alt.mp4" || true
 
       - name: Caption (dry run)
         if: steps.pick.outputs.ep != ''
@@ -119,6 +123,7 @@ jobs:
           name: edu-${{ github.run_id }}
           path: |
             edu/out/${{ steps.pick.outputs.name }}.mp4
+            edu/out/${{ steps.pick.outputs.name }}-alt.mp4
             edu/out/${{ steps.pick.outputs.name }}.json
             edu/out/story.jpg
           retention-days: 14
