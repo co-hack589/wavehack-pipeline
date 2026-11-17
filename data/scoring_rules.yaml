@@ -253,6 +253,7 @@ points:
 
   - name: 木崎浜
     name_en: Kisakihama
+    area: 宮崎
     beach_direction: 東          # 90°、オフショア=270°(西)
     exceptional_swell: []        # 例: [{ from_deg: 30, to_deg: 60, note: "北東うねりは加江田川で増幅" }]
     exceptional_no_swell:
@@ -274,6 +275,7 @@ points:
 
   - name: 一ツ葉
     name_en: Hitotsuba
+    area: 宮崎
     beach_direction: 東
     exceptional_swell:
       - { from_deg: 157.5, to_deg: 202.5, score: 0.85, note: "南うねりを拾いやすい（南南東〜南南西）" }
@@ -291,6 +293,7 @@ points:
 
   - name: 青島
     name_en: Aoshima
+    area: 宮崎
     beach_direction: 東北東       # 67.5°
     # 2026-07-04 ヒアリング: 木崎浜比で1.5サイズダウンの体感（湾内地形。GFS は同一格子で差が出ない）
     size_attenuation: 0.6
@@ -308,6 +311,7 @@ points:
 
   - name: お倉ヶ浜
     name_en: Okuragahama
+    area: 宮崎
     beach_direction: 東南東       # 112.5°
     exceptional_swell:
       - { from_deg: 157.5, to_deg: 202.5, score: 0.85, note: "南うねりに反応しやすい" }
@@ -323,6 +327,7 @@ points:
 
   - name: 金ヶ浜
     name_en: Kanegahama
+    area: 宮崎
     beach_direction: 東
     exceptional_swell:
       - { from_deg: 157.5, to_deg: 202.5, score: 0.85, note: "南うねりに反応しやすい（お倉ヶ浜と同様）" }
@@ -338,6 +343,7 @@ points:
 
   - name: 伊勢ヶ浜
     name_en: Isegahama
+    area: 宮崎
     beach_direction: 南東          # 135°（湾内なので回り込みうねりに反応するはず）
     exceptional_swell:
       - { from_deg: 112.5, to_deg: 157.5, score: 0.95, note: "南東のうねりが入りやすい（湾内ポイント）" }
@@ -353,6 +359,7 @@ points:
 
   - name: 伊比井
     name_en: Ibii
+    area: 宮崎
     beach_direction: 東南東
     exceptional_swell: []        # ヒアリング第2弾: 特になし
     exceptional_no_swell: []     # ヒアリング第2弾: 特になし
@@ -367,6 +374,7 @@ points:
 
   - name: 大堂津
     name_en: Odotsu
+    area: 宮崎
     beach_direction: 東南東
     exceptional_swell: []
     exceptional_no_swell: []
@@ -383,6 +391,7 @@ points:
 
   - name: 蚊口
     name_en: Kakuchi
+    area: 宮崎
     beach_direction: 東
     exceptional_swell: []
     exceptional_no_swell:
@@ -412,12 +421,12 @@ points:
   - name: 曽山寺
     name_en: Sosanji
     beach_direction: 東
-    area: 宮崎市
+    area: 宮崎
 
   - name: 高鍋
     name_en: Takanabe
     beach_direction: 東
-    area: 高鍋町
+    area: 宮崎
 
   - name: 毘砂別
     name_en: nami-01020002
@@ -437,27 +446,27 @@ points:
   - name: 小豆浜
     name_en: nami-01080006
     beach_direction: 東
-    area: 岩手
+    area: 宮城
 
   - name: 仙台新港
     name_en: nami-01080007
     beach_direction: 東
-    area: 岩手
+    area: 宮城
 
   - name: 荒浜河口
     name_en: nami-01080011
     beach_direction: 東
-    area: 岩手
+    area: 宮城
 
   - name: 荒浜プール
     name_en: nami-01080012
     beach_direction: 東
-    area: 岩手
+    area: 宮城
 
   - name: 坂下
     name_en: nami-01100007
     beach_direction: 東
-    area: 岩手
+    area: 福島
 
   - name: 河原子
     name_en: nami-01110020
@@ -982,7 +991,7 @@ points:
   - name: 西目
     name_en: nami-01060010
     beach_direction: 北北西
-    area: 新潟
+    area: 秋田
 
   - name: 五十嵐浜
     name_en: nami-01240007
@@ -997,42 +1006,42 @@ points:
   - name: 大浜(内灘)
     name_en: nami-01260008
     beach_direction: 北
-    area: 鳥取
+    area: 石川
 
   - name: 徳光
     name_en: nami-01260011
     beach_direction: 北
-    area: 鳥取
+    area: 石川
 
   - name: 三国五木
     name_en: nami-01270002
     beach_direction: 北
-    area: 鳥取
+    area: 福井
 
   - name: 三国新港
     name_en: nami-01270003
     beach_direction: 北
-    area: 鳥取
+    area: 福井
 
   - name: 鳥居ヶ浜
     name_en: nami-01270005
     beach_direction: 北
-    area: 鳥取
+    area: 福井
 
   - name: 難波江
     name_en: nami-01270007
     beach_direction: 北
-    area: 鳥取
+    area: 福井
 
   - name: 高嶋
     name_en: nami-01290004
     beach_direction: 北
-    area: 鳥取
+    area: 京都
 
   - name: 八丁浜
     name_en: nami-01290002
     beach_direction: 北
-    area: 鳥取
+    area: 京都
 
   - name: 白兎 歩道橋前付近
     name_en: nami-01370007
@@ -1047,12 +1056,12 @@ points:
   - name: 千畳
     name_en: nami-01360008
     beach_direction: 北
-    area: 鳥取
+    area: 島根
 
   - name: 大塚
     name_en: nami-01360010
     beach_direction: 北
-    area: 鳥取
+    area: 島根
 
   - name: 間々下（新島）
     name_en: nami-01150016
@@ -1092,37 +1101,37 @@ points:
   - name: イセキ（種子島）
     name_en: nami-01490026
     beach_direction: 東
-    area: 東京(伊豆諸島)
+    area: 鹿児島
 
   - name: 風本（種子島）
     name_en: nami-01490013
     beach_direction: 東
-    area: 東京(伊豆諸島)
+    area: 鹿児島
 
   - name: 浅川（種子島）
     name_en: nami-01490014
     beach_direction: 東
-    area: 東京(伊豆諸島)
+    area: 鹿児島
 
   - name: 鉄浜（種子島）
     name_en: nami-01490015
     beach_direction: 東
-    area: 東京(伊豆諸島)
+    area: 鹿児島
 
   - name: ヨキノ（種子島）
     name_en: nami-01490025
     beach_direction: 東
-    area: 東京(伊豆諸島)
+    area: 鹿児島
 
   - name: スーサイド（沖縄本島）
     name_en: nami-01500004
     beach_direction: 東
-    area: 東京(伊豆諸島)
+    area: 沖縄
 
   - name: ボウル（沖縄本島）
     name_en: nami-01500008
     beach_direction: 東
-    area: 東京(伊豆諸島)
+    area: 沖縄
 
 # ============================================================
 # 4) 言語化コメントテンプレート（v0.2）
