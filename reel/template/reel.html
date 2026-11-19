@@ -97,7 +97,8 @@ const surfM = (m, p) => {
   for (let i = 0; i < PF.length - 1; i++) if (p <= PF[i + 1][0]) return m * (PF[i][1] + (PF[i + 1][1] - PF[i][1]) * (p - PF[i][0]) / (PF[i + 1][0] - PF[i][0]));
   return m * PF[PF.length - 1][1];
 };
-const sizeLabel = (m, p) => { const c = Math.round(surfM(m, p) * 10) * 10; // 表示する小数1桁の値で区分（数字と区分を揃える） return c < 50 ? "スネ・ヒザ" : c < 90 ? "モモ・コシ" : c < 130 ? "ハラ・ムネ" : c < 170 ? "カタ・アタマ" : "オーバーヘッド"; };
+// 表示する小数1桁の値で区分（数字と区分を揃える）
+const sizeLabel = (m, p) => { const c = Math.round(surfM(m, p) * 10) * 10; return c < 50 ? "スネ・ヒザ" : c < 90 ? "モモ・コシ" : c < 130 ? "ハラ・ムネ" : c < 170 ? "カタ・アタマ" : "オーバーヘッド"; };
 const surfText = (m, p) => `約${surfM(m, p).toFixed(1)}m`;
 const DAYJ = {sat: "土", sun: "日"};
 const DAYLABEL = window.__REEL__.dayLabel;
