@@ -145,6 +145,17 @@ def publish_story(image: Path, key: str) -> str:
     raise SystemExit("unreachable")
 
 
+def _thursday_19(data: dict) -> float | None:
+    """その週の木曜 19:00 JST（UNIX 秒）。reel_data の saturday（YYYY-MM-DD）から2日前。"""
+    import datetime as _dt
+    try:
+        sat = _dt.date.fromisoformat(str(data.get("saturday")))
+    except ValueError:
+        return None
+    thu = _dt.datetime.combine(sat - _dt.timedelta(days=2), _dt.time(19, 0), _dt.timezone(_dt.timedelta(hours=9)))
+    return thu.timestamp()
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--data", type=Path, required=True)
@@ -175,9 +186,16 @@ def main() -> int:
             print("今週分は投稿済みのためスキップ:", " ".join(skipped), flush=True)
         targets = [P for P in targets if P["name"] not in skipped]
     failed = []
+    # 11/19 運営者の指示: 予定（木曜19:00から15分おき）より遅れている日は待たず、できたものからまとめて出す。
+    # 各地点の予定時刻（19:00 + i×間隔）まで待つだけにする。予定どおりの日はこれまでと同じ15分おき
+    t19 = _thursday_19(data)
     for i, P in enumerate(targets):
         if i and not a.dry_run:
-            time.sleep(a.interval_min * 60)
+            wait = (t19 + i * a.interval_min * 60 - time.time()) if t19 else a.interval_min * 60
+            if wait > 0:
+                time.sleep(wait)
+            else:
+                print("予定より遅れているため待たずに投稿する", flush=True)
         text = caption(data, P)
         if a.dry_run:
             print(f"--- {P['name']} ({len(text)}字)\n{text}\n", flush=True)
