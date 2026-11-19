@@ -1,0 +1,34 @@
+name: tests
+
+# main への push と PR のたびにテストを流す。動画テンプレートの JavaScript の構文検査（tests/test_templates.py）も含む。
+# 11/19 に週次リールのテンプレートが壊れたまま木曜を迎えた反省で追加。失敗したら #wave-hack-error に通知する。
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: Unit tests
+        run: uv run --extra gfs --extra social python -m unittest discover -s tests -v
+
+  notify-failure:
+    needs: [test]
+    if: failure() && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/slack-alert
+        with:
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          text: "wavehack-pipeline のテストが失敗しました（動画テンプレートの壊れなど。次の投稿の前に確認）"
