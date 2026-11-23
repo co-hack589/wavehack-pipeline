@@ -200,7 +200,7 @@ class IdeasAgentTests(unittest.TestCase):
         llm.SEARCH_OK = True
 
     def run_agent(self, fake, count=2, dry=True, api=None):
-        with patch.object(llm, "gemini", fake), patch.object(A.llm, "search_available", lambda: True):
+        with patch.object(llm, "generate", fake), patch.object(A.llm, "search_available", lambda: True):
             return A.run(count, "2026-11-16", dry, api, d=datetime.date(2026, 11, 15), url_check=False)
 
     def test_dry_run_flow_with_fix_and_review(self):

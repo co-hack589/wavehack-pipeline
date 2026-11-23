@@ -1,7 +1,9 @@
-"""SNS 投稿エージェント共通: Gemini 呼び出し（モデルの順次切替・検索グラウンディング）と JSON の取り出し。
+"""SNS 投稿エージェント共通: 文章生成（Claude を優先、無ければ Gemini）と JSON の取り出し。
 
-money-reel/agents/common.py の gemini() / parse_json() を移植したもの。
-環境変数: GEMINI_API_KEY（必須）/ GEMINI_TEXT_MODELS（カンマ区切りで上書き）/ GEMINI_SEARCH=off（検索を使わない）
+generate() が入口。ANTHROPIC_API_KEY があれば Claude（Messages API・サーバー側の web 検索）、無ければ Gemini。
+gemini() / parse_json() は money-reel/agents/common.py から移植したもの。読み上げ音声（TTS）は reel/ 側で Gemini のまま。
+環境変数: ANTHROPIC_API_KEY / CLAUDE_TEXT_MODELS（カンマ区切りで上書き）/ CLAUDE_SEARCH=off（Claude の検索を使わない）
+          GEMINI_API_KEY（Claude が無いとき）/ GEMINI_TEXT_MODELS / GEMINI_SEARCH=off
 """
 from __future__ import annotations
 
@@ -16,6 +18,12 @@ GEMINI = "https://generativelanguage.googleapis.com/v1beta/models"
 # 先頭から順に試す（無い・枠切れなら次へ）。週次リールのナレーションと同じ系列
 TEXT_MODELS = os.environ.get("GEMINI_TEXT_MODELS", "gemini-3.8-flash,gemini-3.7-flash,gemini-flash-latest").split(",")
 SEARCH_OK = os.environ.get("GEMINI_SEARCH", "auto") != "off"  # 検索（グラウンディング）が使えるか。無料枠では使えないことがある
+
+ANTHROPIC = "https://api.anthropic.com/v1/messages"
+CLAUDE_MODELS = os.environ.get("CLAUDE_TEXT_MODELS", "claude-sonnet-5-5,claude-opus-5-5").split(",")
+# サーバー側の web 検索。1回の呼び出しで検索は5回まで
+CLAUDE_SEARCH_TOOL = {"type": "web_search_20250305", "name": "web_search", "max_uses": 5}
+CLAUDE_RETRY_WAIT = (20, 60, 0)  # 529（混雑）・5xx・応答待ちの打ち切りは待って同じモデルで再試行（3回まで）
 
 _MODELS: set[str] | None = None
 
@@ -86,10 +94,113 @@ def gemini(prompt: str, *, search: bool = False, temperature: float = 0.7, model
     raise SystemExit(f"Gemini が使えません: {last}")
 
 
+def _claude_key() -> str:
+    return os.environ.get("ANTHROPIC_API_KEY", "").strip()  # Secrets にコピペした値の末尾改行対策
+
+
+def provider() -> str:
+    """文章生成に使う先。ANTHROPIC_API_KEY があれば Claude、無ければ Gemini。"""
+    return "claude" if _claude_key() else "gemini"
+
+
+def _claude_post(body: dict, timeout: int = 600) -> dict:
+    req = urllib.request.Request(ANTHROPIC, json.dumps(body).encode(), {
+        "Content-Type": "application/json", "x-api-key": _claude_key(), "anthropic-version": "2023-06-01"})
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        return json.load(r)
+
+
+def _claude_text(content: list) -> tuple[str, list[str]]:
+    """応答の本文（最後の検索結果より後の text）と、検索で参照した URL（引用を先に）を取り出す。"""
+    last_tool = max((i for i, b in enumerate(content) if b.get("type") in ("server_tool_use", "web_search_tool_result")), default=-1)
+    text = "".join(b.get("text", "") for b in content[last_tool + 1:] if b.get("type") == "text")
+    if not text.strip():  # 検索の後に本文が無い形なら、text を全部つなぐ
+        text = "".join(b.get("text", "") for b in content if b.get("type") == "text")
+    cited = [c["url"] for b in content if b.get("type") == "text" for c in (b.get("citations") or []) if c.get("url")]
+    found = [r["url"] for b in content if b.get("type") == "web_search_tool_result" and isinstance(b.get("content"), list)
+             for r in b["content"] if isinstance(r, dict) and r.get("url")]
+    return text, list(dict.fromkeys(cited + found))
+
+
+def _search_tool_error(raw: str) -> bool:
+    """400/403 の理由が web 検索ツール（組織で無効など）か。"""
+    s = raw.lower()
+    return "web_search" in s or "web search" in s
+
+
+def claude(prompt: str, *, search: bool = False, temperature: float = 0.7, models: list[str] | None = None) -> tuple[str, list[str]]:
+    """gemini() と同じ形（テキスト, 参照 URL）で返す。529/5xx/応答待ちの打ち切りは待って再試行し、
+    それでも駄目・モデルが無い・断られた（refusal）なら次のモデルへ。検索ツールが使えなければ以後は検索なし（SEARCH_OK=False）。
+    temperature は受け取るだけで送らない（Sonnet 5.5 / Opus 5.5 は既定以外の値を 400 で断る）。"""
+    global SEARCH_OK
+    del temperature
+    last = ""
+    cands = [x.strip() for x in (models or CLAUDE_MODELS) if x.strip()]
+    for m in cands:
+        attempt = 0
+        while attempt < len(CLAUDE_RETRY_WAIT):
+            use_search = search and SEARCH_OK
+            messages: list[dict] = [{"role": "user", "content": prompt}]
+            body: dict = {"model": m, "max_tokens": 16000, "messages": messages}
+            if use_search:
+                body["tools"] = [CLAUDE_SEARCH_TOOL]
+            try:
+                d = _claude_post(body)
+                content = list(d.get("content") or [])
+                for _ in range(3):  # 検索が長いと pause_turn で止まる → そこまでの応答を付けて続きを頼む
+                    if d.get("stop_reason") != "pause_turn":
+                        break
+                    body["messages"] = messages + [{"role": "assistant", "content": content}]
+                    d = _claude_post(body)
+                    content += list(d.get("content") or [])
+                if d.get("stop_reason") == "refusal":
+                    last = f"{m} refusal"
+                    break  # 断られた → 次のモデル
+                text, urls = _claude_text(content)
+                if not text.strip():
+                    last = f"{m} 本文が空（stop_reason={d.get('stop_reason')}）"
+                    break
+                print(f"[claude] {m} ok ({len(text)}字, 検索{'あり' if use_search else 'なし'}, 参照{len(urls)}件)", flush=True)
+                return text, urls
+            except urllib.error.HTTPError as e:
+                raw = e.read().decode(errors="replace")
+                last = f"{m} {e.code} {raw.replace(chr(10), ' ')[:200]}"
+                if e.code in (400, 403) and use_search and _search_tool_error(raw):
+                    SEARCH_OK = False  # 検索ツールが使えない → 検索なしでやり直す（確認済みの出典一覧の方式になる）
+                    print("[claude] 検索が使えないため、検索なしに切り替えます", flush=True)
+                    continue
+                if e.code == 429 or e.code == 529 or e.code >= 500:
+                    time.sleep(CLAUDE_RETRY_WAIT[attempt])  # 混雑・枠 → 待って再試行
+                    attempt += 1
+                    continue
+                if e.code in (401,):
+                    raise SystemExit(f"Claude が使えません（API キー）: {last}")
+                break  # 400/403/404 など → このモデルは使えない。次のモデル
+            except (urllib.error.URLError, TimeoutError) as e:
+                last = f"{m} {e}"
+                time.sleep(CLAUDE_RETRY_WAIT[attempt])
+                attempt += 1
+            except (KeyError, IndexError, TypeError, ValueError, AttributeError) as e:
+                last = f"{m} 応答が壊れている {e}"
+                break
+        print(f"[claude] {last}", flush=True)
+    raise SystemExit(f"Claude が使えません: {last}")
+
+
+if os.environ.get("CLAUDE_SEARCH", "auto") == "off" and _claude_key():
+    SEARCH_OK = False
+
+
+def generate(prompt: str, *, search: bool = False, temperature: float = 0.7, models: list[str] | None = None) -> tuple[str, list[str]]:
+    """文章生成の入口。Claude（ANTHROPIC_API_KEY があるとき）か Gemini。"""
+    fn = claude if provider() == "claude" else gemini
+    return fn(prompt, search=search, temperature=temperature, models=models)
+
+
 def search_available() -> bool:
-    """検索（グラウンディング）が使えるかを1回だけ試す。"""
+    """検索が使えるかを1回だけ試す（Claude なら web 検索ツール、Gemini ならグラウンディング）。"""
     try:
-        gemini("1+1は？数字だけ", search=True, temperature=0)
+        generate("1+1は？数字だけ", search=True, temperature=0)
     except SystemExit:
         pass
     return SEARCH_OK

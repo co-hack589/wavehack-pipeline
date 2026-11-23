@@ -13,7 +13,7 @@
   合格が0本なら終了コード 1。--dry-run は API に送らず結果を標準出力（または --out）に出す
 
 ネタ・台本は公開リポジトリに残さない（保存先は API）。実行ログには題と検査結果だけ出す。
-環境変数: GEMINI_API_KEY / WAVEHACK_API_URL / WAVEHACK_CRON_SECRET / SOCIAL_IDEAS_COUNT（本数の既定）
+環境変数: ANTHROPIC_API_KEY（文章生成は Claude。無いときだけ GEMINI_API_KEY で Gemini）/ WAVEHACK_API_URL / WAVEHACK_CRON_SECRET / SOCIAL_IDEAS_COUNT（本数の既定）
 """
 from __future__ import annotations
 
@@ -151,7 +151,7 @@ def examples(episodes: list[dict]) -> str:
 
 # ---------------------------------------------------------------- 1. ネタ案
 def ideas_prompt(n: int, episodes: list[dict], past: list[str], d: dt.date) -> str:
-    fact = ("- 事実は Google 検索で公的な一次情報（気象庁・海上保安庁・NOAA など）を確かめられるものだけ。" if llm.SEARCH_OK else
+    fact = ("- 事実は Web 検索で公的な一次情報（気象庁・海上保安庁・NOAA など）を確かめられるものだけ。" if llm.SEARCH_OK else
             "- いまは検索が使えない。次の『確認済みの事実』と、気象庁・NOAA の公開資料で確実に確かめられることだけで書けるネタにする。\n"
             "確認済みの事実:\n" + facts_library(episodes)[:8000])
     return f"""あなたは Instagram リール「Wave Hack｜波予報の読み方」第2弾のネタ出し担当です。
@@ -184,7 +184,7 @@ JSON の配列（{n}本）だけで答える:
 
 def propose(n: int, episodes: list[dict], past: list[str], d: dt.date) -> list[dict]:
     try:
-        got = llm.parse_json(llm.gemini(ideas_prompt(n * 2, episodes, past, d), search=True, temperature=0.9)[0])
+        got = llm.parse_json(llm.generate(ideas_prompt(n * 2, episodes, past, d), search=True, temperature=0.9)[0])
     except (ValueError, SystemExit) as e:
         print("ネタ案を作れなかった:", str(e)[:200], flush=True)
         return []
@@ -204,9 +204,9 @@ def propose(n: int, episodes: list[dict], past: list[str], d: dt.date) -> list[d
 # ---------------------------------------------------------------- 2〜4. 台本 → 検査 → レビュー
 def write_prompt(idea: dict, episodes: list[dict], kinds: dict, d: dt.date, feedback: str = "", draft: dict | None = None) -> str:
     if llm.SEARCH_OK:
-        fact = "- 事実・数字は Google 検索で公的な一次情報（気象庁・海上保安庁・NOAA など）を確かめ、確かめられたことだけ書く。"
+        fact = "- 事実・数字は Web 検索で公的な一次情報（気象庁・海上保安庁・NOAA など）を確かめ、確かめられたことだけ書く。"
     else:
-        fact = ("- Google 検索は使えない。使ってよい事実は、下の『確認済みの事実』と、出典に挙げる公的資料に確実に書いてあることだけ。"
+        fact = ("- Web 検索は使えない。使ってよい事実は、下の『確認済みの事実』と、出典に挙げる公的資料に確実に書いてあることだけ。"
                 "確かでない数字は使わない。\n確認済みの事実:\n" + facts_library(episodes)[:8000])
     body = R.MAX_SAY_CHARS - len(R.END_SAY)
     guide = "\n".join(f"  - {k}: {KIND_GUIDE.get(k, '')}（キー {sorted(v)}）" for k, v in kinds.items())
@@ -254,7 +254,7 @@ JSON だけで答える: {{"script": {{...}}, "sources": [{{"title": "...", "url
 
 
 def review_prompt(script: dict, sources: list, hook: str | None = None, style_warnings: list[str] | None = None) -> str:
-    fact = ("Google 検索で公的な一次情報を確かめること。sources の各ページに、台本の事実が実際に書かれているかも確かめる。" if llm.SEARCH_OK else
+    fact = ("Web 検索で公的な一次情報を確かめること。sources の各ページに、台本の事実が実際に書かれているかも確かめる。" if llm.SEARCH_OK else
             "検索は使えない。台本の事実を1つずつ、確実に知っている公的資料の内容と照合し、確かでないものは重大とする。")
     ht = hook_type(hook)
     extra = ""
@@ -318,7 +318,7 @@ def write_one(idea: dict, episodes: list[dict], kinds: dict, d: dt.date, url_che
     draft: dict | None = None
     feedback = ""
     for rnd in range(3):  # 初稿 + 修正2回
-        text, ground = llm.gemini(write_prompt(idea, episodes, kinds, d, feedback, draft), search=True, temperature=0.6)
+        text, ground = llm.generate(write_prompt(idea, episodes, kinds, d, feedback, draft), search=True, temperature=0.6)
         try:
             got = llm.parse_json(text)
             script, sources = R.normalize(got["script"]), got.get("sources") or []
@@ -340,7 +340,7 @@ def write_one(idea: dict, episodes: list[dict], kinds: dict, d: dt.date, url_che
         style = R.lint_script(script)  # 警告だけ（不合格にはしない）。レビューに渡して判断させ、承認カードにも出す
         if style:
             log.append(f"  言い回しの注意 {len(style)}件")
-        rv_text, _ = llm.gemini(review_prompt(script, sources, idea.get("hook_type"), style), search=True, temperature=0.1)
+        rv_text, _ = llm.generate(review_prompt(script, sources, idea.get("hook_type"), style), search=True, temperature=0.1)
         try:
             rv = llm.parse_json(rv_text)
             issues = [i for i in rv.get("issues", []) if isinstance(i, dict)]
@@ -383,7 +383,7 @@ def run(count: int, batch: str, dry: bool, api: SocialApi | None, d: dt.date | N
         print("API に接続しない（dry-run）。過去のネタとの重複は第1弾とだけ確かめる")
     episodes = R.load_episodes()
     kinds = R.allowed_kinds(episodes)
-    print("検索:", "使える" if llm.search_available() else "使えない（確認済みの事実の範囲で書く）", flush=True)
+    print("文章生成:", llm.provider(), "/ 検索:", "使える" if llm.search_available() else "使えない（確認済みの事実の範囲で書く）", flush=True)
     cands = spread(propose(count, episodes, past, d))  # 合格した順に count 本で止まるので、型ごとに交互に書く
     print(f"ネタ案 {len(cands)}本:", " / ".join(f"{c.get('title', '')}（{c.get('hook_type') or '型なし'}）" for c in cands), flush=True)
     ideas = []
