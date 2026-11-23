@@ -10,6 +10,7 @@ name: social-ideas
 #
 # Secrets: ANTHROPIC_API_KEY（文章生成。未設定なら GEMINI_API_KEY の Gemini で動く）/ GEMINI_API_KEY / WAVEHACK_API_URL / WAVEHACK_CRON_SECRET / SLACK_BOT_TOKEN（失敗通知）
 # Variables: SOCIAL_IDEAS_ENABLED — 'true' のときだけ schedule で動く（停止スイッチ）。SOCIAL_IDEAS_COUNT — 本数（既定 5）
+# 手動実行で from_file（例 social/manual/2026-11-24.json）を渡すと、LLM を使わずそのファイルの台本を同じ機械検査にかけて送る（--from-file）。
 # 公開リポジトリなので、ネタ・台本はログに出さない（題と検査結果だけ）。dry-run の結果は短期間の artifact に置く。
 # ---------------------------------------------------------------------------
 
@@ -29,6 +30,10 @@ on:
         default: true
       count:
         description: '作る本数（空なら SOCIAL_IDEAS_COUNT か 5）'
+        type: string
+        default: ''
+      from_file:
+        description: '台本ファイル（例 social/manual/2026-11-24.json）。指定すると生成せず、そのファイルを検査して送る（空なら通常どおり生成）'
         type: string
         default: ''
 
@@ -54,11 +59,15 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Ideas and scripts
+        env:
+          FROM_FILE: ${{ github.event_name == 'workflow_dispatch' && inputs.from_file || '' }}
         run: |
+          src=()
+          if [ -n "$FROM_FILE" ]; then src=(--from-file "$FROM_FILE"); fi
           if [ "${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}" = "true" ]; then
-            python3 social/ideas_agent.py --dry-run --out social-ideas.json
+            python3 social/ideas_agent.py "${src[@]}" --dry-run --out social-ideas.json
           else
-            python3 social/ideas_agent.py
+            python3 social/ideas_agent.py "${src[@]}"
           fi
 
       - uses: actions/upload-artifact@v4

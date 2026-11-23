@@ -11,6 +11,8 @@
      不合格にせずレビューに渡し、review_notes に「言い回しの注意」として載せる。取り込んだ外部素材は THIRD_PARTY_LICENSES.md
   4. POST /social/ideas/batch（409 batch_exists は正常終了）。Slack への投稿と承認は API 側
   合格が0本なら終了コード 1。--dry-run は API に送らず結果を標準出力（または --out）に出す
+  --from-file <path>: 1〜3 をせず（LLM を使わない）、ファイル（batch に送るのと同じ {batch, ideas}）の台本を同じ機械検査にかけて送る。
+  1本でも不合格なら何も送らない（終了コード 1）
 
 ネタ・台本は公開リポジトリに残さない（保存先は API）。実行ログには題と検査結果だけ出す。
 環境変数: ANTHROPIC_API_KEY（文章生成は Claude。無いときだけ GEMINI_API_KEY で Gemini）/ WAVEHACK_API_URL / WAVEHACK_CRON_SECRET / SOCIAL_IDEAS_COUNT（本数の既定）
@@ -409,6 +411,78 @@ def run(count: int, batch: str, dry: bool, api: SocialApi | None, d: dt.date | N
     return 0, ideas
 
 
+# ---------------------------------------------------------------- ファイルの台本を送る（--from-file。生成・レビューの LLM は使わない）
+IDEA_KEYS = ("kind", "title", "pitch", "script", "sources", "review_notes")
+
+
+def load_file(path: Path) -> tuple[str | None, list]:
+    """batch に送るのと同じ形 {batch, ideas} か、ideas の配列だけのファイルを読む。(batch, ideas) を返す。"""
+    d = json.loads(Path(path).read_text(encoding="utf-8"))
+    if isinstance(d, list):
+        return None, d
+    if not isinstance(d, dict) or not isinstance(d.get("ideas"), list):
+        raise SystemExit(f"{path}: {{\"batch\": ..., \"ideas\": [...]}} の形にする")
+    return d.get("batch"), d["ideas"]
+
+
+def check_file_ideas(ideas: list, kinds: dict, url_check: bool = True) -> tuple[list[dict], list[str]]:
+    """ファイルの台本を自動実行と同じ機械検査（validate・validate_sources・出典 URL）にかける。
+    (送る形にそろえたネタ, 不合格の一覧) を返す。言い回し（lint_script）は警告として review_notes に足す。"""
+    out, errs = [], []
+    if not ideas:
+        return [], ["[ファイル] ideas が空"]
+    for n, i in enumerate(ideas, 1):
+        if not isinstance(i, dict) or not isinstance(i.get("script"), dict):
+            errs.append(f"{n}本目: script がありません")
+            continue
+        if i.get("kind", KIND) != KIND:
+            errs.append(f"{n}本目: kind は {KIND} にする")
+        script, sources = R.normalize(i["script"]), i.get("sources") or []
+        e = R.validate(script, kinds) + R.validate_sources(sources)
+        warns: list[str] = []
+        if not e and url_check:
+            e2, warns = check_urls(sources)
+            e += e2
+        chars = R.say_chars(script)
+        title = script.get("title", "")
+        print(f"■ {title} → 読み上げ {chars}字（見積もり {R.est_seconds(chars):.1f}秒）、機械検査 {'合格' if not e else f'不合格 {len(e)}件'}", flush=True)
+        for x in e:
+            print("    - " + x, flush=True)
+        errs += [f"{n}本目（{title}）: {x}" for x in e]
+        style = R.lint_script(script)
+        if style:
+            print(f"    言い回しの注意 {len(style)}件", flush=True)
+        notes = [f"機械検査 合格（ファイルから送信、読み上げ {chars}字 ≒ {R.est_seconds(chars):.0f}秒、LLM のレビューなし）"]
+        if str(i.get("review_notes") or "").strip():
+            notes.append(str(i["review_notes"]).strip())
+        if style:
+            notes.append("言い回しの注意: " + " / ".join(style))
+        notes += [f"・{w}" for w in warns]
+        out.append({"kind": KIND, "title": title, "pitch": str(i.get("pitch", "")), "script": script,
+                    "sources": sources, "review_notes": "\n".join(notes)})
+    titles = [norm_title(x["title"]) for x in out]
+    if len(set(titles)) != len(titles):
+        errs.append("[ファイル] 同じ題のネタが2本以上ある")
+    return out, errs
+
+
+def run_from_file(path: Path, batch: str, dry: bool, api: SocialApi | None, url_check: bool = True) -> tuple[int, list[dict]]:
+    """ファイルの台本を検査して送る。1本でも不合格なら何も送らず終了コード 1（人手の台本は直してから送り直す）。"""
+    if api and not dry and any(i.get("batch") == batch for i in api.list_ideas(200)):
+        print(f"batch {batch} は送信済み。何もしない")
+        return 0, []
+    _, raw = load_file(path)
+    ideas, errs = check_file_ideas(raw, R.allowed_kinds(R.load_episodes()), url_check)
+    if errs:
+        print(f"不合格 {len(errs)}件。送らない", flush=True)
+        return 1, []
+    if dry:
+        return 0, ideas
+    sent, ids = api.post_batch(batch, ideas)  # type: ignore[union-attr]
+    print(f"batch {batch}: {len(ideas)}本を送った ids={ids}" if sent else f"batch {batch} は送信済み（409）。正常終了", flush=True)
+    return 0, ideas
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--count", type=int, default=int(os.environ.get("SOCIAL_IDEAS_COUNT") or 5))
@@ -416,13 +490,17 @@ def main() -> int:
     ap.add_argument("--dry-run", action="store_true", help="API に送らず結果を出す")
     ap.add_argument("--out", type=Path, help="dry-run の結果を書くファイル（無ければ標準出力）")
     ap.add_argument("--no-url-check", action="store_true", help="出典 URL が開けるかを確かめない")
+    ap.add_argument("--from-file", type=Path, help="生成をせず、このファイル（{batch, ideas}）の台本を検査して送る。--batch が無ければファイルの batch")
     a = ap.parse_args()
-    batch = a.batch or default_batch()
+    batch = a.batch or (load_file(a.from_file)[0] if a.from_file else None) or default_batch()
     dt.date.fromisoformat(batch)
     if dt.date.fromisoformat(batch).weekday() != 0:
         ap.error(f"--batch は月曜にする（{batch}）")
     api = SocialApi() if (not a.dry_run or (os.environ.get("WAVEHACK_API_URL") and os.environ.get("WAVEHACK_CRON_SECRET"))) else None
-    rc, ideas = run(a.count, batch, a.dry_run, api, url_check=not a.no_url_check)
+    if a.from_file:
+        rc, ideas = run_from_file(a.from_file, batch, a.dry_run, api, url_check=not a.no_url_check)
+    else:
+        rc, ideas = run(a.count, batch, a.dry_run, api, url_check=not a.no_url_check)
     if a.dry_run and ideas:
         out = json.dumps({"batch": batch, "ideas": ideas}, ensure_ascii=False, indent=1)
         if a.out:

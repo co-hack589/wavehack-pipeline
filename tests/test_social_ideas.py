@@ -270,6 +270,91 @@ class IdeasAgentTests(unittest.TestCase):
         self.assertEqual((rc, ideas, api.posted), (1, [], []))
 
 
+def no_llm(*a, **k):
+    raise AssertionError("--from-file では LLM を呼ばない")
+
+
+class FromFileTests(unittest.TestCase):
+    """--from-file: 人手の台本ファイルを機械検査にかけて送る（LLM は使わない）。"""
+
+    def write(self, data) -> Path:
+        import tempfile
+        d = tempfile.mkdtemp()
+        p = Path(d) / "ideas.json"
+        p.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+        return p
+
+    def idea(self, script=None, **kw):
+        i = {"kind": "edu", "title": "x", "pitch": "p", "script": script or sample_script(), "sources": SOURCES, "review_notes": "人手で確認"}
+        i.update(kw)
+        return i
+
+    def run_file(self, path, dry=True, api=None):
+        with patch.object(llm, "generate", no_llm):
+            return A.run_from_file(path, "2026-11-23", dry, api, url_check=False)
+
+    def test_manual_files_pass_all_checks(self):
+        files = sorted((ROOT / "social" / "manual").glob("*.json"))
+        self.assertTrue(files)
+        for f in files:
+            with self.subTest(file=f.name):
+                batch, raw = A.load_file(f)
+                self.assertEqual(datetime.date.fromisoformat(batch).weekday(), 0)
+                ideas, errs = A.check_file_ideas(raw, R.allowed_kinds(), url_check=False)
+                self.assertEqual(errs, [])
+                season1 = {A.norm_title(e["title"]) for e in R.load_episodes()}
+                for i in ideas:
+                    self.assertEqual(set(i), set(A.IDEA_KEYS))
+                    self.assertNotIn(A.norm_title(i["title"]), season1)
+                    self.assertEqual(R.lint_script(i["script"]), [])
+                    self.assertLessEqual(R.say_chars(i["script"]), R.MAX_SAY_CHARS)
+                    self.assertEqual(i["script"]["scenes"][-1], {"kind": "next", "say": R.END_SAY})
+                    for s in i["sources"]:  # 出典は確認済みの一覧からだけ
+                        self.assertIn(s["url"], A.KNOWN_SOURCES)
+
+    def test_dry_run_checks_and_keeps_notes_without_llm(self):
+        p = self.write({"batch": "2026-11-23", "ideas": [self.idea()]})
+        rc, ideas = self.run_file(p)
+        self.assertEqual((rc, len(ideas)), (0, 1))
+        self.assertEqual(set(ideas[0]), set(A.IDEA_KEYS))
+        self.assertEqual(ideas[0]["title"], sample_script()["title"])  # 題は台本の title
+        self.assertIn("機械検査 合格（ファイルから送信", ideas[0]["review_notes"])
+        self.assertIn("人手で確認", ideas[0]["review_notes"])
+
+    def test_any_failure_sends_nothing(self):
+        bad = sample_script()
+        bad["scenes"][1]["say"] += "とても長い説明を足します。" * 8
+        p = self.write({"ideas": [self.idea(), self.idea(bad), self.idea(sources=[])]})
+        api = FakeIdeasApi()
+        rc, ideas = self.run_file(p, dry=False, api=api)
+        self.assertEqual((rc, ideas, api.posted), (1, [], []))
+
+    def test_sends_batch_and_skips_existing(self):
+        p = self.write([self.idea()])  # ideas の配列だけのファイルも読める
+        api = FakeIdeasApi()
+        rc, ideas = self.run_file(p, dry=False, api=api)
+        self.assertEqual((rc, len(api.posted), api.posted[0][0], len(api.posted[0][1])), (0, 1, "2026-11-23", 1))
+        api2 = FakeIdeasApi(listed=[{"batch": "2026-11-23", "kind": "edu", "title": "t"}])
+        rc, ideas = self.run_file(p, dry=False, api=api2)
+        self.assertEqual((rc, ideas, api2.posted), (0, [], []))
+
+    def test_duplicate_titles_fail(self):
+        _, errs = A.check_file_ideas([self.idea(), self.idea()], R.allowed_kinds(), url_check=False)
+        self.assertTrue(any("同じ題" in e for e in errs))
+
+    def test_main_uses_file_batch_and_workflow_input(self):
+        p = self.write({"batch": "2026-11-23", "ideas": [self.idea()]})
+        out = Path(p.parent) / "out.json"
+        env = {k: v for k, v in os.environ.items() if k not in ("WAVEHACK_API_URL", "WAVEHACK_CRON_SECRET")}
+        with patch.object(llm, "generate", no_llm), patch.dict(os.environ, env, clear=True), \
+                patch.object(sys, "argv", ["ideas_agent.py", "--from-file", str(p), "--dry-run", "--no-url-check", "--out", str(out)]):
+            self.assertEqual(A.main(), 0)
+        self.assertEqual(json.loads(out.read_text(encoding="utf-8"))["batch"], "2026-11-23")
+        wf = (ROOT / ".github" / "workflows" / "social-ideas.yml").read_text(encoding="utf-8")
+        self.assertIn("from_file:", wf)
+        self.assertIn('--from-file "$FROM_FILE"', wf)
+
+
 # ---------------------------------------------------------------- wavehack-api クライアント（ローカルのモックサーバー）
 class MockApi(BaseHTTPRequestHandler):
     state: dict = {}
