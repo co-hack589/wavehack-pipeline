@@ -12,6 +12,7 @@
 第1弾（edu/episodes/ep01〜10.json）は手本として残す。番号順に選ぶ仕組み（旧 --pick）は再投稿を防ぐため廃止した。
 キャプションは ep*.json の caption から組み立てる。同じ1行目の投稿があれば投稿せず、その投稿を記録する。
 環境変数: IG_USER_ID / IG_ACCESS_TOKEN / WAVEHACK_API_URL / WAVEHACK_CRON_SECRET
+  SLACK_BOT_TOKEN — あれば予告のあと、予告と同じスレッドに mp4 を直接上げる（Slack 内で再生できる。無い・失敗ならリンクのみ）
   EDU_PREVIEW_MODE — run（既定。GitHub Actions の実行ページ＝動画の artifact）/ r2（R2 social/ に mp4 を置き
                      https://wavehack.surf/api/social/<file> で配信。フロントの /api/social が mp4 に対応してから使う）
 """
@@ -30,6 +31,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent / "reel"))
 sys.path.insert(0, str(HERE.parent / "social"))
+from slack_files import share_video  # noqa: E402
 from social_api import SocialApi  # noqa: E402
 from publish_reels import COVER_BASE_URL, IG, publish_story  # noqa: E402
 
@@ -172,7 +174,7 @@ def gh_output(**kw) -> None:
                 f.write(f"{k}={v}\n")
 
 
-# ---------------------------------------------------------------- 予告（Slack は API 側が出す）
+# ---------------------------------------------------------------- 予告（Slack の予告文は API 側が出す。動画ファイルはここから上げる）
 def preview_url(ep: dict, video: Path) -> str:
     mode = os.environ.get("EDU_PREVIEW_MODE", "run")
     if mode == "r2":
@@ -199,7 +201,23 @@ def do_preview(api: SocialApi, idea_id: str, ep: dict, video: Path, date: str, n
         status = api.get_idea(idea_id).get("status")
         print(f"予告が受け付けられなかった（409, status={status}）", flush=True)
         ok = status == "preview"
+    if ok:
+        share_preview_video(api, idea_id, ep, video)
     return ok
+
+
+def share_preview_video(api: SocialApi, idea_id: str, ep: dict, video: Path) -> bool:
+    """予告と同じスレッド（idea の slack_channel / slack_parent_ts）に動画を上げる。失敗しても予告は進める。"""
+    if not os.environ.get("SLACK_BOT_TOKEN", "").strip():
+        return share_video(video, None, None, "")  # 「トークンなし」とだけ出して何もしない
+    try:
+        idea = api.get_idea(idea_id)
+    except SystemExit as e:
+        print("Slack の宛先を取れず動画は上げない:", str(e)[:200], flush=True)
+        return False
+    title = f"{HEAD}{ep['no']:02d}｜{ep['title']}"
+    return share_video(video, idea.get("slack_channel"), idea.get("slack_parent_ts"), title,
+                       f"🎞 #{ep['no']:02d}『{ep['title']}』の動画（ここで再生できます）")
 
 
 # ---------------------------------------------------------------- 投稿

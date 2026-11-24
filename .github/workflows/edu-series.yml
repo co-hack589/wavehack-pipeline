@@ -13,6 +13,7 @@ name: edu-series
 #
 # Secrets: GEMINI_API_KEY / IG_USER_ID / IG_ACCESS_TOKEN / CLOUDFLARE_ACCOUNT_ID / CLOUDFLARE_API_TOKEN（weekly-reel と共通）
 #          WAVEHACK_API_URL / WAVEHACK_CRON_SECRET（morning-notifications と共通）
+#          SLACK_BOT_TOKEN（失敗通知と共通。予告の動画を Slack のスレッドに直接上げる。files:write が要る）
 # Variables: EDU_SERIES_ENABLED — 'true' のときだけ schedule 実行で投稿（停止スイッチ）
 #            EDU_PREVIEW_MODE — 予告の動画 URL。run（既定: この実行のページ＝artifact）/ r2（/api/social が mp4 に対応してから）
 # GitHub の定期実行は数時間遅れることがあるため（10/18 は約4時間）、朝 9:17 から起動して早めに動画を作っておく。
@@ -135,6 +136,8 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           EDU_PREVIEW_MODE: ${{ vars.EDU_PREVIEW_MODE || 'run' }}
+          # 予告と同じスレッドに mp4 を直接上げる（files:write が要る。無い・失敗ならリンクの予告だけで続行）
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
         # 予定時刻は当日 18:00 JST（post_now なら今）。止められていれば previewed=false で hold・publish を飛ばす
         run: >-
           python3 edu/publish_edu.py --preview --id "${{ steps.pick.outputs.id }}" --ep "${{ steps.pick.outputs.ep }}"

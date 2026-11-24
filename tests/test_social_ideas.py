@@ -8,6 +8,7 @@ import datetime
 import json
 import os
 import sys
+import tempfile
 import threading
 import unittest
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -23,6 +24,7 @@ import edu_rules as R  # noqa: E402
 import ideas_agent as A  # noqa: E402
 import llm  # noqa: E402
 import publish_edu as P  # noqa: E402
+import slack_files  # noqa: E402
 import social_api  # noqa: E402
 
 JST = datetime.timezone(datetime.timedelta(hours=9))
@@ -535,6 +537,130 @@ class EduFlowTests(unittest.TestCase):
         ep1 = next(e for e in R.load_episodes() if e["no"] == 1)
         self.assertIn("次回 #02 は「周期」", P.caption(ep1))
         self.assertIn("シリーズ全10回", P.caption(next(e for e in R.load_episodes() if e["no"] == 10)))
+
+
+class MockSlack(BaseHTTPRequestHandler):
+    """Slack の新しいアップロード方式（getUploadURLExternal → upload_url → completeUploadExternal）の偽物"""
+    calls: list = []
+    fail: str | None = None  # この method で ok:false（error=missing_scope）を返す
+
+    def log_message(self, *a):
+        pass
+
+    def do_POST(self):
+        raw = self.rfile.read(int(self.headers["content-length"]))
+        method = self.path.lstrip("/")
+        if method == "upload/F1":
+            self.calls.append((method, len(raw), self.headers.get("authorization")))
+            self.send_response(200)
+            self.end_headers()
+            return
+        form = {k: v[0] for k, v in __import__("urllib.parse").parse.parse_qs(raw.decode()).items()}
+        self.calls.append((method, form, self.headers.get("authorization")))
+        if method == self.fail:
+            body = {"ok": False, "error": "missing_scope"}
+        elif method == "files.getUploadURLExternal":
+            body = {"ok": True, "upload_url": f"http://127.0.0.1:{self.server.server_port}/upload/F1", "file_id": "F1"}
+        else:
+            body = {"ok": True, "files": [{"id": "F1"}]}
+        out = json.dumps(body).encode()
+        self.send_response(200)
+        self.send_header("content-type", "application/json")
+        self.send_header("content-length", str(len(out)))
+        self.end_headers()
+        self.wfile.write(out)
+
+
+class SlackVideoTests(unittest.TestCase):
+    """予告の動画を Slack のスレッドに直接上げる（Slack はモック）"""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.api_srv = ThreadingHTTPServer(("127.0.0.1", 0), MockApi)
+        cls.slack_srv = ThreadingHTTPServer(("127.0.0.1", 0), MockSlack)
+        for srv in (cls.api_srv, cls.slack_srv):
+            threading.Thread(target=srv.serve_forever, daemon=True).start()
+        cls.api = social_api.SocialApi(f"http://127.0.0.1:{cls.api_srv.server_port}", "s3cret")
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.api_srv.shutdown()
+        cls.slack_srv.shutdown()
+
+    def setUp(self):
+        MockApi.state = {"ideas": [], "batches": set()}
+        MockApi.calls = []
+        MockSlack.calls = []
+        MockSlack.fail = None
+        self.tmp = tempfile.TemporaryDirectory()
+        self.dir = Path(self.tmp.name)
+        self.video = self.dir / "ep11.mp4"
+        self.video.write_bytes(b"v" * 3000)
+        patcher = patch.object(slack_files, "API", f"http://127.0.0.1:{self.slack_srv.server_port}")
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        self.addCleanup(self.tmp.cleanup)
+        self.env = {"GITHUB_RUN_ID": "42", "GITHUB_REPOSITORY": "o/r", "EDU_PREVIEW_MODE": "run", "SLACK_BOT_TOKEN": "xoxb-test"}
+
+    def approved(self):
+        it = idea("a", "approved", 11)
+        it.update(slack_channel="C0CHT8PFG7Q", slack_parent_ts="1700000000.000100")
+        MockApi.state["ideas"] = [it]
+        return P.episode(it)
+
+    def test_pick_video_prefers_original_then_smaller_alt(self):
+        self.assertEqual(slack_files.pick_video(self.video), self.video)
+        alt = self.dir / "ep11-alt.mp4"
+        alt.write_bytes(b"a" * 1000)
+        self.assertEqual(slack_files.pick_video(self.video, max_bytes=5000), self.video)  # 上限以下なら本体
+        self.assertEqual(slack_files.pick_video(self.video, max_bytes=2000), alt)  # 大きければ小さい alt
+        self.assertIsNone(slack_files.pick_video(self.dir / "none.mp4"))
+
+    def test_preview_uploads_video_to_preview_thread(self):
+        ep = self.approved()
+        with patch.dict(os.environ, self.env):
+            self.assertTrue(P.do_preview(self.api, "a", ep, self.video, "2026-11-16"))
+        self.assertEqual([c[0] for c in MockSlack.calls], ["files.getUploadURLExternal", "upload/F1", "files.completeUploadExternal"])
+        self.assertEqual(MockSlack.calls[0][1], {"filename": "ep11.mp4", "length": "3000"})
+        self.assertEqual(MockSlack.calls[0][2], "Bearer xoxb-test")
+        self.assertEqual(MockSlack.calls[1][1], 3000)
+        done = MockSlack.calls[2][1]
+        self.assertEqual((done["channel_id"], done["thread_ts"]), ("C0CHT8PFG7Q", "1700000000.000100"))
+        self.assertEqual(json.loads(done["files"]), [{"id": "F1", "title": "🌊 波予報の読み方 #11｜予報の当たり外れ"}])
+        self.assertIn("#11", done["initial_comment"])
+        # 予告そのもの（リンク）は従来どおり API に送っている
+        self.assertEqual(MockApi.calls[0][1], "/social/ideas/a/preview")
+
+    def test_no_token_keeps_link_only(self):
+        ep = self.approved()
+        env = {k: v for k, v in self.env.items() if k != "SLACK_BOT_TOKEN"}
+        with patch.dict(os.environ, env), patch.dict(os.environ, {"SLACK_BOT_TOKEN": ""}):
+            self.assertTrue(P.do_preview(self.api, "a", ep, self.video, "2026-11-16"))
+        self.assertEqual(MockSlack.calls, [])
+
+    def test_missing_scope_or_network_error_does_not_fail_preview(self):
+        ep = self.approved()
+        MockSlack.fail = "files.getUploadURLExternal"
+        with patch.dict(os.environ, self.env):
+            self.assertTrue(P.do_preview(self.api, "a", ep, self.video, "2026-11-16"))
+        self.assertEqual(len(MockSlack.calls), 1)
+        MockApi.state["ideas"][0]["status"] = "approved"
+        with patch.dict(os.environ, self.env), patch.object(slack_files, "API", "http://127.0.0.1:1"):
+            self.assertTrue(P.do_preview(self.api, "a", ep, self.video, "2026-11-16"))  # 接続できなくても進める
+
+    def test_held_idea_uploads_nothing(self):
+        it = idea("b", "held", 12)
+        it.update(slack_channel="C", slack_parent_ts="1")
+        MockApi.state["ideas"] = [it]
+        with patch.dict(os.environ, self.env):
+            self.assertFalse(P.do_preview(self.api, "b", P.episode(it), self.video, "2026-11-16"))
+        self.assertEqual(MockSlack.calls, [])
+
+    def test_unknown_thread_skips(self):
+        MockApi.state["ideas"] = [idea("a", "approved", 11)]  # slack_channel が無い（Slack 未設定で作られた回）
+        with patch.dict(os.environ, self.env):
+            self.assertTrue(P.do_preview(self.api, "a", P.episode(MockApi.state["ideas"][0]), self.video, "2026-11-16"))
+        self.assertEqual(MockSlack.calls, [])
 
 
 if __name__ == "__main__":
