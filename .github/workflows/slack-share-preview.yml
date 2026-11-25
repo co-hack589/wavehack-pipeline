@@ -1,0 +1,51 @@
+# 手動用: 既存の edu-series 実行の動画を、予告と同じ Slack スレッドに上げ直す
+# Secrets: SLACK_BOT_TOKEN / WAVEHACK_API_URL / WAVEHACK_CRON_SECRET
+name: slack-share-preview
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: '動画 artifact がある edu-series の run id'
+        type: string
+        required: true
+      idea_id:
+        description: 'API の idea id'
+        type: string
+        required: true
+permissions:
+  contents: read
+  actions: read
+jobs:
+  share:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+      WAVEHACK_API_URL: ${{ secrets.WAVEHACK_API_URL }}
+      WAVEHACK_CRON_SECRET: ${{ secrets.WAVEHACK_CRON_SECRET }}
+      RUN_ID: ${{ inputs.run_id }}
+      IDEA_ID: ${{ inputs.idea_id }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ github.token }}
+          path: art
+      - name: Share
+        run: |
+          V=$(find art -name 'ep*.mp4' ! -name '*-alt.mp4' | head -1)
+          J="${V%.mp4}.json"
+          echo "video: $V"
+          python3 - "$V" "$J" <<'PY'
+          import json, os, sys
+          from pathlib import Path
+          sys.path[:0] = ["edu", "social"]
+          from publish_edu import share_preview_video
+          from social_api import SocialApi
+          v, j = Path(sys.argv[1]), Path(sys.argv[2])
+          ep = json.loads(j.read_text())
+          ok = share_preview_video(SocialApi(), os.environ["IDEA_ID"], ep, v)
+          print("shared" if ok else "not shared")
+          sys.exit(0 if ok else 1)
+          PY
