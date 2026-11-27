@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>Wave Hack Report Reel</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@700;800;900&family=Zen+Kaku+Gothic+New:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+/* 波レポートのリール（report_reel/render.py が window.__EDU__ = {ep, narr, media} を入れて1コマずつ撮る）。
+   木崎浜の試作（claude/videos/wavehack-report-kizaki/template_kizaki.html）を一般化したもの。
+   文字は y=270〜1480 に収める。azure 強調は予報スコア 55 以上のみ（ep.post.forecast_hl）。
+   メディア: video = media/frames/0000.jpg〜（900x506 に切り抜き済み・等速）/ photo = media/photo.jpg（1080x608、ゆっくり Ken Burns）。
+   1行の中に // コメントを書かない（tests/test_templates.py が構文を確かめる）。 */
+:root{--ink:#071a3a;--azure:#0877f9;--muted:#52627a;--faint:#718096;--line:#dce5ef;--hl:#eef6ff;--low:#b9c6d6;
+  --jp:"Zen Kaku Gothic New",sans-serif;--num:"Inter Tight",sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{width:1080px;height:1920px;overflow:hidden;font-family:var(--jp);color:var(--ink);
+  background:linear-gradient(180deg,#cfe8ff 0%,#eef7ff 45%,#ffffff 100%)}
+.badge{position:absolute;left:90px;top:290px;display:flex;align-items:center;gap:20px}
+.badge .no{height:76px;padding:0 26px;border-radius:999px;background:var(--ink);color:#fff;font:900 36px/76px var(--jp)}
+.badge .ttl{font:900 40px/1.2 var(--jp)}
+.badge .ttl small{display:block;font:700 26px/1 var(--jp);color:var(--azure);letter-spacing:2px;margin-bottom:6px}
+.foot{position:absolute;left:90px;right:90px;top:1420px;display:flex;justify-content:space-between;font:700 24px/1 var(--jp);color:var(--faint)}
+.foot b{font:800 24px/1 var(--num);letter-spacing:5px;color:var(--azure)}
+.scene{position:absolute;left:90px;right:90px;top:410px;height:1000px}
+h2{font:900 64px/1.22 var(--jp);letter-spacing:-2px}
+h2 b{color:var(--azure)}
+
+/* 実映像カード（16:9 をそのまま。透かしも残す） */
+.vid{position:absolute;left:90px;top:590px;width:900px;height:506px;border-radius:40px;overflow:hidden;background:#071a3a;
+  box-shadow:0 24px 54px rgba(7,28,59,.20);opacity:0}
+.vid img{position:absolute;left:0;top:0;width:900px;height:506px;display:block}
+.vid img.photo{width:1080px;height:608px;transform-origin:0 0;will-change:transform}
+.vid .tag{position:absolute;left:24px;top:24px;padding:12px 22px;border-radius:999px;background:rgba(7,26,58,.72);color:#fff;font:900 28px/1 var(--jp);display:flex;align-items:center;gap:12px}
+.vid .tag i{width:16px;height:16px;border-radius:50%;background:#ff4d4d;display:block}
+
+/* 映像の下の情報（アプリの波レポートカードと同じ並び） */
+.info{position:absolute;left:0;right:0;top:706px}
+.meta{display:flex;align-items:center;gap:16px;font:700 32px/1 var(--jp);color:var(--muted)}
+.meta b{font:900 32px/1 var(--jp);color:var(--ink)}
+.chips{display:flex;gap:16px;flex-wrap:wrap}
+.chip{padding:14px 26px;border-radius:999px;background:#fff;border:2px solid var(--line);font:900 36px/1 var(--jp);color:var(--ink)}
+.cmt{margin-top:16px;padding:20px 28px;border-radius:28px;background:#fff;border:1px solid var(--line);box-shadow:0 12px 30px rgba(7,28,59,.08);font:700 32px/1.45 var(--jp);color:var(--ink)}
+.cmt small{display:block;margin-bottom:8px;font:700 24px/1 var(--jp);color:var(--faint)}
+.vs{display:flex;align-items:center;gap:18px;padding:30px 30px;border-radius:36px;background:#fff;border:1px solid var(--line);box-shadow:0 14px 34px rgba(7,28,59,.08)}
+.vs .k{font:700 30px/1.2 var(--jp);color:var(--muted)}
+.vs .sc{font:900 84px/1 var(--num);color:var(--ink)}
+.vs .sc.hl{color:var(--azure)}
+.vs .sc span{font:900 36px var(--jp);margin-left:4px}
+.vs .ar{font:900 54px/1 var(--num);color:var(--faint)}
+.vs .rp{font:900 50px/1.1 var(--jp);color:var(--ink);white-space:nowrap}
+.note{margin-top:22px;font:700 34px/1.45 var(--jp);color:var(--muted)}
+.dots{display:flex;gap:14px;margin-top:6px}
+.dots span{padding:16px 22px;border-radius:22px;background:#fff;border:1px solid var(--line);font:700 30px/1 var(--jp);color:var(--muted)}
+
+.logo{width:200px;height:200px}
+.ctah{margin-top:36px;font:900 88px/1.28 var(--jp);letter-spacing:-3px}
+.ctah b{color:var(--azure)}
+.brand{margin-top:40px;font:900 46px/1.3 var(--jp)}
+.brand span{font-family:var(--num);font-weight:800}
+.upd{display:inline-block;margin-top:26px;padding:20px 36px;border-radius:999px;background:var(--ink);color:#fff;font:900 40px/1 var(--jp)}
+.follow{margin-top:44px;padding:40px 44px;border-radius:40px;background:var(--ink);color:#fff;font:900 54px/1.35 var(--jp);opacity:0}
+.follow span{display:block;margin-top:12px;font:700 34px/1.4 var(--jp);color:#b9c9de}
+.nh{font:900 70px/1.25 var(--jp);letter-spacing:-2px}.nh b{color:var(--azure)}
+</style>
+</head>
+<body>
+<div class="badge" id="badge"></div>
+<div class="vid" id="vid"><img id="vb" alt=""><img id="vt" alt=""><div class="tag"><i></i><span id="vtag">現地の映像</span></div></div>
+<div id="stage"></div>
+<div class="foot"><span id="src"></span><b>WAVE HACK</b></div>
+<script>
+const R = window.__EDU__;           // {ep, narr:[{seconds}], media:{kind, frames, fps}}（録画スクリプトが注入）
+const EP = R.ep, S = EP.scenes, P = EP.post, M = R.media || {kind: "video", frames: 1, fps: 30}, stage = document.getElementById("stage");
+const esc = (v) => String(v == null ? "" : v).replace(/[&<>"']/g, (c) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;"}[c]));
+document.getElementById("badge").innerHTML = `<div class="no">${esc(EP.badge)}</div><div class="ttl"><small>${esc(EP.series)}</small>${esc(EP.title)}</div>`;
+document.getElementById("src").textContent = EP.source;
+const at = (d, fn) => setTimeout(fn, d);
+const el = (html) => { const t = document.createElement("template"); t.innerHTML = html.trim(); return t.content.firstChild; };
+const mount = (html) => { const n = el(html); stage.replaceChildren(n); return n; };
+const fadeIn = (e, d = 0, dy = 30) => e.animate([{opacity: 0, transform: `translateY(${dy}px)`}, {opacity: 1, transform: "none"}],
+  {duration: 450, delay: d, easing: "cubic-bezier(.2,.8,.2,1)", fill: "both"});
+const scoreCls = P.forecast_hl ? "sc hl" : "sc";
+
+/* 実映像: 等速再生（速度は変えない）。尺が足りない場面は、場面の切り替わりで頭から再生し直す（途中で途切れない）。
+   写真: 全体の尺をかけて、少し寄りながら左から右へゆっくり動かす（Ken Burns）。 */
+const vid = document.getElementById("vid"), vb = document.getElementById("vb"), vt = document.getElementById("vt");
+const PHOTO = M.kind === "photo";
+const N = Math.max(1, M.frames || 1), FPSV = M.fps || 30, LEN = N / FPSV;
+let VOFF = [{at: 0, off: 0}];
+const src = i => `media/frames/${String(Math.max(0, Math.min(N - 1, i))).padStart(4, "0")}.jpg`;
+async function setImg(im, s) { if (im.dataset.s === s) return; im.dataset.s = s; im.src = s; await im.decode(); }
+if (PHOTO) { document.getElementById("vtag").textContent = "現地の写真"; vt.className = "photo"; }
+window.__vidSync = async () => {
+  const now = performance.now();
+  vb.style.opacity = 0;
+  if (PHOTO) {
+    await setImg(vt, "media/photo.jpg");
+    const end = (window.__render && window.__render.end) || 20000;
+    const p = Math.max(0, Math.min(1, now / end));
+    const k = 1 + 0.05 * p;
+    vt.style.transform = `translate(${(-180 * p).toFixed(2)}px, ${(-51 - 20 * p).toFixed(2)}px) scale(${k.toFixed(4)})`;
+    return;
+  }
+  let off = 0;
+  for (const v of VOFF) if (now >= v.at) off = v.off;
+  const loc = ((now - off) / 1000) % LEN;
+  await setImg(vt, src(Math.floor(loc * FPSV)));
+};
+
+const SCENES = {
+  open(s) {
+    const vs = P.forecast == null ? "" : `<div class="vs" style="margin-top:26px"><div class="k">この時間の<br>予報スコア</div><div class="${scoreCls}">${esc(P.forecast)}<span>点</span></div></div>`;
+    const n = mount(`<div class="scene"><h2>${s.h}</h2><div class="info"><div class="meta"><b>${P.place ? esc(P.place) + "・" : ""}${esc(P.point)}</b>｜${esc(P.captured)} 撮影</div>${vs}</div></div>`);
+    if (vs) fadeIn(n.querySelector(".vs"), 900);
+    return n;
+  },
+  report(s) {
+    const chips = [`${esc(P.size)}・${esc(P.quality)}`, P.crowd ? esc(P.crowd) : null, P.terrain ? `地形 ${esc(P.terrain)}` : null]
+      .filter(Boolean).map((c) => `<div class="chip">${c}</div>`).join("");
+    const cmt = P.comment ? `<div class="cmt"><small>ひとこと</small>「${P.comment}」</div>` : "";
+    const n = mount(`<div class="scene"><h2>${s.h}</h2><div class="info"><div class="chips">${chips}</div>${cmt}</div></div>`);
+    fadeIn(n.querySelector("h2"));
+    n.querySelectorAll(".chip").forEach((c, i) => fadeIn(c, 300 + i * 250, 16));
+    if (cmt) fadeIn(n.querySelector(".cmt"), 1100, 20);
+    return n;
+  },
+  compare(s) {
+    const n = mount(`<div class="scene"><h2>${s.h}</h2><div class="info"><div class="vs"><div class="k">予報</div><div class="${scoreCls}">${esc(P.forecast)}<span>点</span></div><div class="ar">→</div><div class="k">現地は</div><div class="rp">「${esc(P.quality)}」</div></div></div></div>`);
+    fadeIn(n.querySelector("h2")); fadeIn(n.querySelector(".vs"), 400, 20);
+    return n;
+  },
+  crowd(s) {
+    const n = mount(`<div class="scene"><h2>${s.h}</h2><div class="info"><div class="dots"><span>サイズ</span><span>波の質</span><span>混雑</span><span>ひとこと</span></div>
+      <div class="note">集まったレポートは、予報の精度アップに使われます。</div></div></div>`);
+    fadeIn(n.querySelector("h2"));
+    n.querySelectorAll(".dots span").forEach((c, i) => fadeIn(c, 300 + i * 200, 12));
+    fadeIn(n.querySelector(".note"), 1200, 16);
+    return n;
+  },
+  cta(s) {
+    const n = mount(`<div class="scene" style="top:460px"><svg class="logo" viewBox="14 14 212 212"><defs><linearGradient id="sea" x1="0" y1="30" x2="190" y2="196" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#16D6D6"/><stop offset=".56" stop-color="#087EA4"/><stop offset="1" stop-color="#073B63"/></linearGradient></defs><rect x="24" y="24" width="192" height="192" rx="44" fill="url(#sea)"/><circle cx="164" cy="68" r="16" fill="#ffb000"/><path d="M62 80 L88 146 L120 74 L152 146 L178 80" fill="none" stroke="#FFFDF8" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/><path d="M45 170 C75 138 107 200 138 170 C163 144 190 150 220 170" fill="none" stroke="#dff9ff" stroke-width="22" stroke-linecap="round"/></svg>
+      <div class="ctah">${s.h}</div><div class="brand">波レポート｜<span>Wave Hack</span></div><div class="upd">浜から、ひとこと投稿</div></div>`);
+    fadeIn(n.querySelector(".logo"), 0, 0);
+    [".ctah", ".brand", ".upd"].forEach((q, i) => fadeIn(n.querySelector(q), 200 + i * 350));
+    return n;
+  },
+  next(s) {
+    const n = mount(`<div class="scene" style="top:560px"><div class="nh">${s.h}</div><div class="follow">${s.follow}<span>${s.followSub}</span></div></div>`);
+    fadeIn(n.querySelector(".nh")); fadeIn(n.querySelector(".follow"), 700);
+    return n;
+  },
+};
+
+function play() {
+  const durs = S.map((s, i) => Math.max(s.min || 2500, Math.round((R.narr[i]?.seconds || 3) * 1000) + 600));
+  let t = 0; const starts = [];
+  vid.style.opacity = 1;  // 0秒目から映像を見せる
+  S.forEach((s, i) => {
+    starts.push(t);
+    const d = durs[i];
+    if (i === 0) { SCENES[s.kind](s, d, true); t += d; return; }
+    at(t, () => {
+      const old = stage.firstChild;
+      if (old) old.animate([{opacity: 1}, {opacity: 0}], {duration: 250, fill: "forwards"});
+      if (!s.video && S[i - 1].video) vid.animate([{opacity: 1}, {opacity: 0}], {duration: 300, fill: "forwards"});
+      at(250, () => SCENES[s.kind](s, d));
+    });
+    if (s.video) {  // この場面の終わりまでに映像が尽きるなら、場面の頭（切り替え直後）から再生し直す
+      const cut = i ? t + 250 : 0, cur = VOFF[VOFF.length - 1].off;
+      if ((t + d - cur) / 1000 > LEN) VOFF.push({at: cut, off: cut});
+    }
+    t += d;
+  });
+  window.__render = {starts: starts.map(x => x + 250), end: t + 600};
+}
+window.startRender = play;
+if (!new URLSearchParams(location.search).has("render")) document.fonts.ready.then(() => { play(); const f = () => { window.__vidSync(); requestAnimationFrame(f); }; f(); });
+</script>
+</body>
+</html>

@@ -13,7 +13,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 # 書き出しに使うテンプレートは全部見る（11/19: cover.html を一覧から漏らして同じ壊れを見逃した）
-TEMPLATES = sorted(str(p.relative_to(ROOT)) for p in [*ROOT.glob("reel/template/*.html"), *ROOT.glob("edu/*.html")])
+TEMPLATES = sorted(str(p.relative_to(ROOT)) for p in [*ROOT.glob("reel/template/*.html"), *ROOT.glob("edu/*.html"), *ROOT.glob("report_reel/*.html")])
 SCRIPT = re.compile(r"<script(?![^>]*\bsrc=)[^>]*>(.*?)</script>", re.S | re.I)
 
 

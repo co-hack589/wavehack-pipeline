@@ -1,0 +1,114 @@
+name: report-reel
+
+# ---------------------------------------------------------------------------
+# 波レポート → Instagram リール（Slack 承認の2段階）。wavehack-api が repository_dispatch で起動する。
+#   report-reel-build   … #wave-hack-report のカードの［リールを作る］／スレッドの［作り直す］
+#       GET /internal/report-reels/:id → メディア取得 → 台本・キャプション（report_reel/reel_script.py、事実だけ）
+#       → Gemini TTS Aoede（失敗時 Cloud TTS Chirp 3 HD Autonoe）→ 1080x1920 30fps
+#       → R2 wavehack-data/report-reels/<reel_id>.mp4 → 元カードのスレッドに mp4 → POST /ready
+#   report-reel-publish … スレッドの［投稿する］（API が同意を確かめ直してから起動）
+#       R2 から mp4 → Instagram（edu/publish_edu.publish）→ POST /published
+#   失敗したら POST /failed（スレッドに理由と［作り直す］）＋ #wave-hack-error に通知。
+# client_payload: { reel_id }。手動確認は workflow_dispatch（silent で TTS を使わない）。
+#
+# Secrets（既存のものだけ）: WAVEHACK_API_URL / WAVEHACK_CRON_SECRET / SLACK_BOT_TOKEN（files:write）/
+#   GEMINI_API_KEY / CLOUDFLARE_ACCOUNT_ID / CLOUDFLARE_API_TOKEN / IG_USER_ID / IG_ACCESS_TOKEN
+# 公開リポジトリなので、投稿者の言葉・ニックネーム・キャプションはログにも artifact にも出さない。
+# ---------------------------------------------------------------------------
+
+on:
+  repository_dispatch:
+    types: [report-reel-build, report-reel-publish]
+  workflow_dispatch:
+    inputs:
+      reel_id:
+        description: 'report_reels.id'
+        required: true
+        type: string
+      action:
+        description: 'build / publish'
+        type: choice
+        options: [build, publish]
+        default: build
+      silent:
+        description: 'TTS を使わない（build の確認用）'
+        type: boolean
+        default: false
+
+concurrency:
+  group: report-reel-${{ github.event.client_payload.reel_id || inputs.reel_id }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write  # Workload Identity 連携で Cloud TTS（Gemini 失敗時の代替）を使うため
+
+jobs:
+  build:
+    if: github.event.action == 'report-reel-build' || (github.event_name == 'workflow_dispatch' && inputs.action == 'build')
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      REEL_ID: ${{ github.event.client_payload.reel_id || inputs.reel_id }}
+      SILENT: ${{ inputs.silent && '--silent' || '' }}
+      WAVEHACK_API_URL: ${{ secrets.WAVEHACK_API_URL }}
+      WAVEHACK_CRON_SECRET: ${{ secrets.WAVEHACK_CRON_SECRET }}
+      SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+
+      - name: Japanese fonts (web font fallback)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq fonts-noto-cjk >/dev/null
+
+      - name: Authenticate to Google Cloud (Text-to-Speech fallback)
+        id: gcp
+        continue-on-error: true
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/231882021295/locations/global/workloadIdentityPools/github/providers/wavehack-pipeline
+          service_account: reel-tts@wavehack-501114.iam.gserviceaccount.com
+          token_format: access_token
+          create_credentials_file: false
+
+      - name: Build reel
+        env:
+          GOOGLE_ACCESS_TOKEN: ${{ steps.gcp.outputs.access_token }}
+        # reel_id は env で渡す（式を run に直接埋めない）。job.py が UUID の形を確かめる
+        run: uv run --with playwright --with imageio-ffmpeg python report_reel/job.py build --reel-id "$REEL_ID" $SILENT
+
+      - uses: ./.github/actions/slack-alert
+        if: failure()
+        with:
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          text: "波レポートのリール制作 (report-reel build) が失敗しました（スレッドに［作り直す］が出ています）"
+
+  publish:
+    if: github.event.action == 'report-reel-publish' || (github.event_name == 'workflow_dispatch' && inputs.action == 'publish')
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      REEL_ID: ${{ github.event.client_payload.reel_id || inputs.reel_id }}
+      WAVEHACK_API_URL: ${{ secrets.WAVEHACK_API_URL }}
+      WAVEHACK_CRON_SECRET: ${{ secrets.WAVEHACK_CRON_SECRET }}
+      IG_USER_ID: ${{ secrets.IG_USER_ID }}
+      IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+      IG_API_VERSION: v26.0
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Publish to Instagram
+        # 直前に API の状態（publishing）と同意を確かめる。変わっていれば何もせず正常終了
+        run: python3 report_reel/job.py publish --reel-id "$REEL_ID"
+
+      - uses: ./.github/actions/slack-alert
+        if: failure()
+        with:
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          text: "波レポートのリール投稿 (report-reel publish) が失敗しました（スレッドに［投稿する（もう一度）］が出ています）"
