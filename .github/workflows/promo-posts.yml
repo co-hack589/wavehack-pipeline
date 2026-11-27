@@ -10,6 +10,11 @@ on:
     - cron: '17 0 * * *'   # 予備 09:17
     - cron: '17 2 * * *'   # 予備 11:17
   workflow_dispatch:
+    inputs:
+      at:
+        description: "投稿時刻 HH:MM（JST）。過ぎていればすぐ投稿"
+        required: false
+        default: "12:00"
 
 concurrency:
   group: promo-posts
@@ -47,7 +52,7 @@ jobs:
       - name: Wait until 12:00 JST
         id: wait
         if: steps.pick.outputs.video != ''
-        run: python3 reel/wait_slot.py --date "$(TZ=Asia/Tokyo date +%F)" --at 12:00 --last 17:00
+        run: python3 reel/wait_slot.py --date "$(TZ=Asia/Tokyo date +%F)" --at "${{ inputs.at || '12:00' }}" --last 17:00
 
       - name: Publish
         if: steps.wait.outputs.publish == 'true'

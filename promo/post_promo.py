@@ -2,6 +2,9 @@
 
   python promo/post_promo.py --pick            # 今日（JST）の投稿があり未投稿なら動画名を出力
   python promo/post_promo.py --video promo2.mp4 --file work/promo2.mp4
+
+after_app_version を持つ投稿は、date 以降で App Store の公開中の版がその版以上になった最初の日に投稿する
+（iTunes lookup API で確認。例: 新機能の紹介リールを、その機能が入った版の公開後に出す）。
 """
 from __future__ import annotations
 
@@ -18,6 +21,28 @@ from publish_edu import publish  # noqa: E402
 from publish_reels import IG  # noqa: E402
 
 JST = datetime.timezone(datetime.timedelta(hours=9))
+APP_ID = "6793724234"
+
+
+def live_app_version() -> tuple[int, ...] | None:
+    """App Store（日本）で公開中の版。取れなければ None（投稿しない側に倒す）"""
+    import urllib.request
+    try:
+        with urllib.request.urlopen(f"https://itunes.apple.com/lookup?id={APP_ID}&country=jp", timeout=20) as r:
+            v = json.load(r)["results"][0]["version"]
+        return tuple(int(x) for x in v.split("."))
+    except Exception as e:  # noqa: BLE001
+        print(f"app version lookup failed: {e}", file=sys.stderr)
+        return None
+
+
+def due(p: dict, today: str) -> bool:
+    if "after_app_version" not in p:
+        return p["date"] == today
+    if today < p["date"]:
+        return False
+    live = live_app_version()
+    return live is not None and live >= tuple(int(x) for x in p["after_app_version"].split("."))
 
 
 def main() -> int:
@@ -31,7 +56,7 @@ def main() -> int:
     posted = {c.split("\n", 1)[0] for c in ig.recent_captions(30)}
     if a.pick:
         today = datetime.datetime.now(JST).date().isoformat()
-        print(next((p["video"] for p in posts if p["date"] == today and p["caption"].split("\n", 1)[0] not in posted), ""))
+        print(next((p["video"] for p in posts if p["caption"].split("\n", 1)[0] not in posted and due(p, today)), ""))
         return 0
     p = next(p for p in posts if p["video"] == a.video)
     if p["caption"].split("\n", 1)[0] in posted:
